@@ -1,0 +1,55 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// User model
+model User {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  name      String
+  password  String    // In a real app, this would be hashed
+  role      String    @default("USER") // "ADMIN", "BUSINESS", "USER"
+  status    String    @default("ACTIVE") // "ACTIVE", "INACTIVE", "SUSPENDED"
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  lastLogin DateTime?
+  business  Business? @relation(fields: [businessId], references: [id])
+  businessId String?
+  content   Content[] // New relation
+}
+
+// Business model
+model Business {
+  id         String   @id @default(uuid())
+  name       String
+  plan       String   @default("BASIC") // "BASIC", "PROFESSIONAL", "ENTERPRISE"
+  status     String   @default("ACTIVE") // "ACTIVE", "PENDING", "SUSPENDED"
+  joinedDate DateTime @default(now())
+  users      User[]
+  content    Content[] // New relation
+}
+
+// Content model
+model Content {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  type        String   // "COURSE", "GUIDE", "EXERCISE", "FAQ"
+  filePath    String   // Path to the stored file
+  language    String   @default("English")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  lastUpdated DateTime @default(now())
+  createdBy   User?    @relation(fields: [createdById], references: [id])
+  createdById String?
+  businessId  String?  // If null, it's a global content available to all businesses
+  business    Business? @relation(fields: [businessId], references: [id])
+}
