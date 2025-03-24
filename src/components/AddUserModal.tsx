@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext'; // Assuming you have an AuthContext to get the current user
 
 interface AddUserModalProps {
   isOpen: boolean;
@@ -8,11 +9,12 @@ interface AddUserModalProps {
 }
 
 export default function AddUserModal({ isOpen, onClose, onSuccess, translate }: AddUserModalProps) {
+  const { user } = useAuth(); // Get the current user from the AuthContext
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
-    role: 'USER',
+    role: user?.role === 'super_admin' ? 'BUSINESS' : 'USER', // Default role based on current user role
     businessId: ''
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -150,9 +152,15 @@ export default function AddUserModal({ isOpen, onClose, onSuccess, translate }: 
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
             >
-              <option value="USER">{translate('user')}</option>
-              <option value="BUSINESS">{translate('businessAdmin')}</option>
-              <option value="ADMIN">{translate('systemAdmin')}</option>
+              {user?.role === 'super_admin' && (
+                <>
+                  <option value="BUSINESS">{translate('businessAdmin')}</option>
+                  <option value="ADMIN">{translate('systemAdmin')}</option>
+                </>
+              )}
+              {user?.role === 'admin' && (
+                <option value="USER">{translate('user')}</option>
+              )}
             </select>
           </div>
 
@@ -191,4 +199,4 @@ export default function AddUserModal({ isOpen, onClose, onSuccess, translate }: 
       </div>
     </div>
   );
-} 
+}

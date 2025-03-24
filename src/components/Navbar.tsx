@@ -12,27 +12,27 @@ export default function Navbar() {
   const pathname = usePathname();
   const { language, setLanguage, translate } = useLanguage();
   const { isDarkMode, toggleDarkMode } = useDarkMode();
-  
+
   // Add state to force re-renders when language changes
   const [, setForceUpdate] = React.useState(0);
-  
+
   // Debug current language
   React.useEffect(() => {
     console.log('Current language in Navbar:', language);
-    
+
     // Add listener for language changes
     const handleLanguageChanged = () => {
       console.log('Language change detected in Navbar');
       setForceUpdate(prev => prev + 1);
     };
-    
+
     window.addEventListener('languageChanged', handleLanguageChanged);
-    
+
     return () => {
       window.removeEventListener('languageChanged', handleLanguageChanged);
     };
   }, [language]);
-  
+
   // Hide navbar on admin pages
   if (pathname?.startsWith('/admin')) {
     return null;
@@ -48,10 +48,10 @@ export default function Navbar() {
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newLanguage = e.target.value as SupportedLanguage;
     console.log('Language changed to:', newLanguage);
-    
+
     // Save the language first
     setLanguage(newLanguage);
-    
+
     // Force a page reload to ensure all components pick up the language change
     setTimeout(() => {
       window.location.reload();
@@ -67,7 +67,7 @@ export default function Navbar() {
               <span className="text-purple-600 dark:text-purple-400">Alta</span><span className="text-blue-600 dark:text-blue-400">Coach</span>
             </Link>
           </div>
-          
+
           <div className="flex items-center space-x-4">
             <Link href="/features" className="text-gray-700 hover:text-purple-600 dark:text-gray-300 dark:hover:text-purple-400">
               {translate('features')}
@@ -78,9 +78,9 @@ export default function Navbar() {
             <Link href="/contact" className="text-gray-700 hover:text-purple-600 dark:text-gray-300 dark:hover:text-purple-400">
               {translate('contact')}
             </Link>
-            
+
             {/* Dark Mode Toggle */}
-            <button 
+            <button
               onClick={toggleDarkMode}
               className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
               aria-label={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
@@ -95,7 +95,7 @@ export default function Navbar() {
                 </svg>
               )}
             </button>
-            
+
             {/* Language Selector */}
             <div className="relative inline-block">
               <select
@@ -110,13 +110,27 @@ export default function Navbar() {
                 ))}
               </select>
             </div>
-            
+
             {user ? (
               <>
-                <Link href={user?.role?.toString().toUpperCase() === 'ADMIN' ? '/admin' : '/dashboard'} className="text-gray-700 hover:text-purple-600 dark:text-gray-300 dark:hover:text-purple-400">
+                <Link
+                  href={
+                    user?.role?.toLowerCase() === 'admin'
+                      ? '/admin'
+                      :  user?.role?.toLowerCase() === 'super_admin'
+                      ? '/superadmin'
+                      : user?.role?.toLowerCase() === 'business'
+                        ? '/business'
+                        : user?.role?.toLowerCase() === 'staff'
+                          ? '/staff'
+                          : '/dashboard'
+                  }
+                  className="text-gray-700 hover:text-purple-600 dark:text-gray-300 dark:hover:text-purple-400"
+                >
                   {translate('dashboard')}
                 </Link>
-                <button 
+
+                <button
                   onClick={handleLogout}
                   className="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-md"
                 >
@@ -124,8 +138,8 @@ export default function Navbar() {
                 </button>
               </>
             ) : (
-              <Link 
-                href="/login" 
+              <Link
+                href="/login"
                 className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-md"
               >
                 {translate('signIn')}

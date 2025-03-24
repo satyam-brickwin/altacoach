@@ -6,6 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 // Define user roles
 export enum UserRole {
   ADMIN = 'admin',
+  SUPER_ADMIN = 'super_admin', // Add SUPER_ADMIN role
   USER = 'user',
   BUSINESS = 'business',
   STAFF = 'staff'
@@ -162,6 +163,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setIsAuthenticated(true);
         setIsLoading(false);
         console.log('Admin login successful:', mockUser);
+        return true;
+      } else if (email === 'superadmin@altacoach.com' && password === 'superadmin123') { // Handle SUPER_ADMIN login
+        const mockUser = {
+          id: '5',
+          name: 'Super Admin User',
+          email: 'superadmin@altacoach.com',
+          role: UserRole.SUPER_ADMIN,
+        };
+        
+        localStorage.setItem('mockUser', JSON.stringify(mockUser));
+        setUser(mockUser);
+        setIsAuthenticated(true);
+        setIsLoading(false);
+        console.log('Super Admin login successful:', mockUser);
         return true;
       } else if (email === 'user@example.com' && password === 'password') {
         const mockUser = {
@@ -356,4 +371,4 @@ export function useAuthProtection(allowedRoles: UserRole[] = []) {
   }, [isAuthenticated, isLoading, user, router, pathname, rolesKey]);
 
   return { isLoading, isAuthenticated, user, isAuthorized };
-} 
+}

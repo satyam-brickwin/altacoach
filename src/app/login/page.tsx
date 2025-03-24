@@ -115,7 +115,7 @@ export default function LoginPage() {
   const [businessCredentials, setBusinessCredentials] = useState<any[]>([]);
 
   // Get redirect path from URL if available
-  const redirect = searchParams?.get('redirect') || '/dashboard';
+  const redirect = searchParams?.get('redirect') || '/';
 
   // Check for registration success message
   useEffect(() => {
@@ -255,7 +255,7 @@ export default function LoginPage() {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               {translate('selectRole')}
             </label>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-4 gap-3">
               <button
                 type="button"
                 onClick={() => handleRoleSelect(UserRole.ADMIN)}
@@ -266,6 +266,17 @@ export default function LoginPage() {
                 } py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500`}
               >
                 {translate('admin')}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleRoleSelect(UserRole.SUPER_ADMIN)}
+                className={`${
+                  selectedRole === UserRole.SUPER_ADMIN
+                    ? 'bg-red-600 text-white'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600'
+                } py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500`}
+              >
+                {translate('super')}
               </button>
               <button
                 type="button"
@@ -420,7 +431,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="mt-4 grid grid-cols-3 gap-3">
+            <div className="mt-4 grid grid-cols-4 gap-3">
               <button
                 type="button"
                 onClick={async () => {
@@ -437,7 +448,22 @@ export default function LoginPage() {
               >
                 Admin Dashboard
               </button>
-              
+              <button
+                type="button"
+                onClick={async () => {
+                  setIsSubmitting(true);
+                  const success = await login('superadmin@altacoach.com', 'superadmin123', UserRole.SUPER_ADMIN);
+                  if (success) {
+                    router.push('/superadmin');
+                  } else {
+                    setLoginError('Failed to login as super admin');
+                  }
+                  setIsSubmitting(false);
+                }}
+                className="py-2 px-4 border border-red-500 rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              >
+                Super Admin
+              </button>
               <button
                 type="button"
                 onClick={async () => {
@@ -460,7 +486,6 @@ export default function LoginPage() {
               >
                 Business Dashboard
               </button>
-              
               <button
                 type="button"
                 onClick={async () => {
@@ -561,4 +586,4 @@ export default function LoginPage() {
       </div>
     </div>
   );
-} 
+}
