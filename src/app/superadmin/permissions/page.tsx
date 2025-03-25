@@ -326,6 +326,7 @@ export default function AdminUsers() {
   const [error, setError] = useState<string | null>(null);
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const [isPermissionModalOpen, setIsPermissionModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   
   // Protect this page - only allow admin users
   const { isLoading: authLoading, isAuthenticated, user } = useAuthProtection([UserRole.SUPER_ADMIN]);
@@ -428,12 +429,14 @@ export default function AdminUsers() {
     return isAdminUser && matchesRoleFilter && matchesSearch;
   });
 
-  const handleOpenPermissionModal = () => {
+  const handleOpenPermissionModal = (user: User) => {
+    setSelectedUser(user);
     setIsPermissionModalOpen(true);
   };
 
   const handleClosePermissionModal = () => {
     setIsPermissionModalOpen(false);
+    setSelectedUser(null);
   };
 
   return (
@@ -660,7 +663,7 @@ export default function AdminUsers() {
                               {/* )} */}
                               <button
                                 className="text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-300"
-                                onClick={handleOpenPermissionModal}
+                                onClick={() => handleOpenPermissionModal(user)}
                               >
                                 {t('managePermissions')}
                               </button>
@@ -677,12 +680,14 @@ export default function AdminUsers() {
         </div>
       </div>
 
-      {isPermissionModalOpen && (
-        <PermissionModal onClose={handleClosePermissionModal}>
-          {/* Modal content goes here */}
-          <h2>Manage Permissions</h2>
-          {/* Add your form or content for managing permissions */}
-        </PermissionModal>
+      {isPermissionModalOpen && selectedUser && (
+        <PermissionModal 
+          onClose={() => {
+            setIsPermissionModalOpen(false);
+            setSelectedUser(null);
+          }}
+          user={selectedUser}
+        />
       )}
     </div>
   );

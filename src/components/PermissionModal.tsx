@@ -8,10 +8,16 @@ import { Separator } from "@/componentsuper/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/componentsuper/ui/tooltip";
 import { Badge } from "@/componentsuper/ui/badge";
 
-const mockUsers = [
-  { id: 1, name: "Jane Cooper", email: "jane@example.com", role: "Admin", avatar: "https://i.pravatar.cc/150?img=1" },
-  { id: 2, name: "Robert Fox", email: "robert@example.com", role: "Admin", avatar: "https://i.pravatar.cc/150?img=2" },
-];
+// Define proper User interface to match what's being passed from the page
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status?: string;
+  lastActive?: string;
+  avatar?: string; // Make avatar optional since it might not be in the actual user data
+}
 
 const sidebarItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -66,7 +72,7 @@ interface PermissionModalProps {
   roles?: string[];
   modules?: string[];
   actions?: string[];
-  user?: any;
+  user: User; // Make user required
 }
 
 const PermissionModal: React.FC<PermissionModalProps> = ({ 
@@ -77,7 +83,6 @@ const PermissionModal: React.FC<PermissionModalProps> = ({
   user 
 }) => {
   const [selectedTab, setSelectedTab] = useState("specific");
-  const [selectedUser, setSelectedUser] = useState(mockUsers[0]);
   const [permissions, setPermissions] = useState({
     all: false,
     view: false,
@@ -159,7 +164,7 @@ const PermissionModal: React.FC<PermissionModalProps> = ({
       setIsSaving(false);
       
       // Simple toast without try-catch which might be causing issues
-      toast.success(`Permissions for ${selectedUser.name} on ${sidebarItems.find(item => item.id === selectedSidebarItem)?.label} updated successfully`, {
+      toast.success(`Permissions for ${user.name} on ${sidebarItems.find(item => item.id === selectedSidebarItem)?.label} updated successfully`, {
         position: "bottom-right", // Position at bottom right
         style: {
           backgroundColor: "#9333ea", // Purple-600 background to match project
@@ -193,25 +198,36 @@ const PermissionModal: React.FC<PermissionModalProps> = ({
   };
   
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-50 overflow-auto p-3">
-      <div className="bg-white dark:bg-gray-800 p-3 rounded-xl shadow-xl relative w-full max-w-3xl max-h-[80vh] overflow-auto">
+    <div className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-50 overflow-auto p-6">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-xl relative w-full max-w-3xl max-h-[90vh] flex flex-col">
         <button 
           onClick={onClose} 
-          className="absolute top-3 right-3 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-colors bg-gray-100 dark:bg-gray-700 p-1 rounded-full"
+          className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-colors bg-gray-100 dark:bg-gray-700 p-1.5 rounded-full"
         >
-          <X className="h-4 w-4" />
+          <X className="h-5 w-5" />
         </button>
         
         <div className="flex items-center gap-3 mb-4">
-          <img src={selectedUser.avatar} alt={selectedUser.name} className="w-10 h-10 rounded-full object-cover border border-gray-200" />
+          {user.avatar ? (
+            <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full object-cover border border-gray-200" />
+          ) : (
+            <div className="h-10 w-10 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
+              <span className="text-lg font-semibold text-purple-600 dark:text-purple-400">
+                {user.name.charAt(0)}
+              </span>
+            </div>
+          )}
           <div>
-            <h3 className="text-base font-medium">{selectedUser.name}</h3>
-            <p className="text-xs text-gray-500 dark:text-gray-300">{selectedUser.email}</p>
-            <Badge variant="secondary" className="mt-0.5 text-xs dark:bg-gray-700 dark:text-gray-200">{selectedUser.role}</Badge>
+            <h3 className="text-base font-medium">{user.name}</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-300">{user.email}</p>
+            <Badge variant="secondary" className="mt-0.5 text-xs dark:bg-gray-700 dark:text-gray-200">
+              {user.role === 'ADMIN' ? 'System Admin' : 
+               user.role === 'BUSINESS' ? 'Business Admin' : user.role}
+            </Badge>
           </div>
         </div>
         
-        <div className="flex gap-3">
+        <div className="flex gap-3 flex-1 overflow-auto">
           {/* Sidebar Navigation - make it narrower but ensure text is visible */}
           <div className="w-[22%] border-r pr-2 space-y-1">
             {sidebarItems.map((item) => (
@@ -236,7 +252,7 @@ const PermissionModal: React.FC<PermissionModalProps> = ({
           </div>
           
           {/* Main content - give it more space */}
-          <div className="flex-1 pl-1">
+          <div className="flex-1 pl-1 flex flex-col min-h-0">
             {/* Alternative approach - manual tab implementation instead of using the Tabs component */}
             <div className="w-full">
               <div className="flex w-full mb-6 rounded-lg bg-gray-100 dark:bg-gray-800 p-1">
@@ -537,15 +553,17 @@ const PermissionModal: React.FC<PermissionModalProps> = ({
               )}
             </div>
             
-            <div className="flex justify-end mt-6 gap-2">
-              <Button variant="outline" onClick={onClose} className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">Cancel</Button>
-              <Button 
-                onClick={handleSave} 
-                disabled={isSaving}
-                className="bg-purple-500 hover:bg-purple-600 text-white"
-              >
-                {isSaving ? "Saving..." : "Save Changes"}
-              </Button>
+            <div className="mt-6 pt-4 border-t">
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={onClose} className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">Cancel</Button>
+                <Button 
+                  onClick={handleSave} 
+                  disabled={isSaving}
+                  className="bg-purple-500 hover:bg-purple-600 text-white"
+                >
+                  {isSaving ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
