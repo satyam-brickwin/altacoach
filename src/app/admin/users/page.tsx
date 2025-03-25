@@ -22,15 +22,15 @@ interface User {
 
 // Sample user data - will be replaced with database data
 const sampleUserData = [
-  {
-    id: '1',
-    name: 'John Smith',
-    email: 'john.smith@example.com',
-    role: 'Business Admin',
-    lastActive: '2023-08-15',
-    status: 'active',
-    joinDate: '2023-01-10'
-  },
+  // {
+  //   id: '1',
+  //   name: 'John Smith',
+  //   email: 'john.smith@example.com',
+  //   role: 'Business Admin',
+  //   lastActive: '2023-08-15',
+  //   status: 'active',
+  //   joinDate: '2023-01-10'
+  // },
   {
     id: '2',
     name: 'Sarah Johnson',
@@ -40,15 +40,15 @@ const sampleUserData = [
     status: 'active',
     joinDate: '2023-02-22'
   },
-  {
-    id: '3',
-    name: 'Michael Brown',
-    email: 'michael.b@example.com',
-    role: 'Business Admin',
-    lastActive: '2023-08-10',
-    status: 'active',
-    joinDate: '2023-03-15'
-  },
+  // {
+  //   id: '3',
+  //   name: 'Michael Brown',
+  //   email: 'michael.b@example.com',
+  //   role: 'Business Admin',
+  //   lastActive: '2023-08-10',
+  //   status: 'active',
+  //   joinDate: '2023-03-15'
+  // },
   {
     id: '4',
     name: 'Emily Davis',
@@ -58,15 +58,15 @@ const sampleUserData = [
     status: 'suspended',
     joinDate: '2023-04-05'
   },
-  {
-    id: '5',
-    name: 'Robert Wilson',
-    email: 'robert.w@example.com',
-    role: 'System Admin',
-    lastActive: '2023-08-15',
-    status: 'active',
-    joinDate: '2022-11-18'
-  }
+  // {
+  //   id: '5',
+  //   name: 'Robert Wilson',
+  //   email: 'robert.w@example.com',
+  //   role: 'System Admin',
+  //   lastActive: '2023-08-15',
+  //   status: 'active',
+  //   joinDate: '2022-11-18'
+  // }
 ];
 
 // Define translations for the admin dashboard
@@ -115,7 +115,8 @@ const adminTranslations = {
     systemAdmin: 'System Admin',
     user: 'User',
     search: 'Search',
-    searchUsers: 'Search users...'
+    searchUsers: 'Search users...',
+    showingRegularUsers: 'Showing Regular Users'
   },
   fr: {
     adminDashboard: 'Tableau de Bord Admin',
@@ -161,7 +162,8 @@ const adminTranslations = {
     systemAdmin: 'Admin Système',
     user: 'Utilisateur',
     search: 'Rechercher',
-    searchUsers: 'Rechercher des utilisateurs...'
+    searchUsers: 'Rechercher des utilisateurs...',
+    showingRegularUsers: 'Affichage des utilisateurs réguliers'
   },
   de: {
     adminDashboard: 'Admin-Dashboard',
@@ -207,7 +209,8 @@ const adminTranslations = {
     systemAdmin: 'Systemadministrator',
     user: 'Benutzer',
     search: 'Suchen',
-    searchUsers: 'Benutzer suchen...'
+    searchUsers: 'Benutzer suchen...',
+    showingRegularUsers: 'Reguläre Benutzer anzeigen'
   },
   it: {
     adminDashboard: 'Dashboard Admin',
@@ -253,7 +256,8 @@ const adminTranslations = {
     systemAdmin: 'Admin di Sistema',
     user: 'Utente',
     search: 'Cerca',
-    searchUsers: 'Cerca utenti...'
+    searchUsers: 'Cerca utenti...',
+    showingRegularUsers: 'Mostrando utenti regolari'
   },
   es: {
     adminDashboard: 'Panel de Administrador',
@@ -299,7 +303,8 @@ const adminTranslations = {
     systemAdmin: 'Administrador de Sistema',
     user: 'Usuario',
     search: 'Buscar',
-    searchUsers: 'Buscar usuarios...'
+    searchUsers: 'Buscar usuarios...',
+    showingRegularUsers: 'Mostrando usuarios regulares'
   }
 };
 
@@ -401,13 +406,15 @@ export default function AdminUsers() {
 
   // Filter users based on role and search term
   const filteredUsers = users.filter(user => {
-    const matchesRole = roleFilter === 'all' || 
-                        (roleFilter === 'businessAdmin' && user.role === 'BUSINESS') ||
-                        (roleFilter === 'systemAdmin' && user.role === 'ADMIN') ||
-                        (roleFilter === 'user' && user.role === 'USER');
+    // Only include regular users (USER role)
+    const isRegularUser = user.role === 'USER';
+    
+    // Apply search filtering
     const matchesSearch = user.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesRole && matchesSearch;
+    
+    // Only return true if it's a regular user AND matches the search
+    return isRegularUser && matchesSearch;
   });
 
   return (
@@ -484,18 +491,8 @@ export default function AdminUsers() {
             <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
               <div className="flex items-center mb-4 md:mb-0">
                 <span className="mr-4 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {t('filterByRole')}
+                  {t('showingRegularUsers')} {/* Add this translation key */}
                 </span>
-                <select
-                  value={roleFilter}
-                  onChange={(e) => setRoleFilter(e.target.value)}
-                  className="mt-1 block w-40 pl-3 pr-10 py-2 text-sm text-black border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:outline-none focus:ring-purple-500 focus:border-purple-500 rounded-md"
-                >
-                  <option value="all">{t('allUsers')}</option>
-                  <option value="businessAdmin">{t('businessAdmin')}</option>
-                  <option value="systemAdmin">{t('systemAdmin')}</option>
-                  <option value="user">{t('user')}</option>
-                </select>
               </div>
               <div className="relative">
                 <input
@@ -657,4 +654,4 @@ export default function AdminUsers() {
       />
     </div>
   );
-} 
+}

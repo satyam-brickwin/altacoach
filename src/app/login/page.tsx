@@ -431,7 +431,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="mt-4 grid grid-cols-4 gap-3">
+            <div className="mt-4 grid grid-cols-3 gap-3">
               <button
                 type="button"
                 onClick={async () => {
@@ -447,22 +447,6 @@ export default function LoginPage() {
                 className="py-2 px-4 border border-green-500 rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
               >
                 Admin Dashboard
-              </button>
-              <button
-                type="button"
-                onClick={async () => {
-                  setIsSubmitting(true);
-                  const success = await login('superadmin@altacoach.com', 'superadmin123', UserRole.SUPER_ADMIN);
-                  if (success) {
-                    router.push('/superadmin');
-                  } else {
-                    setLoginError('Failed to login as super admin');
-                  }
-                  setIsSubmitting(false);
-                }}
-                className="py-2 px-4 border border-red-500 rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-              >
-                Super Admin
               </button>
               <button
                 type="button"
@@ -528,6 +512,26 @@ export default function LoginPage() {
               <Link href="/signup" className="w-full flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                 {translate('signUp')}
               </Link>
+            </div>
+            
+            {/* Super Admin access button with matching Sign Up UI */}
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={async () => {
+                  setIsSubmitting(true);
+                  const success = await login('superadmin@altacoach.com', 'superadmin123', UserRole.SUPER_ADMIN);
+                  if (success) {
+                    router.push('/superadmin');
+                  } else {
+                    setLoginError('Failed to login as super admin');
+                  }
+                  setIsSubmitting(false);
+                }}
+                className="w-full flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                Super Admin Access
+              </button>
             </div>
           </div>
           

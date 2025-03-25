@@ -6,6 +6,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { DarkModeProvider } from '@/contexts/DarkModeContext';
 import NavbarWrapper from '@/components/NavbarWrapper';
+import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -30,7 +31,8 @@ export default function RootLayout({
             </AuthProvider>
           </DarkModeProvider>
         </LanguageProvider>
+        <Toaster position="bottom-right" />
       </body>
     </html>
   );
-} 
+}

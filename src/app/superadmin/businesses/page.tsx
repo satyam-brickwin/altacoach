@@ -16,7 +16,8 @@ const businessData = [
     joinedDate: '2023-05-15',
     logo: '',
     colorTheme: '#4F46E5',
-    isActive: true
+    isActive: true,
+    createdBy: 'John Smith'
   },
   {
     id: '2',
@@ -27,7 +28,8 @@ const businessData = [
     joinedDate: '2023-06-22',
     logo: '',
     colorTheme: '#10B981',
-    isActive: true
+    isActive: true,
+    createdBy: 'Sarah Johnson'
   },
   {
     id: '3',
@@ -38,7 +40,8 @@ const businessData = [
     joinedDate: '2023-04-10',
     logo: '',
     colorTheme: '#F59E0B',
-    isActive: true
+    isActive: true,
+    createdBy: 'Michael Chen'
   },
   {
     id: '4',
@@ -49,7 +52,8 @@ const businessData = [
     joinedDate: '2023-08-05',
     logo: '',
     colorTheme: '#3B82F6',
-    isActive: false
+    isActive: false,
+    createdBy: 'Emily Wilson'
   },
   {
     id: '5',
@@ -60,7 +64,8 @@ const businessData = [
     joinedDate: '2023-07-18',
     logo: '',
     colorTheme: '#EC4899',
-    isActive: false
+    isActive: false,
+    createdBy: 'Carlos Rodriguez'
   }
 ];
 
@@ -75,6 +80,7 @@ interface Business {
   logo?: string;
   colorTheme?: string;
   isActive: boolean;
+  createdBy: string; // Add this new field
 }
 
 // Define translations for the admin dashboard
@@ -151,6 +157,7 @@ const adminTranslations = {
     loading: 'Loading...',
     refresh: 'Refresh',
     noBusinessesFound: 'No businesses found',
+    createdBy: 'Created By',
   },
   fr: {
     adminDashboard: 'Tableau de Bord Admin',
@@ -224,6 +231,7 @@ const adminTranslations = {
     loading: 'Chargement...',
     refresh: 'Rafraîchir',
     noBusinessesFound: 'Aucune entreprise trouvée',
+    createdBy: 'Créé Par',
   },
   de: {
     adminDashboard: 'Admin-Dashboard',
@@ -297,6 +305,7 @@ const adminTranslations = {
     loading: 'Laden...',
     refresh: 'Aktualisieren',
     noBusinessesFound: 'Keine Unternehmen gefunden',
+    createdBy: 'Erstellt Von',
   },
   it: {
     adminDashboard: 'Dashboard Admin',
@@ -370,6 +379,7 @@ const adminTranslations = {
     loading: 'Caricamento...',
     refresh: 'Aggiorna',
     noBusinessesFound: 'Nessuna azienda trovata',
+    createdBy: 'Creato Da',
   },
   es: {
     adminDashboard: 'Panel de Administrador',
@@ -443,6 +453,7 @@ const adminTranslations = {
     loading: 'Cargando...',
     refresh: 'Actualizar',
     noBusinessesFound: 'No se encontraron empresas',
+    createdBy: 'Creado Por',
   }
 };
 
@@ -456,6 +467,7 @@ interface BusinessFormData {
   logo?: string;
   colorTheme: string;
   isActive: boolean;
+  createdBy: string; // Add this field
 }
 
 export default function AdminBusinesses() {
@@ -484,7 +496,8 @@ export default function AdminBusinesses() {
     address: '',
     logo: '',
     colorTheme: '#4F46E5',
-    isActive: true
+    isActive: true,
+    createdBy: 'Current Admin' // Set default or get from user context
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -500,7 +513,8 @@ export default function AdminBusinesses() {
     address: '',
     logo: '',
     colorTheme: '#4F46E5',
-    isActive: true
+    isActive: true,
+    createdBy: 'Current Admin' // Set default or get from user context
   });
   const [isEditSubmitting, setIsEditSubmitting] = useState(false);
   
@@ -579,7 +593,8 @@ export default function AdminBusinesses() {
       address: '',
       logo: business.logo || '',
       colorTheme: business.colorTheme || '#4F46E5',
-      isActive: business.isActive
+      isActive: business.isActive,
+      createdBy: business.createdBy // Include the createdBy field
     });
     setIsEditModalOpen(true);
   };
@@ -653,7 +668,8 @@ export default function AdminBusinesses() {
           joinedDate: new Date().toISOString().split('T')[0],
           logo: formData.logo,
           colorTheme: formData.colorTheme,
-          isActive: formData.isActive
+          isActive: formData.isActive,
+          createdBy: 'admin' // In a real app, this would be the logged-in admin's ID
         }
       };
       
@@ -674,7 +690,8 @@ export default function AdminBusinesses() {
         address: '',
         logo: '',
         colorTheme: '#4F46E5',
-        isActive: true
+        isActive: true,
+        createdBy: 'Current Admin' // Reset this too
       });
       
       // Show success message
@@ -788,7 +805,7 @@ export default function AdminBusinesses() {
               </li>
               <li>
                 <Link href="/superadmin/users" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
-                  {t('userAccounts')}
+                  {'Admin Accounts'}
                 </Link>
               </li>
               <li>
@@ -803,7 +820,7 @@ export default function AdminBusinesses() {
               </li>
               <li>
                 <Link href="/superadmin/permissions" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
-                  {t('permissions')}
+                  {t('Permissions')}
                 </Link>
               </li>
             </ul>
@@ -902,6 +919,9 @@ export default function AdminBusinesses() {
                         {t('joined')}
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        {t('createdBy')}
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         {t('actions')}
                       </th>
                     </tr>
@@ -909,13 +929,14 @@ export default function AdminBusinesses() {
                   <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
                     {filteredBusinesses.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                        <td colSpan={6} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                           {t('noBusinessesFound')}
                         </td>
                       </tr>
                     ) : (
                       filteredBusinesses.map((business: Business) => (
                         <tr key={business.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                          {/* Name cell */}
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <div className="h-10 w-10 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
@@ -930,12 +951,15 @@ export default function AdminBusinesses() {
                               </div>
                             </div>
                           </td>
+                          {/* Plan cell */}
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm text-gray-500 dark:text-gray-400">{business.plan}</div>
                           </td>
+                          {/* User count cell */}
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm text-gray-500 dark:text-gray-400">{business.userCount}</div>
                           </td>
+                          {/* Status cell */}
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                               business.status === 'active' 
@@ -947,9 +971,15 @@ export default function AdminBusinesses() {
                               {t(business.status)}
                             </span>
                           </td>
+                          {/* Joined date cell */}
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                             {business.joinedDate}
                           </td>
+                          {/* Created By cell - new */}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            {business.createdBy}
+                          </td>
+                          {/* Actions cell */}
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                             <div className="flex space-x-2">
                               <button 
@@ -1105,6 +1135,21 @@ export default function AdminBusinesses() {
                       <option value="active">{t('active')}</option>
                       <option value="suspended">{t('suspended')}</option>
                     </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="createdBy" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {t('createdBy')}
+                    </label>
+                    <input
+                      type="text"
+                      name="createdBy"
+                      id="createdBy"
+                      value={formData.createdBy}
+                      onChange={handleInputChange}
+                      required
+                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                    />
                   </div>
                   
                   <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
@@ -1399,6 +1444,20 @@ export default function AdminBusinesses() {
                       <option value="suspended">{t('suspended')}</option>
                     </select>
                   </div>
+
+                  <div>
+                    <label htmlFor="edit-createdBy" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {t('createdBy')}
+                    </label>
+                    <input
+                      type="text"
+                      name="createdBy"
+                      id="edit-createdBy"
+                      value={editFormData.createdBy}
+                      onChange={handleEditInputChange}
+                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                    />
+                  </div>
                   
                   {/* Active Status */}
                   <div className="flex items-center">
@@ -1439,4 +1498,4 @@ export default function AdminBusinesses() {
       )}
     </div>
   );
-} 
+}

@@ -77,6 +77,7 @@ const adminTranslations = {
     businesses: 'Businesses',
     content: 'Content',
     userAccounts: 'User Accounts',
+    adminAccounts: 'Admin Accounts',
     settings: 'Settings',
     analytics: 'Analytics',
     prompts: 'Prompts',
@@ -107,15 +108,17 @@ const adminTranslations = {
     suspend: 'Suspend',
     delete: 'Delete',
     activate: 'Activate',
-    userManagementDesc: 'Manage user accounts and permissions',
-    addNewUser: 'Add New User',
+    userManagementDesc: 'Manage Admin accounts and permissions',
+    addNewUser: 'Add New Admin',
     filterByRole: 'Filter by Role:',
     allUsers: 'All Users',
     businessAdmin: 'Business Admin',
     systemAdmin: 'System Admin',
     user: 'User',
     search: 'Search',
-    searchUsers: 'Search users...'
+    searchUsers: 'Search users...',
+    searchAdmins: 'Search admins...',
+    allAdmins: 'All Admins'
   },
   fr: {
     adminDashboard: 'Tableau de Bord Admin',
@@ -123,6 +126,7 @@ const adminTranslations = {
     businesses: 'Entreprises',
     content: 'Contenu',
     userAccounts: 'Comptes Utilisateurs',
+    adminAccounts: 'Admin Accounts',
     settings: 'Paramètres',
     analytics: 'Analyses',
     prompts: 'Invites',
@@ -161,7 +165,9 @@ const adminTranslations = {
     systemAdmin: 'Admin Système',
     user: 'Utilisateur',
     search: 'Rechercher',
-    searchUsers: 'Rechercher des utilisateurs...'
+    searchUsers: 'Rechercher des utilisateurs...',
+    searchAdmins: 'Rechercher des administrateurs...',
+    allAdmins: 'Tous les Administrateurs'
   },
   de: {
     adminDashboard: 'Admin-Dashboard',
@@ -169,6 +175,7 @@ const adminTranslations = {
     businesses: 'Unternehmen',
     content: 'Inhalt',
     userAccounts: 'Benutzerkonten',
+    adminAccounts: 'Admin Accounts',
     settings: 'Einstellungen',
     analytics: 'Analysen',
     prompts: 'Eingabeaufforderungen',
@@ -207,7 +214,9 @@ const adminTranslations = {
     systemAdmin: 'Systemadministrator',
     user: 'Benutzer',
     search: 'Suchen',
-    searchUsers: 'Benutzer suchen...'
+    searchUsers: 'Benutzer suchen...',
+    searchAdmins: 'Administratoren suchen...',
+    allAdmins: 'Alle Administratoren'
   },
   it: {
     adminDashboard: 'Dashboard Admin',
@@ -215,6 +224,7 @@ const adminTranslations = {
     businesses: 'Aziende',
     content: 'Contenuto',
     userAccounts: 'Account Utenti',
+    adminAccounts: 'Admin Accounts',
     settings: 'Impostazioni',
     analytics: 'Analisi',
     prompts: 'Prompt',
@@ -253,7 +263,9 @@ const adminTranslations = {
     systemAdmin: 'Admin di Sistema',
     user: 'Utente',
     search: 'Cerca',
-    searchUsers: 'Cerca utenti...'
+    searchUsers: 'Cerca utenti...',
+    searchAdmins: 'Cerca amministratori...',
+    allAdmins: 'Tutti gli Amministratori'
   },
   es: {
     adminDashboard: 'Panel de Administrador',
@@ -261,6 +273,7 @@ const adminTranslations = {
     businesses: 'Empresas',
     content: 'Contenido',
     userAccounts: 'Cuentas de Usuario',
+    adminAccounts: 'Admin Accounts',
     settings: 'Configuración',
     analytics: 'Analíticas',
     prompts: 'Indicaciones',
@@ -299,7 +312,9 @@ const adminTranslations = {
     systemAdmin: 'Administrador de Sistema',
     user: 'Usuario',
     search: 'Buscar',
-    searchUsers: 'Buscar usuarios...'
+    searchUsers: 'Buscar usuarios...',
+    searchAdmins: 'Buscar administradores...',
+    allAdmins: 'Todos los Administradores'
   }
 };
 
@@ -401,13 +416,19 @@ export default function AdminUsers() {
 
   // Filter users based on role and search term
   const filteredUsers = users.filter(user => {
+    // Only include ADMIN and BUSINESS roles
+    const isAdminOrBusinessAdmin = user.role === 'ADMIN' || user.role === 'BUSINESS';
+    
+    // Apply additional filtering based on roleFilter
     const matchesRole = roleFilter === 'all' || 
                         (roleFilter === 'businessAdmin' && user.role === 'BUSINESS') ||
-                        (roleFilter === 'systemAdmin' && user.role === 'ADMIN') ;
-                        (roleFilter === 'user' && user.role === 'USER');
+                        (roleFilter === 'systemAdmin' && user.role === 'ADMIN');
+    
     const matchesSearch = user.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesRole && matchesSearch;
+    
+    // Only return true if it's an admin role AND matches the other filters
+    return isAdminOrBusinessAdmin && matchesRole && matchesSearch;
   });
 
   return (
@@ -451,7 +472,7 @@ export default function AdminUsers() {
               </li>
               <li>
                 <Link href="/superadmin/users" className="block px-4 py-2 rounded-md bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-200 font-medium">
-                  {t('userAccounts')}
+                  {t('adminAccounts')}
                 </Link>
               </li>
               <li>
@@ -466,7 +487,7 @@ export default function AdminUsers() {
               </li>
               <li>
                 <Link href="/superadmin/permissions" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
-                  {t('permissions')}
+                  {t('Permissions')}
                 </Link>
               </li>
             </ul>
@@ -478,7 +499,7 @@ export default function AdminUsers() {
           <div className="max-w-7xl mx-auto">
             <div className="mb-8">
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {t('userAccounts')}
+                {t('adminAccounts')}
               </h1>
               <p className="mt-2 text-gray-600 dark:text-gray-400">
                 {t('userManagementDesc')}
@@ -496,7 +517,7 @@ export default function AdminUsers() {
                   onChange={(e) => setRoleFilter(e.target.value)}
                   className="mt-1 block w-40 pl-3 pr-10 py-2 text-sm text-black border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:outline-none focus:ring-purple-500 focus:border-purple-500 rounded-md"
                 >
-                  <option value="all">{t('allUsers')}</option>
+                  <option value="all">{t('allAdmins')}</option>
                   <option value="businessAdmin">{t('businessAdmin')}</option>
                   <option value="systemAdmin">{t('systemAdmin')}</option>
                   {/* <option value="user">{t('user')}</option> */}
@@ -505,7 +526,7 @@ export default function AdminUsers() {
               <div className="relative">
                 <input
                   type="text"
-                  placeholder={t('searchUsers')}
+                  placeholder={t('searchAdmins')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-sm"
@@ -662,4 +683,4 @@ export default function AdminUsers() {
       />
     </div>
   );
-} 
+}

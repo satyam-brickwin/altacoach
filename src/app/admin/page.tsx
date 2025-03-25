@@ -360,11 +360,11 @@ const AdminDashboard = () => {
                     {translate('analytics')}
                   </Link>
                 </li>
-                <li>
+                {/* <li>
                   <Link href="/admin/chat-analysis" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
                     {translate('chatAnalysis') || 'Chat Analysis'}
                   </Link>
-                </li>
+                </li> */}
                 <li>
                   <Link href="/admin/settings" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
                     {translate('settings')}

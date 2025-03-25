@@ -1,4 +1,6 @@
 import { TrainingContent } from '@/types';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
 /**
  * Detect the language of a given text
@@ -216,6 +218,15 @@ export function safeJsonParse<T>(json: string, fallback: T): T {
   } catch (error) {
     return fallback;
   }
-} 
+}
+
+/**
+ * Combines class names using clsx and tailwind-merge
+ * @param inputs Class names to combine
+ * @returns Combined class names
+ */
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 

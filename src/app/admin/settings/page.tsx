@@ -412,7 +412,7 @@ const AdminSettings = () => {
                 >
                   {translate('general')}
                 </button>
-                <button
+                {/* <button
                   onClick={() => setActiveTab('prompts')}
                   className={`py-4 px-1 border-b-2 font-medium text-sm ${
                     activeTab === 'prompts'
@@ -431,7 +431,7 @@ const AdminSettings = () => {
                   }`}
                 >
                   {translate('apiKeys')}
-                </button>
+                </button> */}
               </nav>
             </div>
             

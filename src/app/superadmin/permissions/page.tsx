@@ -6,9 +6,7 @@ import { useLanguage, languageLabels, SupportedLanguage } from '@/contexts/Langu
 import { useDarkMode } from '@/contexts/DarkModeContext';
 import { useAuthProtection, UserRole } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import AddUserModal from '@/components/AddUserModal';
-import PermissionModal from '@/components/PermissionModal'; // Correct import
-
+import PermissionModal from '@/components/PermissionModal'; // Correct 
 
 // Define user type
 interface User {
@@ -117,8 +115,9 @@ const adminTranslations = {
     systemAdmin: 'System Admin',
     user: 'User',
     search: 'Search',
-    searchUsers: 'Search users...',
-    managePermissions: 'Manage Permissions'
+    searchUsers: 'Search admins...',
+    managePermissions: 'Manage Permissions',
+    allAdmins: 'All Admins',
   },
   fr: {
     adminDashboard: 'Tableau de Bord Admin',
@@ -164,8 +163,9 @@ const adminTranslations = {
     systemAdmin: 'Admin Système',
     user: 'Utilisateur',
     search: 'Rechercher',
-    searchUsers: 'Rechercher des utilisateurs...',
-    managePermissions: 'Gérer les Permissions'
+    searchUsers: 'Rechercher des administrateurs...',
+    managePermissions: 'Gérer les Permissions',
+    allAdmins: 'Tous les Administrateurs',
   },
   de: {
     adminDashboard: 'Admin-Dashboard',
@@ -211,8 +211,9 @@ const adminTranslations = {
     systemAdmin: 'Systemadministrator',
     user: 'Benutzer',
     search: 'Suchen',
-    searchUsers: 'Benutzer suchen...',
-    managePermissions: 'Berechtigungen verwalten'
+    searchUsers: 'Administratoren suchen...',
+    managePermissions: 'Berechtigungen verwalten',
+    allAdmins: 'Alle Administratoren',
   },
   it: {
     adminDashboard: 'Dashboard Admin',
@@ -258,8 +259,9 @@ const adminTranslations = {
     systemAdmin: 'Admin di Sistema',
     user: 'Utente',
     search: 'Cerca',
-    searchUsers: 'Cerca utenti...',
-    managePermissions: 'Gestisci Permessi'
+    searchUsers: 'Cerca amministratori...',
+    managePermissions: 'Gestisci Permessi',
+    allAdmins: 'Tutti gli Amministratori',
   },
   es: {
     adminDashboard: 'Panel de Administrador',
@@ -305,8 +307,9 @@ const adminTranslations = {
     systemAdmin: 'Administrador de Sistema',
     user: 'Usuario',
     search: 'Buscar',
-    searchUsers: 'Buscar usuarios...',
-    managePermissions: 'Gestionar Permisos'
+    searchUsers: 'Buscar administradores...',
+    managePermissions: 'Gestionar Permisos',
+    allAdmins: 'Todos los Administradores',
   }
 };
 
@@ -409,13 +412,20 @@ export default function AdminUsers() {
 
   // Filter users based on role and search term
   const filteredUsers = users.filter(user => {
-    const matchesRole = roleFilter === 'all' || 
-                        (roleFilter === 'businessAdmin' && user.role === 'BUSINESS') ||
-                        (roleFilter === 'systemAdmin' && user.role === 'ADMIN') ;
-                        (roleFilter === 'user' && user.role === 'USER');
+    // Only include ADMIN and BUSINESS roles
+    const isAdminUser = user.role === 'ADMIN' || user.role === 'BUSINESS';
+    
+    // Additional role filter if specific admin type is selected
+    const matchesRoleFilter = roleFilter === 'all' || 
+                       (roleFilter === 'businessAdmin' && user.role === 'BUSINESS') ||
+                       (roleFilter === 'systemAdmin' && user.role === 'ADMIN');
+    
+    // Search term filter
     const matchesSearch = user.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesRole && matchesSearch;
+    
+    // User must be admin AND match the role filter AND match search term
+    return isAdminUser && matchesRoleFilter && matchesSearch;
   });
 
   const handleOpenPermissionModal = () => {
@@ -467,7 +477,7 @@ export default function AdminUsers() {
               </li>
               <li>
                 <Link href="/superadmin/users" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
-                  {t('userAccounts')}
+                  {'Admin Accounts'}
                 </Link>
               </li>
               <li>
@@ -482,7 +492,7 @@ export default function AdminUsers() {
               </li>
               <li>
                 <Link href="/superadmin/permissions" className="block px-4 py-2 rounded-md bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-200 font-medium">
-                  {t('permissions')}
+                  {t('Permissions')}
                 </Link>
               </li>
             </ul>
@@ -512,7 +522,7 @@ export default function AdminUsers() {
                   onChange={(e) => setRoleFilter(e.target.value)}
                   className="mt-1 block w-40 pl-3 pr-10 py-2 text-sm text-black border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:outline-none focus:ring-purple-500 focus:border-purple-500 rounded-md"
                 >
-                  <option value="all">{t('allUsers')}</option>
+                  <option value="all">{t('allAdmins')}</option>
                   <option value="businessAdmin">{t('businessAdmin')}</option>
                   <option value="systemAdmin">{t('systemAdmin')}</option>
                   {/* <option value="user">{t('user')}</option> */}
@@ -521,7 +531,7 @@ export default function AdminUsers() {
               <div className="relative">
                 <input
                   type="text"
-                  placeholder={t('searchUsers')}
+                  placeholder={t('searchAdmins')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-sm"

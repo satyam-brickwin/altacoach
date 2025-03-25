@@ -352,7 +352,7 @@ const SuperAdminDashboard = () => {
                 </li>
                 <li>
                   <Link href="superadmin/users" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
-                    {translate('userAccounts')}
+                    {translate('Admin Accounts')}
                   </Link>
                 </li>
                 <li>
@@ -360,11 +360,11 @@ const SuperAdminDashboard = () => {
                     {translate('analytics')}
                   </Link>
                 </li>
-                <li>
+                {/* <li>
                   <Link href="/superadmin/chat-analysis" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
                     {translate('chatAnalysis') || 'Chat Analysis'}
                   </Link>
-                </li>
+                </li> */}
                 <li>
                   <Link href="/superadmin/settings" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
                     {translate('settings')}
@@ -372,7 +372,7 @@ const SuperAdminDashboard = () => {
                 </li>
                 <li>
                   <Link href="/superadmin/permissions" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
-                    {translate('permissions')}
+                    {translate('Permissions')}
                   </Link>
                 </li>
               </ul>
