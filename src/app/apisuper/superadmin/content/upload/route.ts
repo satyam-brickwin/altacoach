@@ -142,9 +142,7 @@ export async function POST(request: NextRequest) {
  * This would avoid filesystem permission issues and make your app more scalable.
  */
 
-// Configure the API route to handle large files
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-}; 
+// Replace with these:
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const maxDuration = 60; // Set an appropriate timeout for file uploads

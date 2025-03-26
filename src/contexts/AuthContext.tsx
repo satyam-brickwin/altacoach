@@ -39,6 +39,22 @@ export const initMockDatabase = () => {
     // Create sample business credentials
     const businessCredentials: BusinessCredentials[] = [];
     
+    // Add super admin credentials - this is new
+    businessCredentials.push({
+      businessId: '', // Super admin doesn't belong to a specific business
+      email: 'superadmin@altacoach.com',
+      password: 'superadmin123',
+      role: UserRole.SUPER_ADMIN
+    });
+    
+    // Add admin credentials - this is new
+    businessCredentials.push({
+      businessId: '', // Regular admin doesn't belong to a specific business
+      email: 'admin@altacoach.com',
+      password: 'admin123',
+      role: UserRole.ADMIN
+    });
+    
     // Add sample business admin credentials
     sampleBusinesses.forEach(business => {
       businessCredentials.push({

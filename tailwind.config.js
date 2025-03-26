@@ -56,7 +56,18 @@ module.exports = {
         card: '0 4px 6px rgba(0, 0, 0, 0.1)',
         'card-hover': '0 10px 15px rgba(0, 0, 0, 0.1)',
       },
+      textColor: {
+        'chat-text-dark': 'rgba(255, 255, 255, 1)', // Define a custom color
+      },
     },
   },
-  plugins: [],
-} 
+  plugins: [
+    function ({ addComponents, theme }) {
+      addComponents({
+        '.chat-text-dark': {
+          color: theme('textColor.chat-text-dark'),
+        },
+      });
+    },
+  ],
+}

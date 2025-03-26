@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // User model
@@ -16,7 +16,7 @@ model User {
   email     String    @unique
   name      String
   password  String    // In a real app, this would be hashed
-  role      String    @default("USER") // "ADMIN", "BUSINESS", "USER"
+  role      String    @default("USER") // "SUPER_ADMIN", "ADMIN", "BUSINESS", "USER", "STAFF"
   status    String    @default("ACTIVE") // "ACTIVE", "INACTIVE", "SUSPENDED"
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
