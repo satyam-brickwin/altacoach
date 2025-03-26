@@ -103,7 +103,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
               className={cn(
                 "px-4 py-3 rounded-2xl",
                 isUser
-                  ? "bg-primary text-white rounded-br-none" // Force white text for user messages
+                  ? "bg-primary text-gray-900 dark:text-white rounded-br-none" // Force dark text for user messages
                   : "bg-secondary/50 dark:bg-gray-800 rounded-bl-none text-gray-900 dark:chat-text-dark"
               )}
             >
@@ -121,7 +121,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                   className={cn(
                     "prose prose-sm max-w-none break-words",
                     // Both user and assistant messages use dark text in light mode (gray-900)
-                    isUser ? "text-white" : "text-gray-900 dark:chat-text-dark"
+                    isUser ? "text-gray-900 dark:text-white" : "text-gray-900 dark:chat-text-dark"
                   )}
                 >
                   {message.text}
