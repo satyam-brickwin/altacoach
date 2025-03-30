@@ -45,18 +45,55 @@ const translations = {
     askAI: 'Ask AI',
     typeYourAnswer: 'Type your answer...',
     submitAnswer: 'Submit',
+    newChat: 'New chat',
     menu: {
       quizMode: 'Quiz Mode',
       cannedQuestions: 'Canned Questions',
-      history: 'Conversation History',
+      history: 'History',
+    },
+    quizModeActive: 'Quiz Mode Active',
+    categories: {
+      business: 'Business',
+      businessStrategy: 'Business Strategy',
+      marketing: 'Marketing',
+      customerSupport: 'Customer Support',
+      documentAnalysis: 'Document Analysis',
+      productKnowledge: 'Product Knowledge',
+      industryKnowledge: 'Industry Knowledge',
     },
     settings: {
       language: 'Language',
-      adminView: 'Admin View',
+      adminView: 'Admin',
       account: 'Account Settings',
       darkMode: 'Dark Mode',
       logout: 'Logout',
-    }
+    },
+    empty: {
+      title: 'How can I help you today?',
+      description: 'Ask me anything about your business needs, or select a suggestion below.'
+    },
+    emptyState: {
+      title: "Start a conversation",
+      description: "Begin by typing a message to start your chat. Ask questions, get assistance, or explore topics together.",
+      suggestions: {
+        tellMeAbout: {
+          title: "Tell me about...",
+          description: "Complex topics and explanations"
+        },
+        helpMeWith: {
+          title: "Help me with...",
+          description: "Problem solving and creative tasks"
+        },
+        writeA: {
+          title: "Write a...",
+          description: "Creative writing and formatting"
+        },
+        analyzeThis: {
+          title: "Analyze this...",
+          description: "Data analysis and interpretation"
+        }
+      }
+    },
   },
   fr: {
     aiAssistant: 'AltaCoach',
@@ -64,18 +101,55 @@ const translations = {
     askAI: 'Demander à l\'IA',
     typeYourAnswer: 'Répondez à la question...',
     submitAnswer: 'Soumettre',
+    newChat: 'Nouvelle conversation',
     menu: {
       quizMode: 'Mode Quiz',
       cannedQuestions: 'Questions prédéfinies',
-      history: 'Historique des conversations',
+      history: 'Historique',
+    },
+    quizModeActive: 'Mode Quiz Actif',
+    categories: {
+      business: 'Affaires',
+      businessStrategy: 'Stratégie d\'entreprise',
+      marketing: 'Marketing',
+      customerSupport: 'Service client',
+      documentAnalysis: 'Analyse de documents',
+      productKnowledge: 'Connaissance du produit',
+      industryKnowledge: 'Connaissance de l\'industrie',
     },
     settings: {
       language: 'Langue',
-      adminView: 'Vue admin',
+      adminView: 'Admin',
       account: 'Paramètres du compte',
       darkMode: 'Mode sombre',
       logout: 'Déconnexion',
-    }
+    },
+    empty: {
+      title: 'Comment puis-je vous aider aujourd\'hui?',
+      description: 'Posez-moi n\'importe quelle question concernant vos besoins professionnels, ou sélectionnez une suggestion ci-dessous.'
+    },
+    emptyState: {
+      title: "Commencer une conversation",
+      description: "Commencez par taper un message pour démarrer votre conversation. Posez des questions, obtenez de l'aide ou explorez des sujets ensemble.",
+      suggestions: {
+        tellMeAbout: {
+          title: "Parlez-moi de...",
+          description: "Sujets complexes et explications"
+        },
+        helpMeWith: {
+          title: "Aidez-moi avec...",
+          description: "Résolution de problèmes et tâches créatives"
+        },
+        writeA: {
+          title: "Écrivez un...",
+          description: "Rédaction créative et mise en forme"
+        },
+        analyzeThis: {
+          title: "Analysez ceci...",
+          description: "Analyse et interprétation des données"
+        }
+      }
+    },
   },
   de: {
     aiAssistant: 'AltaCoach',
@@ -83,18 +157,55 @@ const translations = {
     askAI: 'KI fragen',
     typeYourAnswer: 'Antworten Sie auf die Frage...',
     submitAnswer: 'Einreichen',
+    newChat: 'Neuer Chat',
     menu: {
       quizMode: 'Quiz-Modus',
       cannedQuestions: 'Vorgefertigte Fragen',
-      history: 'Gesprächsverlauf',
+      history: 'Verlauf',
+    },
+    quizModeActive: 'Quiz-Modus Aktiv',
+    categories: {
+      business: 'Geschäft',
+      businessStrategy: 'Geschäftsstrategie',
+      marketing: 'Marketing',
+      customerSupport: 'Kundendienst',
+      documentAnalysis: 'Dokumentenanalyse',
+      productKnowledge: 'Produktwissen',
+      industryKnowledge: 'Branchenkenntnisse',
     },
     settings: {
       language: 'Sprache',
-      adminView: 'Admin-Ansicht',
+      adminView: 'Admin',
       account: 'Kontoeinstellungen',
       darkMode: 'Dunkelmodus',
       logout: 'Abmelden',
-    }
+    },
+    empty: {
+      title: 'Wie kann ich Ihnen heute helfen?',
+      description: 'Stellen Sie mir jede Frage zu Ihren geschäftlichen Bedürfnissen oder wählen Sie unten einen Vorschlag aus.'
+    },
+    emptyState: {
+      title: "Starten Sie ein Gespräch",
+      description: "Beginnen Sie mit der Eingabe einer Nachricht, um Ihren Chat zu starten. Stellen Sie Fragen, erhalten Sie Hilfe oder erkunden Sie gemeinsam Themen.",
+      suggestions: {
+        tellMeAbout: {
+          title: "Erzählen Sie mir über...",
+          description: "Komplexe Themen und Erklärungen"
+        },
+        helpMeWith: {
+          title: "Helfen Sie mir mit...",
+          description: "Problemlösung und kreative Aufgaben"
+        },
+        writeA: {
+          title: "Schreiben Sie...",
+          description: "Kreatives Schreiben und Formatierung"
+        },
+        analyzeThis: {
+          title: "Analysieren Sie das...",
+          description: "Datenanalyse und Interpretation"
+        }
+      }
+    },
   },
   it: {
     aiAssistant: 'AltaCoach',
@@ -102,18 +213,55 @@ const translations = {
     askAI: 'Chiedi all\'IA',
     typeYourAnswer: 'Rispondi alla domanda...',
     submitAnswer: 'Invia',
+    newChat: 'Nuova chat',
     menu: {
       quizMode: 'Modalità Quiz',
       cannedQuestions: 'Domande predefinite',
-      history: 'Cronologia conversazioni',
+      history: 'Cronologia',
+    },
+    quizModeActive: 'Modalità Quiz Attiva',
+    categories: {
+      business: 'Affari',
+      businessStrategy: 'Strategia aziendale',
+      marketing: 'Marketing',
+      customerSupport: 'Assistenza clienti',
+      documentAnalysis: 'Analisi documenti',
+      productKnowledge: 'Conoscenza del prodotto',
+      industryKnowledge: 'Conoscenza del settore',
     },
     settings: {
       language: 'Lingua',
-      adminView: 'Vista amministratore',
+      adminView: 'Admin',
       account: 'Impostazioni account',
       darkMode: 'Modalità scura',
       logout: 'Esci',
-    }
+    },
+    empty: {
+      title: 'Come posso aiutarti oggi?',
+      description: 'Fammi qualsiasi domanda sulle tue esigenze aziendali o seleziona un suggerimento qui sotto.'
+    },
+    emptyState: {
+      title: "Inizia una conversazione",
+      description: "Inizia digitando un messaggio per avviare la tua chat. Fai domande, ottieni assistenza o esplora argomenti insieme.",
+      suggestions: {
+        tellMeAbout: {
+          title: "Parlami di...",
+          description: "Argomenti complessi e spiegazioni"
+        },
+        helpMeWith: {
+          title: "Aiutami con...",
+          description: "Risoluzione di problemi e compiti creativi"
+        },
+        writeA: {
+          title: "Scrivi un...",
+          description: "Scrittura creativa e formattazione"
+        },
+        analyzeThis: {
+          title: "Analizza questo...",
+          description: "Analisi e interpretazione dei dati"
+        }
+      }
+    },
   },
   es: {
     aiAssistant: 'AltaCoach',
@@ -121,18 +269,55 @@ const translations = {
     askAI: 'Preguntar a la IA',
     typeYourAnswer: 'Responde la pregunta...',
     submitAnswer: 'Enviar',
+    newChat: 'Nueva conversación',
     menu: {
       quizMode: 'Modo Cuestionario',
       cannedQuestions: 'Preguntas predefinidas',
-      history: 'Historial de conversaciones',
+      history: 'Historial',
+    },
+    quizModeActive: 'Modo Cuestionario Activo',
+    categories: {
+      business: 'Negocios',
+      businessStrategy: 'Estrategia de negocio',
+      marketing: 'Marketing',
+      customerSupport: 'Atención al cliente',
+      documentAnalysis: 'Análisis de documentos',
+      productKnowledge: 'Conocimiento del producto',
+      industryKnowledge: 'Conocimiento de la industria',
     },
     settings: {
       language: 'Idioma',
-      adminView: 'Vista de administrador',
+      adminView: 'Admin',
       account: 'Configuración de cuenta',
       darkMode: 'Modo oscuro',
       logout: 'Cerrar sesión',
-    }
+    },
+    empty: {
+      title: '¿Cómo puedo ayudarte hoy?',
+      description: 'Hazme cualquier pregunta sobre tus necesidades de negocio, o selecciona una sugerencia abajo.'
+    },
+    emptyState: {
+      title: "Inicia una conversación",
+      description: "Comienza escribiendo un mensaje para iniciar tu chat. Haz preguntas, obtén ayuda o explora temas juntos.",
+      suggestions: {
+        tellMeAbout: {
+          title: "Háblame sobre...",
+          description: "Temas complejos y explicaciones"
+        },
+        helpMeWith: {
+          title: "Ayúdame con...",
+          description: "Resolución de problemas y tareas creativas"
+        },
+        writeA: {
+          title: "Escribe un...",
+          description: "Escritura creativa y formato"
+        },
+        analyzeThis: {
+          title: "Analiza esto...",
+          description: "Análisis e interpretación de datos"
+        }
+      }
+    },
   }
 };
 
@@ -167,6 +352,35 @@ export default function StaffDashboard() {
   // Quiz mode state
   const [quizMode, setQuizMode] = useState(false);
   
+  // Add state for tracking which dropdowns are expanded - MOVED HERE
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  
+  // Toggle dropdown section function - MODIFIED HERE
+  const toggleSection = (section: string) => {
+    // If we're opening a new section that's different from the currently open one
+    if (expandedSection !== section) {
+      // Reset quiz mode when switching away from quizMode
+      if (expandedSection === 'quizMode') {
+        setQuizMode(false);
+      }
+      
+      // Clear messages when switching between sections (if needed)
+      if ((expandedSection === 'quizMode' && section === 'cannedQuestions') || 
+          (expandedSection === 'cannedQuestions' && section === 'quizMode')) {
+        // Use a timeout to ensure state updates don't interfere with each other
+        setTimeout(() => {
+          setMessages([]);
+        }, 0);
+      }
+      
+      // Set the new expanded section (do this last to avoid UI glitches)
+      setExpandedSection(section);
+    } else {
+      // Toggle off the current section
+      setExpandedSection(null);
+    }
+  };
+  
   // Available languages
   const languages = [
     { code: 'en', name: 'English' },
@@ -186,19 +400,19 @@ export default function StaffDashboard() {
     "What's the difference between AI and machine learning?"
   ]);
 
+  // Quiz-specific questions
+  const [quizQuestions] = useState([
+    "What are the three key components of effective leadership?",
+    "Explain the difference between growth and fixed mindset",
+    "How would you handle a difficult customer situation?",
+    "What are the most important metrics for measuring team performance?",
+    "Describe the steps in an effective problem-solving process",
+    "What strategies would you use to improve team collaboration?"
+  ]);
+
   // Quiz subjects data
   const [quizSubjects] = useState([
     {
-      title: "General Knowledge",
-      description: "Explore a wide range of topics from science to history."
-    },
-    {
-      title: "Technology",
-      description: "Test your knowledge about AI, programming, and tech trends."
-    },
-    {
-      title: "Business Strategy",
-      description: "Test your understanding of business strategies, marketing, and management."
     },
     {
       title: "Customer Service",
@@ -241,7 +455,7 @@ export default function StaffDashboard() {
         const target = e.target as HTMLElement;
         if (!target.closest('.menu-dropdown') && !target.closest('.menu-trigger') && 
             !target.closest('.settings-dropdown') && !target.closest('.settings-trigger')) {
-          setMenuOpen(false);
+          // setMenuOpen(false);
           setSettingsOpen(false);
         }
       }
@@ -295,19 +509,22 @@ export default function StaffDashboard() {
 
   // Handle view switching
   const handleViewChange = (view: 'chat' | 'history' | 'cannedQuestions' | 'quizMode') => {
-    setActiveView(view);
-    setMenuOpen(false);
+    // ONLY toggle the section, don't change the activeView
+    toggleSection(view);
+    // Removed the setActiveView call that was happening somewhere else
   };
   
   // Function to handle quiz subject selection
   const handleStartQuiz = (subject: string) => {
-    // Clear existing messages
+    // Clear existing messages and ensure we're not in a previous quiz
     setMessages([]);
     setActiveView('chat');
-    setQuizMode(true);
     
-    // Add a welcome message for the quiz
+    // Set quiz mode with a slight delay to ensure state is reset properly
     setTimeout(() => {
+      setQuizMode(true);
+      
+      // Add a welcome message for the quiz
       const welcomeMessage = {
         id: uuidv4(),
         role: 'assistant' as const,
@@ -316,7 +533,12 @@ export default function StaffDashboard() {
       };
       
       setMessages([welcomeMessage]);
-    }, 100);
+      
+      // Close menu on mobile only
+      if (window.innerWidth < 1024) {
+        setMenuOpen(false);
+      }
+    }, 50);
   };
 
   // Handle AI Assistant chat submission - modified to work with the new UI
@@ -340,35 +562,103 @@ export default function StaffDashboard() {
     try {
       // If in quiz mode, handle the submission as an answer to a quiz question
       if (quizMode && messages.length > 0 && messages[messages.length - 1].role === 'assistant') {
-        // In quiz mode, just simulate the AI evaluation - in a real app you'd evaluate the answer
+        // Generate feedback based on the user's answer
+        const feedback = evaluateQuizAnswer(content);
+        
+        // Create a feedback message first
+        const feedbackMessage = {
+          id: uuidv4(),
+          role: 'assistant' as const,
+          text: feedback,
+          timestamp: new Date().toISOString(),
+        };
+        
+        // Add the feedback message to the chat
+        setMessages(prev => [...prev, feedbackMessage]);
+        
+        // Small delay before sending the next question to make it feel more natural
         setTimeout(() => {
-          const evaluationMessage = {
+          // Create a new question to ask
+          const newQuestion = generateQuizQuestion();
+          
+          // Create the assistant's next question message
+          const questionMessage = {
             id: uuidv4(),
             role: 'assistant' as const,
-            text: evaluateQuizAnswer(content),
+            text: newQuestion,
             timestamp: new Date().toISOString(),
           };
           
-          setMessages(prevMessages => [...prevMessages, evaluationMessage]);
-          
-          // After evaluation, ask another question
-          setTimeout(() => {
-            const nextQuestionMessage = {
-              id: uuidv4(),
-              role: 'assistant' as const,
-              text: generateQuizQuestion(),
-              timestamp: new Date().toISOString(),
-            };
-            
-            setMessages(prevMessages => [...prevMessages, nextQuestionMessage]);
-            setIsLoading(false);
-          }, 1000);
-        }, 1500);
+          // Add the question message to the chat
+          setMessages(prev => [...prev, questionMessage]);
+        }, 1500); // 1.5 second delay between feedback and new question
         
+        // Set loading to false since we're handling the response ourselves
+        setIsLoading(false);
         return;
       }
       
-      // Regular chat mode processing
+      // Check if the message is a canned question and use a dedicated response
+      const isCannedQuestion = [
+        ...["What are effective strategies for small business growth?", 
+           "How can I create a competitive analysis for my industry?", 
+           "What metrics should I track for my business performance?"],
+        ...["How can I improve my social media marketing?",
+           "What are the latest digital marketing trends?",
+           "How to create an effective email marketing campaign?",
+           "What content marketing strategies work best for B2B companies?"],
+        ...["How to improve customer satisfaction scores?",
+           "What are best practices for handling customer complaints?",
+           "How can AI enhance our customer service operations?"],
+        ...["Can you summarize this document for me?",
+           "What are the key points in this document?",
+           "How does this document compare to industry standards?"],
+        ...exampleQuestions
+      ].includes(content);
+
+      if (isCannedQuestion) {
+        // For canned questions, we'll provide a thorough response instead of using the default
+        let response;
+        
+        if (content === "What metrics should I track for my business performance?") {
+          response = "For business performance, you should track both financial and operational metrics. Key financial metrics include revenue growth, profit margin, cash flow, and customer acquisition cost (CAC). Important operational metrics are customer retention rate, employee productivity, sales conversion rate, and inventory turnover. Also consider customer satisfaction metrics like Net Promoter Score (NPS). The ideal metrics vary by industry and business goals, so focus on those most relevant to your specific objectives.";
+        } else {
+          // Use the API for other canned questions
+          console.log('Calling API for canned question:', content);
+          const apiResponse = await fetch('/api/chat-simple', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              message: content,
+              isCannedQuestion: true, // Add a flag to indicate this is a canned question
+            }),
+          });
+          
+          if (apiResponse.ok) {
+            const data = await apiResponse.json();
+            response = data.message;
+          } else {
+            // Fallback response if API fails
+            response = "I'd be happy to help with that question. Please note that our system is currently experiencing high demand. Could you please try again in a moment?";
+          }
+        }
+
+        // Add response as assistant message
+        const aiMessage = {
+          id: uuidv4(),
+          role: 'assistant' as const,
+          text: response,
+          timestamp: new Date().toISOString(),
+        };
+
+        setMessages(prev => [...prev, aiMessage]);
+        setIsLoading(false);
+        return;
+      }
+      
+      // Regular chat API logic for non-canned questions
       // Try the simple chat endpoint first as it's more reliable
       console.log('Calling simple chat API with message:', content);
       const simpleResponse = await fetch('/api/chat-simple', {
@@ -474,7 +764,87 @@ export default function StaffDashboard() {
   
   // Handle suggested question click
   const handleSuggestedQuestion = (question: string) => {
-    handleSendMessage(question);
+    // Use a callback for state updates to ensure they're applied in the correct order
+    setMessages([]); // First clear all messages
+    
+    // Use setTimeout to ensure the messages state is fully cleared before sending the new message
+    setTimeout(() => {
+      // Create a user message
+      const userMessage = {
+        id: uuidv4(),
+        role: 'user' as const,
+        text: question,
+        timestamp: new Date().toISOString(),
+      };
+      
+      // Add the user message
+      setMessages([userMessage]);
+      setActiveView('chat');
+      
+      // Set quiz mode off (if it was on)
+      setQuizMode(false);
+      
+      // Show typing indicator
+      setIsLoading(true);
+      
+      // Calculate response time based on length of potential response
+      // This simulates a natural typing experience
+      // Short responses: 1-2 seconds, Medium: 2-3.5 seconds, Longer: 3.5-5 seconds
+      const estimatedLength = question.length * 5; // Rough estimate of response length
+      const typingDelay = Math.min(
+        Math.max(1000, estimatedLength / 20), // Min 1 second, scales with estimated length
+        5000 // Max 5 seconds
+      );
+      
+      // Call API for this canned question after a short delay to show initial typing
+      setTimeout(() => {
+        fetch('/api/chat-simple', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: question,
+            isCannedQuestion: true,
+          }),
+        })
+        .then(response => response.json())
+        .then(data => {
+          // Add AI response
+          const aiMessage = {
+            id: uuidv4(),
+            role: 'assistant' as const,
+            text: data.message || "I'm sorry, I couldn't generate a response.",
+            timestamp: new Date().toISOString(),
+          };
+          
+          // Update messages to include both user and assistant message
+          setMessages(prev => [...prev, aiMessage]);
+        })
+        .catch(error => {
+          console.error("Error fetching canned question response:", error);
+          
+          // Add error message
+          const errorMessage = {
+            id: uuidv4(),
+            role: 'assistant' as const,
+            text: `Sorry, I encountered an error. Please try again.`,
+            timestamp: new Date().toISOString(),
+          };
+          
+          setMessages(prev => [...prev, errorMessage]);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+      }, typingDelay); // Dynamic delay based on expected response length
+      
+    }, 50);
+    
+    // Close menu on mobile
+    if (window.innerWidth < 1024) {
+      setMenuOpen(false);
+    }
   };
 
   // Function to clear all chat history
@@ -485,7 +855,8 @@ export default function StaffDashboard() {
   // Function to load a historical chat
   const handleLoadChat = (id: string) => {
     alert(`Loading chat ${id} in a real application`);
-    setActiveView('chat');
+    setActiveView('chat'); // This is correct - we want to change the view
+    setMenuOpen(false); // Close the sidebar
   };
 
   // Handle file upload
@@ -574,7 +945,7 @@ export default function StaffDashboard() {
             className={`p-1.5 sm:p-2 rounded-full transition-colors ${
               !inputValue.trim() || isLoading
                 ? 'text-gray-400 dark:text-gray-600'
-                : 'text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30'
+                : 'text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/30'
             }`}
           >
             <Send size={16} className="sm:w-[18px] sm:h-[18px]" />
@@ -588,7 +959,7 @@ export default function StaffDashboard() {
   return (
     <div className="h-screen flex overflow-hidden">
       {/* Sidebar */}
-      <div className={`fixed top-0 left-0 h-full bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 w-[260px] z-50 flex flex-col transition-transform duration-300 ease-in-out shadow-lg ${
+      <div className={`fixed top-0 left-0 h-full bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 w-[260px] z-50 flex flex-col transition-transform duration-300 ease-in-out shadow-lg overflow-y-auto ${
         menuOpen ? "translate-x-0" : "-translate-x-full"
       }`}>
         {/* New Chat Button */}
@@ -597,40 +968,333 @@ export default function StaffDashboard() {
             onClick={() => {
               setMessages([]);
               setActiveView('chat');
+              setQuizMode(false); // Add this to ensure quiz mode is off for new chats
               setMenuOpen(false);
             }}
             className="flex items-center gap-2 w-full px-3 py-3 rounded-md border border-gray-200 dark:border-gray-700 text-sm hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors"
           >
-            <PlusCircle size={16} />
-            <span>New chat</span>
+            <PlusCircle size={16} className="text-purple-600 dark:text-purple-400" />
+            <span>{translations[language]?.newChat || 'New chat'}</span>
           </button>
         </div>
 
-        {/* Navigation Buttons - Moved from bottom to top */}
+        {/* Navigation Dropdowns */}
         <div className="p-2 space-y-1">
-          <button
-            onClick={() => handleViewChange('quizMode')}
-            className="flex items-center w-full px-3 py-3 rounded-md text-sm hover:bg-gray-100 dark:hover:bg-gray-700/50 group text-gray-700 dark:text-gray-300"
-          >
-            <Brain size={16} className="mr-3" />
-            <span>Quiz Mode</span>
-          </button>
+          {/* Quiz Mode Dropdown (replacing the toggle) */}
+          <div className="border-b dark:border-gray-700">
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                toggleSection('quizMode'); // Toggle the dropdown
+              }}
+              className="flex items-center justify-between w-full px-3 py-3 rounded-md text-sm hover:bg-gray-100 dark:hover:bg-gray-700/50 group"
+            >
+              <div className="flex items-center">
+                <Brain size={16} className="mr-3 text-purple-600 dark:text-purple-400" />
+                <span>{translations[language]?.menu.quizMode || 'Quiz Mode'}</span>
+              </div>
+              <svg 
+                className={`w-4 h-4 transition-transform ${expandedSection === 'quizMode' ? 'rotate-180' : ''}`}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24" 
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            
+            {/* Quiz Mode Content */}
+            {expandedSection === 'quizMode' && (
+              <div className="pl-8 pr-3 pb-3 space-y-3 animate-fadeIn">
+                {/* Business */}
+                <div>
+                  <div className="text-xs font-medium text-purple-600 dark:text-purple-400 mb-2">
+                    Business
+                  </div>
+                  <button
+                    className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
+                    onClick={() => {
+                      handleStartQuiz("Marketing Fundamentals");
+                    }}
+                  >
+                    Marketing Fundamentals
+                  </button>
+                  <button
+                    className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
+                    onClick={() => {
+                      handleStartQuiz("Sales Strategy");
+                    }}
+                  >
+                    Sales Strategy
+                  </button>
+                  <button
+                    className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
+                    onClick={() => {
+                      handleStartQuiz("Business Development");
+                    }}
+                  >
+                    Business Development
+                  </button>
+                  <button
+                    className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
+                    onClick={() => {
+                      handleStartQuiz("Customer Relationship Management");
+                    }}
+                  >
+                    Customer Relationship Management
+                  </button>
+                </div>
+                
+                {/* Product Knowledge */}
+                <div>
+                  <div className="text-xs font-medium text-purple-600 dark:text-purple-400 mb-2">
+                    Product Knowledge
+                  </div>
+                  <button
+                    className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
+                    onClick={() => {
+                      handleStartQuiz("Product Features");
+                    }}
+                  >
+                    Product Features
+                  </button>
+                  <button
+                    className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
+                    onClick={() => {
+                      handleStartQuiz("Services Overview");
+                    }}
+                  >
+                    Services Overview
+                  </button>
+                  <button
+                    className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
+                    onClick={() => {
+                      handleStartQuiz("Pricing Models");
+                    }}
+                  >
+                    Pricing Models
+                  </button>
+                  <button
+                    className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
+                    onClick={() => {
+                      handleStartQuiz("Technical Specifications");
+                    }}
+                  >
+                    Technical Specifications
+                  </button>
+                </div>
+                
+                {/* Industry Knowledge */}
+                <div>
+                  <div className="text-xs font-medium text-purple-600 dark:text-purple-400 mb-2">
+                    Industry Knowledge
+                  </div>
+                  <button
+                    className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
+                    onClick={() => {
+                      handleStartQuiz("Market Trends");
+                    }}
+                  >
+                    Market Trends
+                  </button>
+                  <button
+                    className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
+                    onClick={() => {
+                      handleStartQuiz("Competitor Analysis");
+                    }}
+                  >
+                    Competitor Analysis
+                  </button>
+                  <button
+                    className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
+                    onClick={() => {
+                      handleStartQuiz("Industry Regulations");
+                    }}
+                  >
+                    Industry Regulations
+                  </button>
+                  <button
+                    className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
+                    onClick={() => {
+                      handleStartQuiz("Best Practices");
+                    }}
+                  >
+                    Best Practices
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
 
-          <button
-            onClick={() => handleViewChange('cannedQuestions')}
-            className="flex items-center w-full px-3 py-3 rounded-md text-sm hover:bg-gray-100 dark:hover:bg-gray-700/50 group"
-          >
-            <MessageSquare size={16} className="mr-3" />
-            <span>Canned Questions</span>
-          </button>
+          {/* Canned Questions Dropdown */}
+          <div className="border-b dark:border-gray-700">
+            <button
+              onClick={(e) => {
+                e.preventDefault(); // Prevent any default behavior
+                toggleSection('cannedQuestions'); // Only toggle the dropdown
+              }}
+              className="flex items-center justify-between w-full px-3 py-3 rounded-md text-sm hover:bg-gray-100 dark:hover:bg-gray-700/50 group"
+            >
+              <div className="flex items-center">
+                <MessageSquare size={16} className="mr-3 text-purple-600 dark:text-purple-400" />
+                <span>{translations[language]?.menu.cannedQuestions || 'Canned Questions'}</span>
+              </div>
+              <svg 
+                className={`w-4 h-4 transition-transform ${expandedSection === 'cannedQuestions' ? 'rotate-180' : ''}`}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24" 
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            
+            {/* Canned Questions Content */}
+            {expandedSection === 'cannedQuestions' && (
+              <div className="pl-8 pr-3 pb-3 space-y-3 animate-fadeIn">
+                {/* Business Strategy */}
+                <div>
+                  <div className="text-xs font-medium text-purple-600 dark:text-purple-400 mb-1.5">
+                    {translations[language]?.categories.businessStrategy || 'Business Strategy'}
+                  </div>
+                  {[
+                    "What are effective strategies for small business growth?",
+                    "How can I create a competitive analysis for my industry?",
+                    "What metrics should I track for my business performance?"
+                  ].map((question, idx) => (
+                    <button
+                      key={`strategy-${idx}`}
+                      className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
+                      onClick={() => {
+                        setQuizMode(false); // Explicitly turn off quiz mode
+                        handleSuggestedQuestion(question);
+                      }}
+                    >
+                      {question}
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Marketing */}
+                <div>
+                  <div className="text-xs font-medium text-purple-600 dark:text-purple-400 mb-1.5">
+                    {translations[language]?.categories.marketing || 'Marketing'}
+                  </div>
+                  {[
+                    "How can I improve my social media marketing?",
+                    "What are the latest digital marketing trends?",
+                    "How to create an effective email marketing campaign?",
+                    "What content marketing strategies work best for B2B companies?"
+                  ].map((question, idx) => (
+                    <button
+                      key={`marketing-${idx}`}
+                      className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
+                      onClick={() => {
+                        setQuizMode(false); // Explicitly turn off quiz mode
+                        handleSuggestedQuestion(question);
+                      }}
+                    >
+                      {question}
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Customer Support */}
+                <div>
+                  <div className="text-xs font-medium text-purple-600 dark:text-purple-400 mb-1.5">
+                    {translations[language]?.categories.customerSupport || 'Customer Support'}
+                  </div>
+                  {[
+                    "How to improve customer satisfaction scores?",
+                    "What are best practices for handling customer complaints?",
+                    "How can AI enhance our customer service operations?"
+                  ].map((question, idx) => (
+                    <button
+                      key={`support-${idx}`}
+                      className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
+                      onClick={() => {
+                        setQuizMode(false); // Explicitly turn off quiz mode
+                        handleSuggestedQuestion(question);
+                      }}
+                    >
+                      {question}
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Document Analysis */}
+                <div>
+                  <div className="text-xs font-medium text-purple-600 dark:text-purple-400 mb-1.5">
+                    {translations[language]?.categories.documentAnalysis || 'Document Analysis'}
+                  </div>
+                  {[
+                    "Can you summarize this document for me?",
+                    "What are the key points in this document?",
+                    "How does this document compare to industry standards?"
+                  ].map((question, idx) => (
+                    <button
+                      key={`document-${idx}`}
+                      className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
+                      onClick={() => {
+                        setQuizMode(false); // Explicitly turn off quiz mode
+                        handleSuggestedQuestion(question);
+                      }}
+                    >
+                      {question}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
 
-          <button
-            onClick={() => handleViewChange('history')}
-            className="flex items-center w-full px-3 py-3 rounded-md text-sm hover:bg-gray-100 dark:hover:bg-gray-700/50 group"
-          >
-            <Clock size={16} className="mr-3" />
-            <span>History</span>
-          </button>
+          {/* Chat History Dropdown */}
+          <div className="border-b dark:border-gray-700">
+            <button
+              onClick={(e) => {
+                e.preventDefault(); // Prevent any default behavior
+                toggleSection('history'); // Only toggle the dropdown
+              }}
+              className="flex items-center justify-between w-full px-3 py-3 rounded-md text-sm hover:bg-gray-100 dark:hover:bg-gray-700/50 group"
+            >
+              <div className="flex items-center">
+                <Clock size={16} className="mr-3 text-purple-600 dark:text-purple-400" />
+                <span>{translations[language]?.menu.history || 'History'}</span>
+              </div>
+              <svg 
+                className={`w-4 h-4 transition-transform ${expandedSection === 'history' ? 'rotate-180' : ''}`}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24" 
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            
+            {/* History Content */}
+            {expandedSection === 'history' && (
+              <div className="pl-8 pr-3 pb-3 space-y-2 animate-fadeIn">
+                {chatHistory.map((chat) => (
+                  <button
+                    key={chat.id}
+                    className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+                    onClick={() => {
+                      handleLoadChat(chat.id);
+                      setMenuOpen(true);
+                    }}
+                  >
+                    <div className="font-medium truncate">{chat.title}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                      {chat.date}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Spacer to push any future bottom content down */}
@@ -653,13 +1317,13 @@ export default function StaffDashboard() {
 
           {/* Center: AltaCoach Title */}
           <div className="absolute left-1/2 transform -translate-x-1/2">
-            <h1 className="text-xl font-bold text-gray-700 dark:text-gray-300">
-              AltaCoach
+            <h1 className="text-xl font-bold text-purple-600 dark:text-purple-400">
+              {translations[language]?.aiAssistant || 'AltaCoach'}
             </h1>
           </div>
 
           {/* Right: Settings */}
-          <div className="relative">
+          {/* <div className="relative">
             <button
               className="p-2 hover:bg-gray-100/60 dark:hover:bg-gray-700/60 rounded-md"
               onClick={() => setSettingsOpen(!settingsOpen)}
@@ -674,25 +1338,25 @@ export default function StaffDashboard() {
                   className="flex items-center w-full px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   <Globe size={16} className="mr-2 dark:text-white" />
-                  <span className="dark:text-white">Language</span>
+                  <span className="dark:text-white">{translations[language]?.settings.language || 'Language'}</span>
                 </button>
                 <button
                   onClick={() => alert('Admin functionality would be integrated here')}
                   className="flex items-center w-full px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   <Shield size={16} className="mr-2 dark:text-white" />
-                  <span className="dark:text-white">Admin</span>
+                  <span className="dark:text-white">{translations[language]?.settings.adminView || 'Admin'}</span>
                 </button>
                 <button
                   onClick={() => alert('Account settings would be integrated here')}
                   className="flex items-center w-full px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   <User size={16} className="mr-2 dark:text-white" />
-                  <span className="dark:text-white">Account</span>
+                  <span className="dark:text-white">{translations[language]?.settings.account || 'Account'}</span>
                 </button>
               </div>
             )}
-          </div>
+          </div> */}
         </header>
 
         {/* Chat Container - Remaining height */}
@@ -756,7 +1420,7 @@ export default function StaffDashboard() {
                     <button
                       key={idx}
                       className="p-4 border dark:border-gray-700 rounded-lg text-left hover:bg-gray-50 dark:hover:bg-gray-800/50 flex flex-col"
-                      onClick={() => handleStartQuiz(subject.title)}
+                      onClick={() => handleStartQuiz(subject.title ?? 'Unknown Subject')}
                     >
                       <span className="font-medium text-lg">{subject.title}</span>
                       <span className="text-gray-600 dark:text-gray-400 text-sm mt-1">
@@ -767,7 +1431,11 @@ export default function StaffDashboard() {
                 </div>
               </div>
             ) : messages.length === 0 ? (
-              <EmptyState />
+              <EmptyState 
+                title={translations[language]?.emptyState?.title} 
+                description={translations[language]?.emptyState?.description}
+                suggestions={translations[language]?.emptyState?.suggestions}
+              />
             ) : (
               <div className="space-y-4 pb-24"> {/* Added pb-24 for bottom padding */}
                 {messages.map((message, index) => (
@@ -785,14 +1453,16 @@ export default function StaffDashboard() {
           </div>
         </div>
 
-        {/* Fixed Chat Input - Only show in chat view */}
-        {activeView === 'chat' && (
-          <div className="fixed bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-white dark:from-gray-900 pt-6 pb-4">
-            <div className="max-w-3xl mx-auto px-4">
-              <EnhancedInput />
-            </div>
+      {/* Fixed Chat Input - Only show in chat view */}
+      {activeView === 'chat' && (
+        <div className={`fixed bottom-0 z-10 bg-gradient-to-t from-white dark:from-gray-900 pt-6 pb-4 ${
+          menuOpen ? "lg:left-[260px]" : "left-0"
+        } right-0 transition-all duration-300`}>
+          <div className="max-w-3xl mx-auto px-4">
+            <EnhancedInput />
           </div>
-        )}
+        </div>
+      )}
       </div>
 
       {/* Mobile Overlay */}
@@ -802,6 +1472,24 @@ export default function StaffDashboard() {
           onClick={() => setMenuOpen(false)}
         />
       )}
+      
+      {/* Add the missing animation styles */}
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from { 
+            opacity: 0; 
+            transform: translateY(-10px); 
+          }
+          to { 
+            opacity: 1; 
+            transform: translateY(0); 
+          }
+        }
+        
+        .animate-fadeIn {
+          animation: fadeIn 0.2s ease-in-out;
+        }
+      `}</style>
     </div>
   );
 }
