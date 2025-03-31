@@ -8,7 +8,8 @@ export default function NavbarWrapper() {
   const pathname = usePathname();
   
   // Don't show navbar on admin, dashboard, business, or staff pages
-  if (pathname?.startsWith('/admin') || 
+  if (pathname?.startsWith('/superadmin') || 
+      pathname?.startsWith('/admin') || 
       pathname?.startsWith('/dashboard') || 
       pathname?.startsWith('/business') ||
       pathname?.startsWith('/staff')) {
