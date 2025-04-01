@@ -7,6 +7,8 @@ import { useDarkMode } from '@/contexts/DarkModeContext';
 import { useAuthProtection, UserRole } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import AddUserModal from '@/components/AddUserModal';
+import ViewAdminModal from '@/componentsuper/ViewAdminModal';
+import EditAdminModal from '@/componentsuper/EditAdminModal';
 
 // Define user type
 interface User {
@@ -118,7 +120,9 @@ const adminTranslations = {
     search: 'Search',
     searchUsers: 'Search users...',
     searchAdmins: 'Search admins...',
-    allAdmins: 'All Admins'
+    allAdmins: 'All Admins',
+    userDetails: 'User Details',
+    close: 'Close',
   },
   fr: {
     adminDashboard: 'Tableau de Bord Admin',
@@ -167,7 +171,9 @@ const adminTranslations = {
     search: 'Rechercher',
     searchUsers: 'Rechercher des utilisateurs...',
     searchAdmins: 'Rechercher des administrateurs...',
-    allAdmins: 'Tous les Administrateurs'
+    allAdmins: 'Tous les Administrateurs',
+    userDetails: 'Détails de l\'utilisateur',
+    close: 'Fermer',
   },
   de: {
     adminDashboard: 'Admin-Dashboard',
@@ -216,7 +222,9 @@ const adminTranslations = {
     search: 'Suchen',
     searchUsers: 'Benutzer suchen...',
     searchAdmins: 'Administratoren suchen...',
-    allAdmins: 'Alle Administratoren'
+    allAdmins: 'Alle Administratoren',
+    userDetails: 'Benutzerdetails',
+    close: 'Schließen',
   },
   it: {
     adminDashboard: 'Dashboard Admin',
@@ -265,7 +273,9 @@ const adminTranslations = {
     search: 'Cerca',
     searchUsers: 'Cerca utenti...',
     searchAdmins: 'Cerca amministratori...',
-    allAdmins: 'Tutti gli Amministratori'
+    allAdmins: 'Tutti gli Amministratori',
+    userDetails: 'Dettagli Utente',
+    close: 'Chiudi',
   },
   es: {
     adminDashboard: 'Panel de Administrador',
@@ -314,7 +324,9 @@ const adminTranslations = {
     search: 'Buscar',
     searchUsers: 'Buscar usuarios...',
     searchAdmins: 'Buscar administradores...',
-    allAdmins: 'Todos los Administradores'
+    allAdmins: 'Todos los Administradores',
+    userDetails: 'Detalles del Usuario',
+    close: 'Cerrar',
   }
 };
 
@@ -330,6 +342,10 @@ export default function AdminUsers() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+  const [viewUser, setViewUser] = useState<User | null>(null);
+  const [isViewUserModalOpen, setIsViewUserModalOpen] = useState(false);
+  const [editUser, setEditUser] = useState<User | null>(null);
+  const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
   
   // Protect this page - only allow admin users
   const { isLoading: authLoading, isAuthenticated, user } = useAuthProtection([UserRole.SUPER_ADMIN]);
@@ -430,6 +446,16 @@ export default function AdminUsers() {
     // Only return true if it's an admin role AND matches the other filters
     return isAdminOrBusinessAdmin && matchesRole && matchesSearch;
   });
+
+  const handleViewUser = (user: User) => {
+    setViewUser(user);
+    setIsViewUserModalOpen(true);
+  };
+
+  const handleEditUser = (user: User) => {
+    setEditUser(user);
+    setIsEditUserModalOpen(true);
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -646,10 +672,16 @@ export default function AdminUsers() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                             <div className="flex space-x-2">
-                              <button className="text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300">
+                              <button 
+                                className="text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300"
+                                onClick={() => handleViewUser(user)}
+                              >
                                 {t('view')}
                               </button>
-                              <button className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
+                              <button 
+                                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+                                onClick={() => handleEditUser(user)}
+                              >
                                 {t('edit')}
                               </button>
                               {user.status === 'active' ? (
@@ -680,6 +712,23 @@ export default function AdminUsers() {
         onClose={() => setIsAddUserModalOpen(false)}
         onSuccess={fetchUsers}
         translate={t}
+      />
+
+      {/* View User Modal */}
+      <ViewAdminModal
+        isOpen={isViewUserModalOpen}
+        onClose={() => setIsViewUserModalOpen(false)}
+        admin={viewUser}
+        translate={t}
+      />
+
+      {/* Edit Admin Modal */}
+      <EditAdminModal
+        isOpen={isEditUserModalOpen}
+        onClose={() => setIsEditUserModalOpen(false)}
+        admin={editUser}
+        translate={t}
+        onSuccess={fetchUsers}
       />
     </div>
   );

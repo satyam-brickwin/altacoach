@@ -7,6 +7,8 @@ import { useDarkMode } from '@/contexts/DarkModeContext';
 import { useAuthProtection, UserRole } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import AddUserModal from '@/components/AddUserModal';
+import EditUserModal from '@/components/EditUserModal';
+import ViewUserModal from '@/components/ViewUserModal';
 
 // Define user type
 interface User {
@@ -320,6 +322,10 @@ export default function AdminUsers() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+  const [viewUser, setViewUser] = useState<User | null>(null);
+  const [isViewUserModalOpen, setIsViewUserModalOpen] = useState(false);
+  const [editUser, setEditUser] = useState<User | null>(null);
+  const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
   
   // Protect this page - only allow admin users
   const { isLoading: authLoading, isAuthenticated, user } = useAuthProtection([UserRole.ADMIN]);
@@ -416,6 +422,16 @@ export default function AdminUsers() {
     // Only return true if it's a regular user AND matches the search
     return isRegularUser && matchesSearch;
   });
+
+  const handleViewUser = (user: User) => {
+    setViewUser(user);
+    setIsViewUserModalOpen(true);
+  };
+
+  const handleEditUser = (user: User) => {
+    setEditUser(user);
+    setIsEditUserModalOpen(true);
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -617,10 +633,14 @@ export default function AdminUsers() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                             <div className="flex space-x-2">
-                              <button className="text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300">
+                              <button 
+                                onClick={() => handleViewUser(user)}
+                                className="text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300">
                                 {t('view')}
                               </button>
-                              <button className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
+                              <button 
+                                onClick={() => handleEditUser(user)}
+                                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
                                 {t('edit')}
                               </button>
                               {user.status === 'active' ? (
@@ -651,6 +671,23 @@ export default function AdminUsers() {
         onClose={() => setIsAddUserModalOpen(false)}
         onSuccess={fetchUsers}
         translate={t}
+      />
+
+      {/* View User Modal */}
+      <ViewUserModal
+        isOpen={isViewUserModalOpen}
+        onClose={() => setIsViewUserModalOpen(false)}
+        user={viewUser}
+        translate={t}
+      />
+
+      {/* Edit User Modal */}
+      <EditUserModal
+        isOpen={isEditUserModalOpen}
+        onClose={() => setIsEditUserModalOpen(false)}
+        user={editUser}
+        translate={t}
+        onSuccess={fetchUsers}
       />
     </div>
   );

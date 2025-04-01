@@ -53,6 +53,15 @@ const SuperAdminSettings = () => {
     isActive: false
   });
   const [promptStatus, setPromptStatus] = useState<{message: string, type: 'success' | 'error'} | null>(null);
+
+  // Password state
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordStrength, setPasswordStrength] = useState(0); // 0-4 scale
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
+  const [isPasswordSubmitting, setIsPasswordSubmitting] = useState(false);
   
   // Handler for language change
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -298,12 +307,121 @@ const SuperAdminSettings = () => {
     }
   };
   
+  // Password strength checker function
+  const checkPasswordStrength = (password: string): number => {
+    let strength = 0;
+    
+    if (password.length >= 8) strength += 1;
+    if (password.match(/[A-Z]/)) strength += 1;
+    if (password.match(/[0-9]/)) strength += 1;
+    if (password.match(/[^A-Za-z0-9]/)) strength += 1;
+    
+    return strength;
+  };
+
+  // Handle password changes
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    
+    if (name === 'current-password') {
+      setCurrentPassword(value);
+    } else if (name === 'new-password') {
+      setNewPassword(value);
+      setPasswordStrength(checkPasswordStrength(value));
+    } else if (name === 'confirm-password') {
+      setConfirmPassword(value);
+    }
+    
+    // Clear any previous errors/success when user types
+    setPasswordError(null);
+    setPasswordSuccess(null);
+  };
+
+  // Handle password form submission
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Reset states
+    setPasswordError(null);
+    setPasswordSuccess(null);
+    
+    // Validate passwords
+    if (!currentPassword) {
+      setPasswordError(translate('currentPasswordRequired'));
+      return;
+    }
+    
+    if (!newPassword) {
+      setPasswordError(translate('newPasswordRequired'));
+      return;
+    }
+    
+    if (passwordStrength < 3) {
+      setPasswordError(translate('passwordNotStrongEnough'));
+      return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+      setPasswordError(translate('passwordsDontMatch'));
+      return;
+    }
+    
+    setIsPasswordSubmitting(true);
+    
+    try {
+      // Call your API to update the password
+      const response = await fetch('/apisuper/superadmin/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || translate('failedToUpdatePassword'));
+      }
+      
+      // Clear form on success
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setPasswordStrength(0);
+      setPasswordSuccess(translate('passwordUpdateSuccess'));
+      
+    } catch (error: any) {
+      console.error('Error updating password:', error);
+      setPasswordError(error.message || translate('failedToUpdatePassword'));
+    } finally {
+      setIsPasswordSubmitting(false);
+    }
+  };
+
   // Load prompts on component mount
   useEffect(() => {
     if (isAuthenticated && !authLoading) {
       fetchPrompts();
     }
   }, [isAuthenticated, authLoading]);
+
+  const titleCase = (str: string): string => {
+    return str
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  const formatTabName = (str: string): string => {
+    // First, handle camelCase by adding spaces before capital letters
+    const spacedString = str.replace(/([A-Z])/g, ' $1').trim();
+    
+    // Then apply title case to ensure first letters are capitalized
+    return titleCase(spacedString);
+  };
 
   // If still loading or not authenticated, show loading spinner
   if (authLoading || !isAuthenticated) {
@@ -436,6 +554,16 @@ const SuperAdminSettings = () => {
                   }`}
                 >
                   {translate('apiKeys')}
+                </button>
+                <button
+                  onClick={() => setActiveTab('resetPassword')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'resetPassword'
+                      ? 'border-purple-500 text-purple-600 dark:text-purple-400'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                  }`}
+                >
+                  {formatTabName(translate('resetPassword'))}
                 </button>
               </nav>
             </div>
@@ -770,6 +898,144 @@ const SuperAdminSettings = () => {
                 </div>
               </div>
             )}
+
+            {/* Reset Password Tab */}
+            {activeTab === 'resetPassword' && (
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mt-6">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  {formatTabName(translate('accountSecurity'))}
+                </h2>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">
+                  {formatTabName(translate('updateYourPasswordRegularly'))}
+                </p>
+                
+                {passwordSuccess && (
+                  <div className="mb-4 p-3 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-md text-green-800 dark:text-green-200">
+                    {formatTabName(passwordSuccess)}
+                  </div>
+                )}
+                
+                {passwordError && (
+                  <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-md text-red-800 dark:text-red-200">
+                    {formatTabName(passwordError)}
+                  </div>
+                )}
+                
+                <form onSubmit={handlePasswordSubmit} className="mt-8 space-y-6 max-w-2xl mx-auto">
+                  <div className="bg-gray-50 dark:bg-gray-700/50 p-6 rounded-lg border border-gray-100 dark:border-gray-700">
+                    <div className="mb-5">
+                      <label htmlFor="current-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        {formatTabName(translate('currentPassword'))}
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="password"
+                          id="current-password"
+                          name="current-password"
+                          value={currentPassword}
+                          onChange={handlePasswordChange}
+                          className="block w-full px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                          placeholder="••••••••••••"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="mb-5">
+                      <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        {formatTabName(translate('newPassword'))}
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="password"
+                          id="new-password"
+                          name="new-password"
+                          value={newPassword}
+                          onChange={handlePasswordChange}
+                          className="block w-full px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                          placeholder="••••••••••••"
+                        />
+                        <div className="mt-2 flex space-x-1">
+                          {[1, 2, 3, 4].map((index) => (
+                            <span 
+                              key={index} 
+                              className={`h-1 flex-1 rounded-full ${
+                                passwordStrength >= index 
+                                  ? 'bg-green-500 dark:bg-green-400' 
+                                  : 'bg-gray-300 dark:bg-gray-600'
+                              }`}
+                            ></span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="mt-3 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-100 dark:border-purple-800/30">
+                        <p className="font-medium text-sm text-gray-700 dark:text-gray-300 mb-2">
+                          {formatTabName(translate('passwordRequirements'))}:
+                        </p>
+                        <ul className="space-y-1.5 mb-3">
+                          {[
+                            "Minimum 8 characters long",
+                            "At least one uppercase letter (A-Z)",
+                            "At least one number (0-9)",
+                            "At least one special character (!@#$%^&*)"
+                          ].map((req, i) => (
+                            <li key={i} className="flex items-center text-xs text-gray-600 dark:text-gray-400">
+                              <svg className="w-3.5 h-3.5 mr-1.5 text-purple-500 dark:text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                              </svg>
+                              {req}
+                            </li>
+                          ))}
+                        </ul>
+                        <div className="pt-2 border-t border-purple-100 dark:border-purple-800/30 flex items-center">
+                          <span className="text-xs font-medium text-gray-600 dark:text-gray-400 mr-2">Example:</span>
+                          <code className="px-2 py-0.5 bg-white dark:bg-gray-800 rounded border border-purple-200 dark:border-purple-700 text-xs font-mono text-purple-600 dark:text-purple-400">Secure@2025!</code>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="mb-5">
+                      <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        {formatTabName(translate('confirmNewPassword'))}
+                      </label>
+                      <input
+                        type="password"
+                        id="confirm-password"
+                        name="confirm-password"
+                        value={confirmPassword}
+                        onChange={handlePasswordChange}
+                        className="block w-full px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                        placeholder="••••••••••••"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={isPasswordSubmitting}
+                      className="bg-purple-500 hover:bg-purple-600 text-white font-medium py-3 px-6 rounded-md transition duration-150 ease-in-out flex items-center disabled:opacity-70 disabled:cursor-not-allowed"
+                    >
+                      {isPasswordSubmitting ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          {formatTabName(translate('updating'))}
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                          {formatTabName(translate('updatePassword'))}
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -777,4 +1043,4 @@ const SuperAdminSettings = () => {
   );
 };
 
-export default SuperAdminSettings; 
+export default SuperAdminSettings;

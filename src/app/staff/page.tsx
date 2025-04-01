@@ -345,6 +345,7 @@ export default function StaffDashboard() {
   // Menu state
   const [menuOpen, setMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
   
   // View state
   const [activeView, setActiveView] = useState<'chat' | 'history' | 'cannedQuestions' | 'quizMode'>('chat');
@@ -354,6 +355,10 @@ export default function StaffDashboard() {
   
   // Add state for tracking which dropdowns are expanded - MOVED HERE
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+
+  // Add new state variables
+  const [lastClickTime, setLastClickTime] = useState<{ [key: string]: number }>({});
+  const [inputValue, setInputValue] = useState('');
   
   // Toggle dropdown section function - MODIFIED HERE
   const toggleSection = (section: string) => {
@@ -847,6 +852,52 @@ export default function StaffDashboard() {
     }
   };
 
+  // Handle question click with single vs double click detection
+  const handleQuestionClick = (question: string, questionId: string) => {
+    const now = Date.now();
+    const lastClick = lastClickTime[questionId] || 0;
+    const isDoubleClick = now - lastClick < 300; // 300ms threshold for double click
+    
+    // Update the last click time regardless
+    setLastClickTime(prev => ({
+      ...prev,
+      [questionId]: now
+    }));
+    
+    if (isDoubleClick) {
+      // Double click - send immediately
+      setQuizMode(false); // Explicitly turn off quiz mode
+      handleSuggestedQuestion(question);
+    } else {
+      // Single click - put in input box
+      setQuizMode(false); // Explicitly turn off quiz mode
+      setInputValue(question); // Set the value
+      setActiveView('chat'); // Ensure we're in chat view
+      
+      // Set focus and position cursor at end in next tick
+      setTimeout(() => {
+        if (inputRef.current) {
+          // Focus the input
+          inputRef.current.focus();
+          
+          // Position cursor at the end
+          const length = question.length;
+          inputRef.current.setSelectionRange(length, length);
+          
+          // Manually trigger height adjustment
+          const newHeight = `${Math.min(inputRef.current.scrollHeight, 100)}px`;
+          inputRef.current.style.height = 'auto';
+          inputRef.current.style.height = newHeight;
+        }
+      }, 50);
+      
+      // Close menu on mobile if needed
+      if (window.innerWidth < 1024) {
+        setMenuOpen(false);
+      }
+    }
+  };
+
   // Function to clear all chat history
   const handleClearHistory = () => {
     alert('This would clear all chat history in a real app.');
@@ -888,16 +939,55 @@ export default function StaffDashboard() {
 
   // Enhanced custom input component
   const EnhancedInput = () => {
-    const [inputValue, setInputValue] = useState('');
+    // Track textarea height separately to avoid re-renders during typing
+    const heightRef = useRef('auto');
     
+    // Handle input value changes - completely rewritten
     const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      // Update the input value in state
       setInputValue(e.target.value);
       
-      // Auto resize the textarea
-      if (inputRef.current) {
-        inputRef.current.style.height = 'auto';
-        inputRef.current.style.height = `${Math.min(inputRef.current.scrollHeight, 100)}px`;
-      }
+      // Store current cursor position and selection
+      const selectionStart = e.target.selectionStart;
+      const selectionEnd = e.target.selectionEnd;
+      
+      // Use setTimeout to ensure DOM updates properly
+      setTimeout(() => {
+        if (inputRef.current) {
+          // Clone the current input element to measure height without affecting the UI
+          const clone = document.createElement('textarea');
+          const styles = window.getComputedStyle(inputRef.current);
+          
+          // Copy all relevant styles to ensure accurate height calculation
+          Array.from(styles).forEach(key => {
+            clone.style.setProperty(key, styles.getPropertyValue(key));
+          });
+          
+          // Set the clone's value to the current text
+          clone.value = e.target.value;
+          clone.style.position = 'absolute';
+          clone.style.visibility = 'hidden';
+          clone.style.height = 'auto';
+          document.body.appendChild(clone);
+          
+          // Measure the clone's height
+          const newHeight = `${Math.min(clone.scrollHeight, 100)}px`;
+          
+          // Remove the clone from the DOM
+          document.body.removeChild(clone);
+          
+          // Only update the height if it has changed
+          if (heightRef.current !== newHeight) {
+            heightRef.current = newHeight;
+            inputRef.current.style.height = 'auto';
+            inputRef.current.style.height = newHeight;
+          }
+          
+          // Restore cursor position after any height changes
+          inputRef.current.focus();
+          inputRef.current.setSelectionRange(selectionStart, selectionEnd);
+        }
+      }, 0);
     };
     
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -912,7 +1002,8 @@ export default function StaffDashboard() {
         handleSendMessage(inputValue);
         setInputValue('');
         
-        // Reset height
+        // Reset height reference and input height
+        heightRef.current = 'auto';
         if (inputRef.current) {
           inputRef.current.style.height = 'auto';
         }
@@ -1167,10 +1258,7 @@ export default function StaffDashboard() {
                     <button
                       key={`strategy-${idx}`}
                       className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
-                      onClick={() => {
-                        setQuizMode(false); // Explicitly turn off quiz mode
-                        handleSuggestedQuestion(question);
-                      }}
+                      onClick={() => handleQuestionClick(question, `strategy-${idx}`)}
                     >
                       {question}
                     </button>
@@ -1191,10 +1279,7 @@ export default function StaffDashboard() {
                     <button
                       key={`marketing-${idx}`}
                       className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
-                      onClick={() => {
-                        setQuizMode(false); // Explicitly turn off quiz mode
-                        handleSuggestedQuestion(question);
-                      }}
+                      onClick={() => handleQuestionClick(question, `marketing-${idx}`)}
                     >
                       {question}
                     </button>
@@ -1214,10 +1299,7 @@ export default function StaffDashboard() {
                     <button
                       key={`support-${idx}`}
                       className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
-                      onClick={() => {
-                        setQuizMode(false); // Explicitly turn off quiz mode
-                        handleSuggestedQuestion(question);
-                      }}
+                      onClick={() => handleQuestionClick(question, `support-${idx}`)}
                     >
                       {question}
                     </button>
@@ -1237,10 +1319,7 @@ export default function StaffDashboard() {
                     <button
                       key={`document-${idx}`}
                       className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
-                      onClick={() => {
-                        setQuizMode(false); // Explicitly turn off quiz mode
-                        handleSuggestedQuestion(question);
-                      }}
+                      onClick={() => handleQuestionClick(question, `document-${idx}`)}
                     >
                       {question}
                     </button>
@@ -1323,23 +1402,89 @@ export default function StaffDashboard() {
           </div>
 
           {/* Right: Settings */}
-          {/* <div className="relative">
+          <div className="relative">
             <button
-              className="p-2 hover:bg-gray-100/60 dark:hover:bg-gray-700/60 rounded-md"
+              className="p-2 hover:bg-gray-100/60 dark:hover:bg-gray-700/60 rounded-md settings-trigger"
               onClick={() => setSettingsOpen(!settingsOpen)}
             >
               <MoreVertical size={20} className="text-gray-700 dark:text-white" />
             </button>
             
             {settingsOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border dark:border-gray-700 z-50">
+              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border dark:border-gray-700 z-50 settings-dropdown">
                 <button
-                  onClick={() => handleLanguageChange('en')}
+                  onClick={() => {
+                    // Toggle language dropdown instead of immediately closing settings
+                    setIsLanguageDropdownOpen(!isLanguageDropdownOpen);
+                  }}
                   className="flex items-center w-full px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   <Globe size={16} className="mr-2 dark:text-white" />
                   <span className="dark:text-white">{translations[language]?.settings.language || 'Language'}</span>
+                  <svg 
+                    className={`ml-auto h-4 w-4 transition-transform ${
+                      isLanguageDropdownOpen ? 'rotate-90' : ''
+                    }`}
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24" 
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
                 </button>
+                
+                {/* Language dropdown */}
+                {isLanguageDropdownOpen && (
+                  <div className="border-t dark:border-gray-700">
+                    <div className="py-1 px-2">
+                      <div className="mb-1 px-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Select Language
+                      </div>
+                      <div className="grid grid-cols-2 gap-1">
+                        {languages.map((lang) => (
+                          <button
+                            key={lang.code}
+                            onClick={() => {
+                              handleLanguageChange(lang.code);
+                              setIsLanguageDropdownOpen(false);
+                              setSettingsOpen(false);
+                            }}
+                            className={`flex items-center justify-center px-2 py-2 text-sm rounded-md ${
+                              language === lang.code 
+                                ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' 
+                                : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200'
+                            }`}
+                          >
+                            <span>{lang.name}</span>
+                            {language === lang.code && (
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-600 dark:text-purple-400 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                <button
+                  onClick={toggleDarkMode}
+                  className="flex items-center w-full px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  {isDarkMode ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                  )}
+                  <span className="dark:text-white">{translations[language]?.settings.darkMode || 'Dark Mode'}</span>
+                </button>
+                
                 <button
                   onClick={() => alert('Admin functionality would be integrated here')}
                   className="flex items-center w-full px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -1354,9 +1499,31 @@ export default function StaffDashboard() {
                   <User size={16} className="mr-2 dark:text-white" />
                   <span className="dark:text-white">{translations[language]?.settings.account || 'Account'}</span>
                 </button>
+                <div className="border-t dark:border-gray-700 my-1"></div>
+                {/* Add forgot password option */}
+                <button
+                  onClick={() => alert('Password reset functionality would be integrated here')}
+                  className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
+                  role="menuitem"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  Forgot Password
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
+                  role="menuitem"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  Sign out
+                </button>
               </div>
             )}
-          </div> */}
+          </div>
         </header>
 
         {/* Chat Container - Remaining height */}
@@ -1398,10 +1565,7 @@ export default function StaffDashboard() {
                     <button
                       key={idx}
                       className="p-3 text-left border dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                      onClick={() => {
-                        handleSuggestedQuestion(question);
-                        setActiveView('chat');
-                      }}
+                      onClick={() => handleQuestionClick(question, `example-${idx}`)}
                     >
                       {question}
                     </button>

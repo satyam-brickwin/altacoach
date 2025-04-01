@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useDarkMode } from '@/contexts/DarkModeContext';
 import { useLanguage, languageLabels, SupportedLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,6 +14,15 @@ export default function DashboardHeader() {
   const { isDarkMode, toggleDarkMode } = useDarkMode();
   const { language, setLanguage, translate } = useLanguage();
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Check if we're on the staff dashboard
+  const isStaffDashboard = pathname?.includes('/staff');
+
+  // Don't render anything if we're on the staff dashboard
+  if (isStaffDashboard) {
+    return null;
+  }
 
   const userDisplayName = useMemo(() => {
     if (!user) return 'U';
@@ -27,7 +36,7 @@ export default function DashboardHeader() {
 
   // Determine if user is staff (you'll need to update this based on your user model)
   const isStaffUser = useMemo(() => {
-    return user?.role === 'staff' ;
+    return user?.role === 'staff';
   }, [user]);
 
   const handleLogout = async () => {
@@ -82,7 +91,7 @@ export default function DashboardHeader() {
 
               {/* Language menu */}
               {isLanguageMenuOpen && (
-                <div 
+                <div
                   className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 z-50"
                   role="menu"
                   aria-orientation="vertical"
@@ -124,10 +133,10 @@ export default function DashboardHeader() {
                   </div>
                 </button>
               </div>
-              
+
               {/* User menu dropdown */}
               {isUserMenuOpen && (
-                <div 
+                <div
                   className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
                   role="menu"
                   aria-orientation="vertical"
@@ -139,43 +148,7 @@ export default function DashboardHeader() {
                       {user?.email}
                     </div>
                   )}
-                  
-                  {/* Staff-only options */}
-                  {isStaffUser && (
-                    <>
-                      <button
-                        onClick={() => {
-                          // router.push('/admin');
-                          setIsUserMenuOpen(false);
-                        }}
-                        className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
-                        role="menuitem"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        Admin
-                      </button>
-                      
-                      <button
-                        onClick={() => {
-                          router.push('/account');
-                          setIsUserMenuOpen(false);
-                        }}
-                        className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
-                        role="menuitem"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                        Account
-                      </button>
-                      
-                      <div className="border-t border-gray-200 dark:border-gray-600"></div>
-                    </>
-                  )}
-                  
+
                   <button
                     onClick={handleLogout}
                     className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
