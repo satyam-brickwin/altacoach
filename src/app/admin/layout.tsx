@@ -20,8 +20,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <DashboardHeader />
-      <main className="py-6">
+      {/* <DashboardHeader /> */}
+      <main className="py-0">
         {children}
       </main>
     </div>

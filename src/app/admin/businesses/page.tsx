@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useLanguage, languageLabels, SupportedLanguage } from '@/contexts/LanguageContext';
 import { useDarkMode } from '@/contexts/DarkModeContext';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext'; // Make sure you have this context
 
 // Sample business data
 const businessData = [
@@ -472,19 +474,21 @@ interface BusinessFormData {
 
 export default function AdminBusinesses() {
   const { language, setLanguage, translate } = useLanguage();
-  const { isDarkMode } = useDarkMode();
-  
+  const { isDarkMode, toggleDarkMode } = useDarkMode();
+  const router = useRouter();
+  const { user, signOut } = useAuth(); // Get user and signOut from auth context
+
   // State for loading and error handling
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  
+
   // State for businesses data
   const [businesses, setBusinesses] = useState<Business[]>([]);
-  
+
   // State for filtering and search
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   // State for add business modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<BusinessFormData>({
@@ -500,7 +504,7 @@ export default function AdminBusinesses() {
     createdBy: 'Current Admin' // Default value
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // State for edit business modal
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
@@ -517,21 +521,38 @@ export default function AdminBusinesses() {
     createdBy: 'Current Admin' // Set default or get from user context
   });
   const [isEditSubmitting, setIsEditSubmitting] = useState(false);
-  
+
   // State for view business modal
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  
+
+  // State for language and user menu
+  const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userDisplayName = user?.name?.[0] || 'A'; // Updated userDisplayName logic
+  const isStaffUser = true; // Replace with actual user role check
+  const handleLogout = async () => {
+    try {
+      setIsUserMenuOpen(false); // Close the menu first
+      await signOut(); // Call signOut from auth context
+      window.location.href = '/login'; // Use direct navigation for full page reload
+    } catch (error) {
+      console.error('Error signing out:', error);
+      // Fallback navigation if needed
+      window.location.href = '/login';
+    }
+  };
+
   // Fetch businesses from API
   const fetchBusinesses = async () => {
     setIsLoading(true);
     setError('');
-    
+
     try {
       // In a real app, this would be an API call
       // const response = await fetch('/api/admin/businesses');
       // const data = await response.json();
       // setBusinesses(data.businesses);
-      
+
       // For demo purposes, we'll use the sample data
       setTimeout(() => {
         setBusinesses(businessData);
@@ -543,7 +564,7 @@ export default function AdminBusinesses() {
       setIsLoading(false);
     }
   };
-  
+
   // Fetch businesses when component mounts
   useEffect(() => {
     fetchBusinesses();
@@ -570,7 +591,7 @@ export default function AdminBusinesses() {
   // Modal functions
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
-  
+
   // View modal functions
   const openViewModal = (business: Business) => {
     setSelectedBusiness(business);
@@ -580,7 +601,7 @@ export default function AdminBusinesses() {
     setSelectedBusiness(null);
     setIsViewModalOpen(false);
   };
-  
+
   // Edit modal functions
   const openEditModal = (business: Business) => {
     setSelectedBusiness(business);
@@ -608,19 +629,19 @@ export default function AdminBusinesses() {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
-  
+
   // Handle edit form input changes
   const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setEditFormData(prev => ({ ...prev, [name]: value }));
   };
-  
+
   // Handle checkbox changes for isActive
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
     setEditFormData(prev => ({ ...prev, [name]: checked }));
   };
-  
+
   // Handle logo upload
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -639,10 +660,10 @@ export default function AdminBusinesses() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
-    
+
     setIsSubmitting(true);
     setError('');
-    
+
     try {
       // In a real app, this would be an API call
       // const response = await fetch('/api/admin/businesses', {
@@ -653,10 +674,10 @@ export default function AdminBusinesses() {
       //   body: JSON.stringify(formData),
       // });
       // const data = await response.json();
-      
+
       // For demo purposes, we'll simulate a successful response
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       const data = {
         success: true,
         business: {
@@ -672,13 +693,13 @@ export default function AdminBusinesses() {
           createdBy: 'admin' // Hardcoded as 'admin' instead of using formData.createdBy
         }
       };
-      
+
       console.log('Business created successfully:', data);
-      
+
       // Add the new business to our state
       const newBusiness = data.business;
       setBusinesses(prev => [newBusiness, ...prev]);
-      
+
       // Close the modal and reset form
       closeModal();
       setFormData({
@@ -693,10 +714,10 @@ export default function AdminBusinesses() {
         isActive: true,
         createdBy: 'Current Admin' // Reset this too
       });
-      
+
       // Show success message
       alert(t('businessAddedSuccessfully'));
-      
+
     } catch (error) {
       console.error('Error creating business:', error);
       setError(typeof error === 'string' ? error : (error instanceof Error ? error.message : 'An unknown error occurred'));
@@ -710,10 +731,10 @@ export default function AdminBusinesses() {
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isEditSubmitting || !selectedBusiness) return;
-    
+
     setIsEditSubmitting(true);
     setError('');
-    
+
     try {
       // In a real app, this would be an API call
       // const response = await fetch(`/api/admin/businesses/${selectedBusiness.id}`, {
@@ -724,31 +745,31 @@ export default function AdminBusinesses() {
       //   body: JSON.stringify(editFormData),
       // });
       // const data = await response.json();
-      
+
       // For demo purposes, we'll simulate a successful response
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       // Update the business in our state
-      setBusinesses(prev => prev.map(business => 
-        business.id === selectedBusiness.id 
-          ? { 
-              ...business, 
+      setBusinesses(prev => prev.map(business =>
+        business.id === selectedBusiness.id
+          ? {
+              ...business,
               name: editFormData.name,
               plan: editFormData.plan,
               status: editFormData.status,
               logo: editFormData.logo,
               colorTheme: editFormData.colorTheme,
               isActive: editFormData.isActive
-            } 
+            }
           : business
       ));
-      
+
       // Close the modal
       closeEditModal();
-      
+
       // Show success message
       alert(t('businessUpdatedSuccessfully'));
-      
+
     } catch (error) {
       console.error('Error updating business:', error);
       setError(typeof error === 'string' ? error : (error instanceof Error ? error.message : 'An unknown error occurred'));
@@ -760,9 +781,9 @@ export default function AdminBusinesses() {
 
   // Toggle business active status
   const toggleBusinessActive = (business: Business) => {
-    setBusinesses(prev => prev.map(b => 
-      b.id === business.id 
-        ? { ...b, isActive: !b.isActive } 
+    setBusinesses(prev => prev.map(b =>
+      b.id === business.id
+        ? { ...b, isActive: !b.isActive }
         : b
     ));
   };
@@ -772,13 +793,122 @@ export default function AdminBusinesses() {
       {/* Header with logo and Admin badge */}
       <header className="bg-white dark:bg-gray-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center h-16">
-            <Link href="/" className="flex items-center">
-              <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">altacoach</span>
-              <span className="ml-2 px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-sm font-medium rounded">
-               Admin
-              </span>
-            </Link>
+          <div className="flex items-center justify-between h-16">
+            {/* Left side - Logo and Admin badge */}
+            <div className="flex items-center">
+              <Link href="/" className="flex items-center">
+                <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">altacoach</span>
+                <span className="ml-2 px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-sm font-medium rounded">
+                  Admin
+                </span>
+              </Link>
+            </div>
+
+            {/* Right-side items - dark mode, language, profile */}
+            <div className="flex items-center space-x-4">
+              {/* Dark mode toggle */}
+              <button
+                type="button"
+                onClick={toggleDarkMode}
+                className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label="Toggle dark mode"
+              >
+                {isDarkMode ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                  </svg>
+                )}
+              </button>
+
+              {/* Language selector */}
+              <div className="relative">
+                <button
+                  type="button"
+                  className="flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full p-1"
+                  onClick={() => setIsLanguageMenuOpen(!isLanguageMenuOpen)}
+                  aria-expanded={isLanguageMenuOpen}
+                >
+                  <span>{languageLabels[language as SupportedLanguage]}</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="ml-1 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {isLanguageMenuOpen && (
+                  <div
+                    className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 z-50"
+                    role="menu"
+                    aria-orientation="vertical"
+                  >
+                    {Object.entries(languageLabels).map(([code, label]) => (
+                      <button
+                        key={code}
+                        onClick={() => {
+                          setLanguage(code as SupportedLanguage);
+                          setIsLanguageMenuOpen(false);
+                        }}
+                        className={`${
+                          language === code
+                            ? 'bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white'
+                            : 'text-gray-700 dark:text-gray-200'
+                        } block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600`}
+                        role="menuitem"
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Profile dropdown */}
+              <div className="ml-3 relative">
+                <div>
+                  <button
+                    type="button"
+                    className="max-w-xs bg-white dark:bg-gray-800 rounded-full flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    id="user-menu"
+                    aria-expanded={isUserMenuOpen}
+                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  >
+                    <span className="sr-only">Open user menu</span>
+                    <div className="h-8 w-8 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center text-purple-600 dark:text-purple-400 font-semibold">
+                      {userDisplayName}
+                    </div>
+                  </button>
+                </div>
+
+                {isUserMenuOpen && (
+                  <div
+                    className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
+                    role="menu"
+                    aria-orientation="vertical"
+                    aria-labelledby="user-menu"
+                  >
+                    {!isStaffUser && (
+                      <div className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600">
+                        {user?.email}
+                      </div>
+                    )}
+
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
+                      role="menuitem"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      Sign out
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </header>
@@ -803,11 +933,11 @@ export default function AdminBusinesses() {
                   {t('content')}
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link href="/admin/users" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
                   {t('userAccounts')}
                 </Link>
-              </li>
+              </li> */}
               <li>
                 <Link href="/admin/analytics" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
                   {t('analytics')}

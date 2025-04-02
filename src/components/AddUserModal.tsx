@@ -14,7 +14,7 @@ export default function AddUserModal({ isOpen, onClose, onSuccess, translate }: 
     name: '',
     email: '',
     password: '',
-    role: user?.role === 'super_admin' ? 'BUSINESS' : 'USER', // Default role based on current user role
+    language: 'en', // Default language
     businessId: ''
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -35,7 +35,9 @@ export default function AddUserModal({ isOpen, onClose, onSuccess, translate }: 
       ...formData,
       name: formData.name.trim(),
       email: formData.email.trim(),
+      language: formData.language,
       businessId: formData.businessId.trim(),
+      role: 'USER' // Set default role
     };
 
     try {
@@ -142,25 +144,22 @@ export default function AddUserModal({ isOpen, onClose, onSuccess, translate }: 
           </div>
 
           <div className="mb-4">
-            <label htmlFor="role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              {translate('role')}
+            <label htmlFor="language" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              {translate('language')}
             </label>
             <select
-              id="role"
-              name="role"
-              value={formData.role}
+              id="language"
+              name="language"
+              value={formData.language}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
             >
-              {user?.role === 'super_admin' && (
-                <>
-                  <option value="BUSINESS">{translate('businessAdmin')}</option>
-                  <option value="ADMIN">{translate('systemAdmin')}</option>
-                </>
-              )}
-              {user?.role === 'admin' && (
-                <option value="USER">{translate('user')}</option>
-              )}
+              <option value="en">English</option>
+              <option value="es">Español</option>
+              <option value="fr">Français</option>
+              <option value="de">Deutsch</option>
+              <option value="pt">Português</option>
+              <option value="it">Italiano</option>
             </select>
           </div>
 
