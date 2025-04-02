@@ -889,7 +889,7 @@ export default function AdminAnalytics() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center h-16">
             <Link href="/" className="flex items-center">
-              <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">AltaCoach</span>
+              <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">altacoach</span>
               <span className="ml-2 px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-sm font-medium rounded">
                 Admin
               </span>

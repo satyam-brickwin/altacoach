@@ -48,8 +48,10 @@ interface UserStats {
 }
 
 const SuperAdminDashboard = () => {
-  // Move all hooks to the top for consistent ordering
   const router = useRouter();
+  const { logout } = useAuth();
+
+  // Move all hooks to the top for consistent ordering
   const { language, setLanguage, translate } = useLanguage();
   const { isDarkMode, toggleDarkMode } = useDarkMode();
   const { user, isAuthenticated } = useAuth();
@@ -87,9 +89,27 @@ const SuperAdminDashboard = () => {
   
   // Add a refresh trigger state to force data refresh
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setLanguage(e.target.value as SupportedLanguage);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // Clear any local storage items
+      localStorage.removeItem('mockUser');
+      localStorage.removeItem('token');
+      // Close the profile dropdown
+      setIsProfileOpen(false);
+      // Redirect to login page
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Optionally show an error message to the user
+      alert('Failed to logout. Please try again.');
+    }
   };
   
   // Force refresh function
@@ -297,6 +317,19 @@ const SuperAdminDashboard = () => {
       setIsLoading(false);
     }, 1000);
   }, []);
+
+  // Optional: Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (isProfileOpen && !target.closest('.profile-dropdown')) {
+        setIsProfileOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isProfileOpen]);
   
   // If still loading or not authenticated, show loading spinner
   if (authLoading || !isAuthenticated) {
@@ -318,13 +351,83 @@ const SuperAdminDashboard = () => {
       {/* Header with logo and Admin badge */}
       <header className="bg-white dark:bg-gray-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center h-16">
+          <div className="flex items-center justify-between h-16">
+            {/* Left side - Logo */}
             <Link href="/" className="flex items-center">
-              <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">AltaCoach</span>
+              <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">altacoach</span>
               <span className="ml-2 px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-sm font-medium rounded">
                 Super Admin
               </span>
             </Link>
+
+            {/* Right side - Controls */}
+            <div className="flex items-center space-x-4">
+              {/* Dark mode toggle */}
+              <button
+                type="button"
+                onClick={toggleDarkMode}
+                className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                aria-label="Toggle dark mode"
+              >
+                {isDarkMode ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                  </svg>
+                )}
+              </button>
+
+              {/* Language selector */}
+              <div className="relative">
+                <select
+                  value={language}
+                  onChange={handleLanguageChange}
+                  className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md px-2 py-1 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                >
+                  {Object.entries(languageLabels).map(([code, label]) => (
+                    <option key={code} value={code}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Profile dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
+                    <span className="text-sm font-medium text-purple-700 dark:text-purple-200">
+                      {user?.name?.[0]?.toUpperCase()}
+                    </span>
+                  </div>
+                </button>
+
+                {/* Profile Dropdown Menu */}
+                {isProfileOpen && (
+                  <div className="profile-dropdown absolute right-0 mt-2 w-50 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5 z-50">
+                    <div className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600">
+                      {user?.email}
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
+                      role="menuitem"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      {translate('signOut')}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </header>
@@ -647,4 +750,4 @@ const SuperAdminDashboard = () => {
   );
 };
 
-export default SuperAdminDashboard; 
+export default SuperAdminDashboard;

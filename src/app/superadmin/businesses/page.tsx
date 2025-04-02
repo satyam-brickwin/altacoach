@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useLanguage, languageLabels, SupportedLanguage } from '@/contexts/LanguageContext';
 import { useDarkMode } from '@/contexts/DarkModeContext';
+import { useRouter } from 'next/navigation';
 
 // Sample business data
 const businessData = [
@@ -473,18 +474,19 @@ interface BusinessFormData {
 export default function AdminBusinesses() {
   const { language, setLanguage, translate } = useLanguage();
   const { isDarkMode } = useDarkMode();
-  
+  const router = useRouter();
+
   // State for loading and error handling
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  
+
   // State for businesses data
   const [businesses, setBusinesses] = useState<Business[]>([]);
-  
+
   // State for filtering and search
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   // State for add business modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<BusinessFormData>({
@@ -500,7 +502,7 @@ export default function AdminBusinesses() {
     createdBy: 'Current Admin' // Set default or get from user context
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // State for edit business modal
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
@@ -517,21 +519,30 @@ export default function AdminBusinesses() {
     createdBy: 'Current Admin' // Set default or get from user context
   });
   const [isEditSubmitting, setIsEditSubmitting] = useState(false);
-  
+
   // State for view business modal
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  
+
+  // State for profile dropdown
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  // Mock user data (replace with actual user data in production)
+  const user = {
+    name: 'Admin User',
+    email: 'admin@example.com'
+  };
+
   // Fetch businesses from API
   const fetchBusinesses = async () => {
     setIsLoading(true);
     setError('');
-    
+
     try {
       // In a real app, this would be an API call
       // const response = await fetch('/api/admin/businesses');
       // const data = await response.json();
       // setBusinesses(data.businesses);
-      
+
       // For demo purposes, we'll use the sample data
       setTimeout(() => {
         setBusinesses(businessData);
@@ -543,7 +554,7 @@ export default function AdminBusinesses() {
       setIsLoading(false);
     }
   };
-  
+
   // Fetch businesses when component mounts
   useEffect(() => {
     fetchBusinesses();
@@ -570,7 +581,7 @@ export default function AdminBusinesses() {
   // Modal functions
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
-  
+
   // View modal functions
   const openViewModal = (business: Business) => {
     setSelectedBusiness(business);
@@ -580,7 +591,7 @@ export default function AdminBusinesses() {
     setSelectedBusiness(null);
     setIsViewModalOpen(false);
   };
-  
+
   // Edit modal functions
   const openEditModal = (business: Business) => {
     setSelectedBusiness(business);
@@ -608,19 +619,19 @@ export default function AdminBusinesses() {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
-  
+
   // Handle edit form input changes
   const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setEditFormData(prev => ({ ...prev, [name]: value }));
   };
-  
+
   // Handle checkbox changes for isActive
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
     setEditFormData(prev => ({ ...prev, [name]: checked }));
   };
-  
+
   // Handle logo upload
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -639,10 +650,10 @@ export default function AdminBusinesses() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
-    
+
     setIsSubmitting(true);
     setError('');
-    
+
     try {
       // In a real app, this would be an API call
       // const response = await fetch('/api/admin/businesses', {
@@ -653,10 +664,10 @@ export default function AdminBusinesses() {
       //   body: JSON.stringify(formData),
       // });
       // const data = await response.json();
-      
+
       // For demo purposes, we'll simulate a successful response
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       const data = {
         success: true,
         business: {
@@ -672,13 +683,13 @@ export default function AdminBusinesses() {
           createdBy: 'admin' // In a real app, this would be the logged-in admin's ID
         }
       };
-      
+
       console.log('Business created successfully:', data);
-      
+
       // Add the new business to our state
       const newBusiness = data.business;
       setBusinesses(prev => [newBusiness, ...prev]);
-      
+
       // Close the modal and reset form
       closeModal();
       setFormData({
@@ -693,10 +704,10 @@ export default function AdminBusinesses() {
         isActive: true,
         createdBy: 'Current Admin' // Reset this too
       });
-      
+
       // Show success message
       alert(t('businessAddedSuccessfully'));
-      
+
     } catch (error) {
       console.error('Error creating business:', error);
       setError(typeof error === 'string' ? error : (error instanceof Error ? error.message : 'An unknown error occurred'));
@@ -710,10 +721,10 @@ export default function AdminBusinesses() {
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isEditSubmitting || !selectedBusiness) return;
-    
+
     setIsEditSubmitting(true);
     setError('');
-    
+
     try {
       // In a real app, this would be an API call
       // const response = await fetch(`/api/admin/businesses/${selectedBusiness.id}`, {
@@ -724,31 +735,31 @@ export default function AdminBusinesses() {
       //   body: JSON.stringify(editFormData),
       // });
       // const data = await response.json();
-      
+
       // For demo purposes, we'll simulate a successful response
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       // Update the business in our state
-      setBusinesses(prev => prev.map(business => 
-        business.id === selectedBusiness.id 
-          ? { 
-              ...business, 
-              name: editFormData.name,
-              plan: editFormData.plan,
-              status: editFormData.status,
-              logo: editFormData.logo,
-              colorTheme: editFormData.colorTheme,
-              isActive: editFormData.isActive
-            } 
+      setBusinesses(prev => prev.map(business =>
+        business.id === selectedBusiness.id
+          ? {
+            ...business,
+            name: editFormData.name,
+            plan: editFormData.plan,
+            status: editFormData.status,
+            logo: editFormData.logo,
+            colorTheme: editFormData.colorTheme,
+            isActive: editFormData.isActive
+          }
           : business
       ));
-      
+
       // Close the modal
       closeEditModal();
-      
+
       // Show success message
       alert(t('businessUpdatedSuccessfully'));
-      
+
     } catch (error) {
       console.error('Error updating business:', error);
       setError(typeof error === 'string' ? error : (error instanceof Error ? error.message : 'An unknown error occurred'));
@@ -760,25 +771,105 @@ export default function AdminBusinesses() {
 
   // Toggle business active status
   const toggleBusinessActive = (business: Business) => {
-    setBusinesses(prev => prev.map(b => 
-      b.id === business.id 
-        ? { ...b, isActive: !b.isActive } 
+    setBusinesses(prev => prev.map(b =>
+      b.id === business.id
+        ? { ...b, isActive: !b.isActive }
         : b
     ));
   };
 
+  // Logout handler
+  const handleLogout = () => {
+    // Add actual logout logic here
+    router.push('/login');
+  };
+
+  // Toggle dark mode handler
+  const toggleDarkMode = () => {
+    // This should be handled by your DarkModeContext
+    // If not already defined, implement the toggle logic
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header with logo and Admin badge */}
       <header className="bg-white dark:bg-gray-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center h-16">
             <Link href="/" className="flex items-center">
-              <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">AltaCoach</span>
+              <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">altacoach</span>
               <span className="ml-2 px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-sm font-medium rounded">
-               Super Admin
+                Super Admin
               </span>
             </Link>
+
+            {/* Right side - Controls */}
+            <div className="flex items-center space-x-4 ml-auto">
+              {/* Dark mode toggle */}
+              <button
+                type="button"
+                onClick={toggleDarkMode}
+                className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                aria-label="Toggle dark mode"
+              >
+                {isDarkMode ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                  </svg>
+                )}
+              </button>
+
+              {/* Language selector */}
+              <div className="relative">
+                <select
+                  value={language}
+                  onChange={handleLanguageChange}
+                  className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md px-2 py-1 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                >
+                  {Object.entries(languageLabels).map(([code, label]) => (
+                    <option key={code} value={code}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Profile dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
+                    <span className="text-sm font-medium text-purple-700 dark:text-purple-200">
+                      {user?.name?.[0]?.toUpperCase()}
+                    </span>
+                  </div>
+                </button>
+
+                {/* Profile Dropdown Menu */}
+                {isProfileOpen && (
+                  <div className="profile-dropdown absolute right-0 mt-2 w-50 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5 z-50">
+                    <div className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600">
+                      {user?.email}
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
+                      role="menuitem"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      {translate('signOut')}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </header>
@@ -840,7 +931,7 @@ export default function AdminBusinesses() {
                     {t('businessManagement')}
                   </p>
                 </div>
-                <button 
+                <button
                   onClick={openModal}
                   className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
                 >
@@ -891,7 +982,7 @@ export default function AdminBusinesses() {
                 {error}
               </div>
             )}
-            
+
             {/* Businesses Table */}
             <div className="overflow-x-auto">
               {isLoading ? (
@@ -961,13 +1052,12 @@ export default function AdminBusinesses() {
                           </td>
                           {/* Status cell */}
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              business.status === 'active' 
-                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200' 
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${business.status === 'active'
+                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200'
                                 : business.status === 'pending'
-                                ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
-                                : 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200'
-                            }`}>
+                                  ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
+                                  : 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200'
+                              }`}>
                               {t(business.status)}
                             </span>
                           </td>
@@ -982,13 +1072,13 @@ export default function AdminBusinesses() {
                           {/* Actions cell */}
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                             <div className="flex space-x-2">
-                              <button 
+                              <button
                                 onClick={() => openViewModal(business)}
                                 className="text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300"
                               >
                                 {t('view')}
                               </button>
-                              <button 
+                              <button
                                 onClick={() => openEditModal(business)}
                                 className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
                               >
@@ -1009,13 +1099,12 @@ export default function AdminBusinesses() {
                                   {t('approve')}
                                 </button>
                               )}
-                              <button 
+                              <button
                                 onClick={() => toggleBusinessActive(business)}
-                                className={`${
-                                  business.isActive 
-                                    ? 'text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300' 
+                                className={`${business.isActive
+                                    ? 'text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300'
                                     : 'text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300'
-                                }`}
+                                  }`}
                               >
                                 {business.isActive ? t('deactivate') : t('activate')}
                               </button>
@@ -1059,7 +1148,7 @@ export default function AdminBusinesses() {
                       className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
                     />
                   </div>
-                  
+
                   <div>
                     <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       {t('email')}
@@ -1074,7 +1163,7 @@ export default function AdminBusinesses() {
                       className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
                     />
                   </div>
-                  
+
                   <div>
                     <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       {t('phoneNumber')}
@@ -1088,7 +1177,7 @@ export default function AdminBusinesses() {
                       className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
                     />
                   </div>
-                  
+
                   <div>
                     <label htmlFor="address" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       {t('address')}
@@ -1102,7 +1191,7 @@ export default function AdminBusinesses() {
                       className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
                     ></textarea>
                   </div>
-                  
+
                   <div>
                     <label htmlFor="plan" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       {t('plan')}
@@ -1119,7 +1208,7 @@ export default function AdminBusinesses() {
                       <option value="Enterprise">Enterprise</option>
                     </select>
                   </div>
-                  
+
                   <div>
                     <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       {t('status')}
@@ -1151,7 +1240,7 @@ export default function AdminBusinesses() {
                       className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
                     />
                   </div>
-                  
+
                   <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
                     <button
                       type="submit"
@@ -1200,18 +1289,18 @@ export default function AdminBusinesses() {
                     </svg>
                   </button>
                 </div>
-                
+
                 <div className="mt-4 space-y-4">
                   {/* Logo */}
                   <div className="flex justify-center">
                     {selectedBusiness.logo ? (
-                      <img 
-                        src={selectedBusiness.logo} 
-                        alt={`${selectedBusiness.name} logo`} 
+                      <img
+                        src={selectedBusiness.logo}
+                        alt={`${selectedBusiness.name} logo`}
                         className="h-24 w-24 object-contain rounded-lg border border-gray-200 dark:border-gray-700"
                       />
                     ) : (
-                      <div 
+                      <div
                         className="h-24 w-24 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center"
                         style={{ backgroundColor: selectedBusiness.colorTheme || '#4F46E5' }}
                       >
@@ -1221,7 +1310,7 @@ export default function AdminBusinesses() {
                       </div>
                     )}
                   </div>
-                  
+
                   {/* Business Details */}
                   <div className="grid grid-cols-2 gap-4 mt-4">
                     <div>
@@ -1231,13 +1320,12 @@ export default function AdminBusinesses() {
                     <div>
                       <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('status')}</p>
                       <p className="mt-1">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          selectedBusiness.status === 'active' 
-                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200' 
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${selectedBusiness.status === 'active'
+                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200'
                             : selectedBusiness.status === 'pending'
-                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
-                            : 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200'
-                        }`}>
+                              ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
+                              : 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200'
+                          }`}>
                           {t(selectedBusiness.status)}
                         </span>
                       </p>
@@ -1253,8 +1341,8 @@ export default function AdminBusinesses() {
                     <div>
                       <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('colorTheme')}</p>
                       <div className="mt-1 flex items-center">
-                        <div 
-                          className="h-6 w-6 rounded-full mr-2" 
+                        <div
+                          className="h-6 w-6 rounded-full mr-2"
                           style={{ backgroundColor: selectedBusiness.colorTheme || '#4F46E5' }}
                         ></div>
                         <p className="text-sm text-gray-900 dark:text-white">{selectedBusiness.colorTheme || '#4F46E5'}</p>
@@ -1263,18 +1351,17 @@ export default function AdminBusinesses() {
                     <div>
                       <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('isActive')}</p>
                       <p className="mt-1">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          selectedBusiness.isActive 
-                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200' 
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${selectedBusiness.isActive
+                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200'
                             : 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200'
-                        }`}>
+                          }`}>
                           {selectedBusiness.isActive ? t('active') : t('deactivate')}
                         </span>
                       </p>
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="mt-6">
                   <button
                     type="button"
@@ -1318,7 +1405,7 @@ export default function AdminBusinesses() {
                     </svg>
                   </button>
                 </div>
-                
+
                 <form onSubmit={handleEditSubmit} className="mt-4 space-y-4">
                   {/* Business Name */}
                   <div>
@@ -1335,7 +1422,7 @@ export default function AdminBusinesses() {
                       className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
                     />
                   </div>
-                  
+
                   {/* Logo Upload */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -1344,9 +1431,9 @@ export default function AdminBusinesses() {
                     <div className="mt-1 flex items-center">
                       {editFormData.logo ? (
                         <div className="relative">
-                          <img 
-                            src={editFormData.logo} 
-                            alt="Business logo" 
+                          <img
+                            src={editFormData.logo}
+                            alt="Business logo"
                             className="h-16 w-16 object-contain rounded-lg border border-gray-200 dark:border-gray-700"
                           />
                           <button
@@ -1360,7 +1447,7 @@ export default function AdminBusinesses() {
                           </button>
                         </div>
                       ) : (
-                        <div 
+                        <div
                           className="h-16 w-16 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center"
                           style={{ backgroundColor: editFormData.colorTheme }}
                         >
@@ -1384,7 +1471,7 @@ export default function AdminBusinesses() {
                       </label>
                     </div>
                   </div>
-                  
+
                   {/* Color Theme */}
                   <div>
                     <label htmlFor="colorTheme" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -1408,7 +1495,7 @@ export default function AdminBusinesses() {
                       />
                     </div>
                   </div>
-                  
+
                   {/* Plan */}
                   <div>
                     <label htmlFor="edit-plan" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -1426,7 +1513,7 @@ export default function AdminBusinesses() {
                       <option value="Enterprise">Enterprise</option>
                     </select>
                   </div>
-                  
+
                   {/* Status */}
                   <div>
                     <label htmlFor="edit-status" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -1458,7 +1545,7 @@ export default function AdminBusinesses() {
                       className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
                     />
                   </div>
-                  
+
                   {/* Active Status */}
                   <div className="flex items-center">
                     <input
@@ -1473,7 +1560,7 @@ export default function AdminBusinesses() {
                       {t('isActive')}
                     </label>
                   </div>
-                  
+
                   <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
                     <button
                       type="submit"
