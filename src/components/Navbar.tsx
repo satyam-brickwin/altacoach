@@ -64,12 +64,12 @@ export default function Navbar() {
         <div className="flex justify-between items-center">
           <div className="flex items-center">
             <Link href="/" className="text-xl font-bold">
-              <span className="text-purple-600 dark:text-purple-400">Alta</span><span className="text-blue-600 dark:text-blue-400">Coach</span>
+              <span className="text-purple-600 dark:text-purple-400">alta</span><span className="text-blue-600 dark:text-blue-400">coach</span>
             </Link>
           </div>
 
           <div className="flex items-center space-x-4">
-            <Link href="/features" className="text-gray-700 hover:text-purple-600 dark:text-gray-300 dark:hover:text-purple-400">
+            {/* <Link href="/features" className="text-gray-700 hover:text-purple-600 dark:text-gray-300 dark:hover:text-purple-400">
               {translate('features')}
             </Link>
             <Link href="/pricing" className="text-gray-700 hover:text-purple-600 dark:text-gray-300 dark:hover:text-purple-400">
@@ -77,7 +77,7 @@ export default function Navbar() {
             </Link>
             <Link href="/contact" className="text-gray-700 hover:text-purple-600 dark:text-gray-300 dark:hover:text-purple-400">
               {translate('contact')}
-            </Link>
+            </Link> */}
 
             {/* Dark Mode Toggle */}
             <button

@@ -76,7 +76,7 @@ export default function AddUserModal({ isOpen, onClose, onSuccess, translate }: 
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-            {translate('addNewUser')}
+            {translate('Add New User')}
           </h2>
           <button
             onClick={onClose}

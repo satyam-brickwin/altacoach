@@ -6,6 +6,11 @@ import { useLanguage, languageLabels, SupportedLanguage } from '@/contexts/Langu
 import { useDarkMode } from '@/contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext'; // Make sure you have this context
+import AddUserModal from '@/components/AddUserModal';
+import ViewUserModal from '@/components/ViewUserModal';
+import EditUserModal from '@/components/EditUserModal';
+import UploadDocumentModal from '@/components/UploadDocumentModal';
+import UserDataActions from '@/components/UserDataActions';
 
 // Sample business data
 const businessData = [
@@ -84,6 +89,71 @@ interface Business {
   isActive: boolean;
   createdBy: string; // Add this new field
 }
+
+// Define Document type for better type safety
+interface Document {
+  id: string;
+  title: string;
+  description: string;
+  type: string;
+  status: string;
+  created: string;
+  source: string;
+}
+
+// Define User type for better type safety
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  lastActive?: string;
+  status: string;
+  joinDate?: string;
+}
+
+// Dummy data for documents and users
+const dummyDocuments: Document[] = [
+  {
+    id: '1',
+    title: 'Business Plan 2024',
+    description: 'Annual business plan document',
+    type: 'PDF',
+    status: 'active',
+    created: '2024-01-15',
+    source: 'business'
+  },
+  {
+    id: '2',
+    title: 'Employee Handbook',
+    description: 'Company policies and procedures',
+    type: 'DOCX',
+    status: 'active',
+    created: '2024-02-01',
+    source: 'admin'
+  }
+];
+
+const dummyUsers: User[] = [
+  {
+    id: '1',
+    name: 'John Doe',
+    email: 'john@example.com',
+    role: 'Admin',
+    status: 'active',
+    lastActive: '2024-03-15',
+    joinDate: '2023-06-01'
+  },
+  {
+    id: '2',
+    name: 'Jane Smith',
+    email: 'jane@example.com',
+    role: 'User',
+    status: 'active',
+    lastActive: '2024-03-14',
+    joinDate: '2023-07-15'
+  }
+];
 
 // Define translations for the admin dashboard
 const adminTranslations = {
@@ -191,7 +261,7 @@ const adminTranslations = {
     activeUsers: 'Utilisateurs Actifs',
     adminUsers: 'Utilisateurs Admin',
     courses: 'Cours',
-    guides: 'Guides',
+    guides: 'Guide',
     recentRegistrations: 'Inscriptions Récentes',
     selectLanguage: 'Sélectionner la Langue',
     name: 'Nom',
@@ -542,6 +612,58 @@ export default function AdminBusinesses() {
     }
   };
 
+  // State for selected business view and view mode
+  const [selectedBusinessView, setSelectedBusinessView] = useState<Business | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'detail'>('list');
+
+  const handleBusinessClick = (business: Business) => {
+    setSelectedBusinessView(business);
+    setViewMode('detail');
+  };
+
+  const handleBackToList = () => {
+    setSelectedBusinessView(null);
+    setViewMode('list');
+  };
+
+  // State for user modals
+  const [activeFilter, setActiveFilter] = useState('all');
+  const [documentSearchTerm, setDocumentSearchTerm] = useState('');
+  const [userSearchTerm, setUserSearchTerm] = useState('');
+  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+  const [isViewUserModalOpen, setIsViewUserModalOpen] = useState(false);
+  const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+  // Add this state to track user status changes
+  const [users, setUsers] = useState(dummyUsers);
+
+  const handleAddUser = () => {
+    setIsAddUserModalOpen(true);
+  };
+
+  const handleUploadDocument = () => {
+    setIsUploadDocumentModalOpen(true);
+  };
+
+  // Add this handler function
+  const handleToggleUserStatus = (user: User) => {
+    const newStatus = user.status === 'active' ? 'suspended' : 'active';
+    
+    // In a real app, you would make an API call here
+    // For demo purposes, we'll just update the state
+    setUsers(currentUsers =>
+      currentUsers.map(u =>
+        u.id === user.id
+          ? { ...u, status: newStatus }
+          : u
+      )
+    );
+
+    // Show confirmation toast/alert
+    alert(`User ${user.name} has been ${newStatus}`);
+  };
+
   // Fetch businesses from API
   const fetchBusinesses = async () => {
     setIsLoading(true);
@@ -788,6 +910,9 @@ export default function AdminBusinesses() {
     ));
   };
 
+  // State for upload document modal
+  const [isUploadDocumentModalOpen, setIsUploadDocumentModalOpen] = useState(false);
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header with logo and Admin badge */}
@@ -955,207 +1080,412 @@ export default function AdminBusinesses() {
         {/* Main Content */}
         <div className="flex-1 p-4 md:p-8">
           <div className="max-w-7xl mx-auto">
-            <div className="mb-8">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {t('businesses')}
-                  </h1>
-                  <p className="mt-2 text-gray-600 dark:text-gray-400">
-                    {t('businessManagement')}
-                  </p>
+            {!selectedBusinessView ? (
+              <div>
+                <div className="mb-8">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                        {t('businesses')}
+                      </h1>
+                      <p className="mt-2 text-gray-600 dark:text-gray-400">
+                        {t('businessManagement')}
+                      </p>
+                    </div>
+                    <button 
+                      onClick={openModal}
+                      className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                    >
+                      <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                      {t('addNewBusiness')}
+                    </button>
+                  </div>
                 </div>
-                <button 
-                  onClick={openModal}
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-                >
-                  <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  {t('addNewBusiness')}
-                </button>
-              </div>
-            </div>
 
-            {/* Filters and Search */}
-            <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
-              <div className="flex items-center mb-4 md:mb-0">
-                <span className="mr-4 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {t('filterByStatus')}
-                </span>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="mt-1 block w-40 pl-3 pr-10 py-2 text-sm text-black border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:outline-none focus:ring-purple-500 focus:border-purple-500 rounded-md"
-                >
-                  <option value="all">{t('allBusinesses')}</option>
-                  <option value="active">{t('active')}</option>
-                  <option value="pending">{t('pending')}</option>
-                  <option value="suspended">{t('suspended')}</option>
-                </select>
-              </div>
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder={t('searchBusinesses')}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-sm"
-                />
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                  </svg>
+                {/* Filters and Search */}
+                <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
+                  <div className="flex items-center mb-4 md:mb-0">
+                    <span className="mr-4 text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {t('filterByStatus')}
+                    </span>
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                      className="mt-1 block w-40 pl-3 pr-10 py-2 text-sm text-black border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:outline-none focus:ring-purple-500 focus:border-purple-500 rounded-md"
+                    >
+                      <option value="all">{t('allBusinesses')}</option>
+                      <option value="active">{t('active')}</option>
+                      <option value="pending">{t('pending')}</option>
+                      <option value="suspended">{t('suspended')}</option>
+                    </select>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder={t('searchBusinesses')}
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-sm"
+                    />
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Error message */}
+                {error && (
+                  <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                    {error}
+                  </div>
+                )}
+                
+                {/* Businesses Table */}
+                <div className="overflow-x-auto">
+                  {isLoading ? (
+                    <div className="flex justify-center items-center p-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-700"></div>
+                      <span className="ml-2">{t('loading')}</span>
+                    </div>
+                  ) : (
+                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                      <thead className="bg-gray-50 dark:bg-gray-800">
+                        <tr>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            {t('name')}
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            {t('plan')}
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            {t('userCount')}
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            {t('status')}
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            {t('joined')}
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            {t('createdBy')}
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            {t('actions')}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                        {filteredBusinesses.length === 0 ? (
+                          <tr>
+                            <td colSpan={6} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                              {t('noBusinessesFound')}
+                            </td>
+                          </tr>
+                        ) : (
+                          filteredBusinesses.map((business: Business) => (
+                            <tr key={business.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                              {/* Name cell */}
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center">
+                                  <div className="h-10 w-10 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
+                                    <span className="text-lg font-semibold text-purple-600 dark:text-purple-400">
+                                      {business.name.charAt(0)}
+                                    </span>
+                                  </div>
+                                  <div className="ml-4">
+                                    <button 
+                                      onClick={() => handleBusinessClick(business)}
+                                      className="text-sm font-medium text-gray-900 dark:text-white hover:text-purple-600 dark:hover:text-purple-400"
+                                    >
+                                      {business.name}
+                                    </button>
+                                  </div>
+                                </div>
+                              </td>
+                              {/* Plan cell */}
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-500 dark:text-gray-400">{business.plan}</div>
+                              </td>
+                              {/* User count cell */}
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-500 dark:text-gray-400">{business.userCount}</div>
+                              </td>
+                              {/* Status cell */}
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                  business.status === 'active' 
+                                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200' 
+                                    : business.status === 'pending'
+                                    ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
+                                    : 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200'
+                                }`}>
+                                  {t(business.status)}
+                                </span>
+                              </td>
+                              {/* Joined date cell */}
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                {business.joinedDate}
+                              </td>
+                              {/* Created By cell - new */}
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                {business.createdBy}
+                              </td>
+                              {/* Actions cell */}
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                <div className="flex space-x-2">
+                                  <button 
+                                    onClick={() => openViewModal(business)}
+                                    className="text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300"
+                                  >
+                                    {t('view')}
+                                  </button>
+                                  <button 
+                                    onClick={() => openEditModal(business)}
+                                    className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+                                  >
+                                    {t('edit')}
+                                  </button>
+                                  {business.status === 'pending' && (
+                                    <button className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300">
+                                      {t('approve')}
+                                    </button>
+                                  )}
+                                  {business.status === 'active' && (
+                                    <button className="text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300">
+                                      {t('suspend')}
+                                    </button>
+                                  )}
+                                  {business.status === 'suspended' && (
+                                    <button className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300">
+                                      {t('approve')}
+                                    </button>
+                                  )}
+                                  <button 
+                                    onClick={() => toggleBusinessActive(business)}
+                                    className={`${
+                                      business.isActive 
+                                        ? 'text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300' 
+                                        : 'text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300'
+                                    }`}
+                                  >
+                                    {business.isActive ? t('deactivate') : t('activate')}
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  )}
                 </div>
               </div>
-            </div>
+            ) : (
+              <div>
+                <div className="mb-6 flex items-center justify-between">
+                  <div className="flex items-center">
+                    <button
+                      onClick={handleBackToList}
+                      className="flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    >
+                      <svg className="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      Back to Businesses
+                    </button>
+                    <h2 className="ml-4 text-xl font-bold text-gray-900 dark:text-white">
+                      {selectedBusinessView?.name}
+                    </h2>
+                  </div>
+                </div>
 
-            {/* Error message */}
-            {error && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                {error}
+                {/* Tabs Navigation */}
+                <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
+                  <nav className="-mb-px flex space-x-8">
+                    {['all', 'business', 'admin', 'users'].map((filter) => (
+                      <button
+                        key={filter}
+                        onClick={() => setActiveFilter(filter)}
+                        className={`${
+                          activeFilter === filter
+                            ? 'border-blue-500 text-blue-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm capitalize`}
+                      >
+                        {filter === 'all' ? 'All Documents' : 
+                         filter === 'users' ? 'User Accounts' :
+                         `${filter} Documents`}
+                      </button>
+                    ))}
+                  </nav>
+                </div>
+
+                {/* Content Area */}
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                      {activeFilter === 'users' ? 'User Accounts' : 
+                       activeFilter === 'all' ? 'All Documents' : 
+                       `${activeFilter.charAt(0).toUpperCase() + activeFilter.slice(1)} Documents`}
+                    </h3>
+                    
+                    {/* Add appropriate action button based on active filter */}
+                    {activeFilter === 'users' ? (
+                      <div className="flex space-x-2">
+                        <UserDataActions 
+                          users={users}
+                          onImportUsers={(importedUsers) => {
+                            setUsers(prevUsers => [...prevUsers, ...importedUsers]);
+                          }}
+                        />
+                        <button 
+                          onClick={handleAddUser}
+                          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700"
+                        >
+                          Add User
+                        </button>
+                      </div>
+                    ) : (
+                      <button 
+                        onClick={handleUploadDocument}
+                        className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700"
+                      >
+                        Upload Document
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="relative mb-4">
+                    <input
+                      type="text"
+                      placeholder={`Search ${activeFilter === 'users' ? 'users' : 'documents'}...`}
+                      value={activeFilter === 'users' ? userSearchTerm : documentSearchTerm}
+                      onChange={(e) => activeFilter === 'users' 
+                        ? setUserSearchTerm(e.target.value)
+                        : setDocumentSearchTerm(e.target.value)
+                      }
+                      className="w-full px-3 py-2 border rounded-md"
+                    />
+                  </div>
+
+                  {/* Inside the business details view content area */}
+                  <div className="overflow-x-auto">
+                    {activeFilter === 'users' ? (
+                      // Users Table
+                      <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead className="bg-gray-50 dark:bg-gray-800">
+                          <tr>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Role</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                          {users.map((user) => (
+                            <tr key={user.id}>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm font-medium text-gray-900 dark:text-white">{user.name}</div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-500 dark:text-gray-400">{user.email}</div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-500 dark:text-gray-400">{user.role}</div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                  user.status === 'active' 
+                                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                                    : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                }`}>
+                                  {user.status}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex space-x-3">
+                                  <button 
+                                    onClick={() => {
+                                      setSelectedUser(user);
+                                      setIsViewUserModalOpen(true);
+                                    }}
+                                    className="text-blue-600 hover:text-blue-900 dark:hover:text-blue-400"
+                                  >
+                                    View
+                                  </button>
+                                  <button 
+                                    onClick={() => {
+                                      setSelectedUser(user);
+                                      setIsEditUserModalOpen(true);
+                                    }}
+                                    className="text-purple-600 hover:text-purple-900 dark:hover:text-purple-400"
+                                  >
+                                    Edit
+                                  </button>
+                                  <button 
+                                    onClick={() => handleToggleUserStatus(user)}
+                                    className={`${
+                                      user.status === 'active'
+                                        ? 'text-red-600 hover:text-red-900 dark:hover:text-red-400'
+                                        : 'text-green-600 hover:text-green-900 dark:hover:text-green-400'
+                                    }`}
+                                  >
+                                    {user.status === 'active' ? 'Suspend' : 'Activate'}
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    ) : (
+                      // Documents Table
+                      <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead className="bg-gray-50 dark:bg-gray-800">
+                          <tr>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Title</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Source</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                          {dummyDocuments
+                            .filter(doc => activeFilter === 'all' || doc.source === activeFilter)
+                            .map((document) => (
+                              <tr key={document.id}>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="text-sm font-medium text-gray-900 dark:text-white">{document.title}</div>
+                                  <div className="text-sm text-gray-500 dark:text-gray-400">{document.description}</div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="text-sm text-gray-500 dark:text-gray-400">{document.type}</div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="text-sm text-gray-500 dark:text-gray-400">{document.source}</div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                  {document.created}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <button className="text-blue-600 hover:text-blue-900 mr-3">View</button>
+                                  <button className="text-purple-600 hover:text-purple-900">Download</button>
+                                </td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
-            
-            {/* Businesses Table */}
-            <div className="overflow-x-auto">
-              {isLoading ? (
-                <div className="flex justify-center items-center p-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-700"></div>
-                  <span className="ml-2">{t('loading')}</span>
-                </div>
-              ) : (
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                  <thead className="bg-gray-50 dark:bg-gray-800">
-                    <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        {t('name')}
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        {t('plan')}
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        {t('userCount')}
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        {t('status')}
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        {t('joined')}
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        {t('createdBy')}
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        {t('actions')}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                    {filteredBusinesses.length === 0 ? (
-                      <tr>
-                        <td colSpan={6} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
-                          {t('noBusinessesFound')}
-                        </td>
-                      </tr>
-                    ) : (
-                      filteredBusinesses.map((business: Business) => (
-                        <tr key={business.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                          {/* Name cell */}
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <div className="h-10 w-10 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
-                                <span className="text-lg font-semibold text-purple-600 dark:text-purple-400">
-                                  {business.name.charAt(0)}
-                                </span>
-                              </div>
-                              <div className="ml-4">
-                                <Link 
-                                  href={`/admin/businesses/${business.id}`}
-                                  className="text-sm font-medium text-gray-900 dark:text-white hover:text-purple-600 dark:hover:text-purple-400"
-                                >
-                                  {business.name}
-                                </Link>
-                              </div>
-                            </div>
-                          </td>
-                          {/* Plan cell */}
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-500 dark:text-gray-400">{business.plan}</div>
-                          </td>
-                          {/* User count cell */}
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-500 dark:text-gray-400">{business.userCount}</div>
-                          </td>
-                          {/* Status cell */}
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              business.status === 'active' 
-                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200' 
-                                : business.status === 'pending'
-                                ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
-                                : 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200'
-                            }`}>
-                              {t(business.status)}
-                            </span>
-                          </td>
-                          {/* Joined date cell */}
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                            {business.joinedDate}
-                          </td>
-                          {/* Created By cell - new */}
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                            {business.createdBy}
-                          </td>
-                          {/* Actions cell */}
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                            <div className="flex space-x-2">
-                              <button 
-                                onClick={() => openViewModal(business)}
-                                className="text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300"
-                              >
-                                {t('view')}
-                              </button>
-                              <button 
-                                onClick={() => openEditModal(business)}
-                                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
-                              >
-                                {t('edit')}
-                              </button>
-                              {business.status === 'pending' && (
-                                <button className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300">
-                                  {t('approve')}
-                                </button>
-                              )}
-                              {business.status === 'active' && (
-                                <button className="text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300">
-                                  {t('suspend')}
-                                </button>
-                              )}
-                              {business.status === 'suspended' && (
-                                <button className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300">
-                                  {t('approve')}
-                                </button>
-                              )}
-                              <button 
-                                onClick={() => toggleBusinessActive(business)}
-                                className={`${
-                                  business.isActive 
-                                    ? 'text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300' 
-                                    : 'text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300'
-                                }`}
-                              >
-                                {business.isActive ? t('deactivate') : t('activate')}
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              )}
-            </div>
           </div>
         </div>
       </div>
@@ -1624,6 +1954,40 @@ export default function AdminBusinesses() {
           </div>
         </div>
       )}
+
+      {/* User Modals */}
+      <ViewUserModal
+        isOpen={isViewUserModalOpen}
+        onClose={() => setIsViewUserModalOpen(false)}
+        user={selectedUser}
+        translate={(key: string) => key}
+      />
+      <EditUserModal
+        isOpen={isEditUserModalOpen}
+        onClose={() => setIsEditUserModalOpen(false)}
+        user={selectedUser}
+        onSuccess={() => {
+          setIsEditUserModalOpen(false);
+        }}
+        translate={(key: string) => key}
+      />
+      <AddUserModal
+        isOpen={isAddUserModalOpen}
+        onClose={() => setIsAddUserModalOpen(false)}
+        onSuccess={() => {
+          setIsAddUserModalOpen(false);
+        }}
+        translate={(key: string) => key}
+      />
+      <UploadDocumentModal
+        isOpen={isUploadDocumentModalOpen}
+        onClose={() => setIsUploadDocumentModalOpen(false)}
+        onSuccess={() => {
+          setIsUploadDocumentModalOpen(false);
+          // Refresh documents list if needed
+        }}
+        translate={t}
+      />
     </div>
   );
 }

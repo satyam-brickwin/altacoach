@@ -549,7 +549,25 @@ export default function StaffDashboard() {
   // Handle AI Assistant chat submission - modified to work with the new UI
   const handleSendMessage = async (content: string) => {
     if (!content.trim()) return;
-    
+
+    // Check if input is too short or not business-related
+    if (content.length < 2 || !isBusinessRelatedQuery(content)) {
+      const restrictedMessage = {
+        id: uuidv4(),
+        role: 'assistant' as const,
+        text: "Sorry, AltaCoach is designed to coach you about client experience. For any other topic, please contact your manager or send a suggestion to the team.",
+        timestamp: new Date().toISOString(),
+      };
+
+      setMessages(prev => [...prev, {
+        id: uuidv4(),
+        role: 'user' as const,
+        text: content,
+        timestamp: new Date().toISOString(),
+      }, restrictedMessage]);
+      return;
+    }
+
     // Create a user message
     const userMessage = {
       id: uuidv4(),
@@ -739,6 +757,22 @@ export default function StaffDashboard() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Add a helper function to check if query is business-related
+  const isBusinessRelatedQuery = (query: string): boolean => {
+    // List of business-related keywords
+    const businessKeywords = [
+      'client', 'customer', 'business', 'service', 'product', 
+      'sales', 'marketing', 'strategy', 'support', 'experience',
+      'market', 'growth', 'revenue', 'satisfaction', 'feedback',
+      'complaint', 'improvement', 'quality', 'performance', 'metrics'
+    ];
+
+    // Check if query contains any business-related keywords
+    const lowercaseQuery = query.toLowerCase();
+    return businessKeywords.some(keyword => lowercaseQuery.includes(keyword)) || 
+           query.length > 10; // Allow longer queries as they're likely more specific
   };
 
   // Handle regenerate response

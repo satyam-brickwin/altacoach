@@ -205,7 +205,7 @@ export default function LoginPage() {
     <div className={`min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8 ${isDarkMode ? 'dark' : ''}`}>
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-          {translate('loginToAltaCoach')}
+          {translate('login to altacoach')}
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
           {translate('welcomeBack')}
@@ -213,7 +213,7 @@ export default function LoginPage() {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white dark:bg-gray-800 py-8 px-4 shadow sm:rounded-lg sm:px-10">
+        <div className="bg-white dark:bg-gray-800 py-6 px-4 sm:py-8 sm:px-10 shadow sm:rounded-lg">
           {/* Registration success message */}
           {loginSuccess && (
             <div className="mb-4 rounded-md bg-green-50 dark:bg-green-900 p-4">
@@ -255,7 +255,7 @@ export default function LoginPage() {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               {translate('selectRole')}
             </label>
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4">
               <button
                 type="button"
                 onClick={() => handleRoleSelect(UserRole.ADMIN)}
@@ -263,31 +263,12 @@ export default function LoginPage() {
                   selectedRole === UserRole.ADMIN
                     ? 'bg-green-600 text-white'
                     : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600'
-                } py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500`}
+                } py-2 sm:py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 flex items-center justify-center`}
               >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
                 {translate('admin')}
-              </button>
-              <button
-                type="button"
-                onClick={() => handleRoleSelect(UserRole.SUPER_ADMIN)}
-                className={`${
-                  selectedRole === UserRole.SUPER_ADMIN
-                    ? 'bg-red-600 text-white'
-                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600'
-                } py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500`}
-              >
-                {translate('super')}
-              </button>
-              <button
-                type="button"
-                onClick={() => handleRoleSelect(UserRole.BUSINESS)}
-                className={`${
-                  selectedRole === UserRole.BUSINESS
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600'
-                } py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500`}
-              >
-                {translate('business')}
               </button>
               <button
                 type="button"
@@ -296,9 +277,26 @@ export default function LoginPage() {
                   selectedRole === UserRole.STAFF
                     ? 'bg-blue-600 text-white'
                     : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600'
-                } py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+                } py-2 sm:py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center justify-center`}
               >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
                 {translate('staff')}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleRoleSelect(UserRole.SUPER_ADMIN)}
+                className={`${
+                  selectedRole === UserRole.SUPER_ADMIN
+                    ? 'bg-red-600 text-white'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600'
+                } py-2 sm:py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 flex items-center justify-center`}
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                {translate('super')}
               </button>
             </div>
           </div>
@@ -431,67 +429,67 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="mt-4 grid grid-cols-3 gap-3">
-              <button
-                type="button"
-                onClick={async () => {
-                  setIsSubmitting(true);
-                  const success = await login('admin@altacoach.com', 'admin123', UserRole.ADMIN);
-                  if (success) {
-                    router.push('/admin');
-                  } else {
-                    setLoginError('Failed to login as admin');
-                  }
-                  setIsSubmitting(false);
-                }}
-                className="py-2 px-4 border border-green-500 rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-              >
-                Admin Dashboard
-              </button>
-              <button
-                type="button"
-                onClick={async () => {
-                  setIsSubmitting(true);
-                  // Use Acme Corporation (ID: 1) as the default business
-                  const success = await login(
-                    'admin@acmecorporation.com', 
-                    'password', 
-                    UserRole.BUSINESS, 
-                    '1'
-                  );
-                  if (success) {
-                    router.push('/business');
-                  } else {
-                    setLoginError('Failed to login as business');
-                  }
-                  setIsSubmitting(false);
-                }}
-                className="py-2 px-4 border border-purple-500 rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-              >
-                Business Dashboard
-              </button>
-              <button
-                type="button"
-                onClick={async () => {
-                  setIsSubmitting(true);
-                  // Use Acme Corporation (ID: 1) as the default business for staff
-                  const success = await login(
-                    'staff@acmecorporation.com', 
-                    'password', 
-                    UserRole.STAFF, 
-                    '1'
-                  );
-                  if (success) {
-                    router.push('/staff');
-                  } else {
-                    setLoginError('Failed to login as staff');
-                  }
-                  setIsSubmitting(false);
-                }}
-                className="py-2 px-4 border border-blue-500 rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Staff Dashboard
-              </button>
+            <div className="mt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+                {/* Admin Dashboard Button */}
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setIsSubmitting(true);
+                    const success = await login('admin@altacoach.com', 'admin123', UserRole.ADMIN);
+                    if (success) {
+                      router.push('/admin');
+                    } else {
+                      setLoginError('Failed to login as admin');
+                    }
+                    setIsSubmitting(false);
+                  }}
+                  className="py-2 px-4 border border-green-500 rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 w-full"
+                >
+                  Admin Dashboard
+                </button>
+
+                {/* Staff Dashboard Button */}
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setIsSubmitting(true);
+                    const success = await login(
+                      'staff@acmecorporation.com', 
+                      'password', 
+                      UserRole.STAFF, 
+                      '1'
+                    );
+                    if (success) {
+                      router.push('/staff');
+                    } else {
+                      setLoginError('Failed to login as staff');
+                    }
+                    setIsSubmitting(false);
+                  }}
+                  className="py-2 px-4 border border-blue-500 rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 w-full"
+                >
+                  Staff Dashboard
+                </button>
+
+                {/* Super Admin Dashboard Button */}
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setIsSubmitting(true);
+                    const success = await login('superadmin@altacoach.com', 'superadmin123', UserRole.SUPER_ADMIN);
+                    if (success) {
+                      router.push('/superadmin');
+                    } else {
+                      setLoginError('Failed to login as super admin');
+                    }
+                    setIsSubmitting(false);
+                  }}
+                  className="py-2 px-4 border border-red-500 rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 w-full"
+                >
+                  Super Admin
+                </button>
+              </div>
             </div>
           </div>
 
@@ -515,7 +513,7 @@ export default function LoginPage() {
             </div>
             
             {/* Super Admin access button with matching Sign Up UI */}
-            <div className="mt-4">
+            {/* <div className="mt-4">
               <button
                 type="button"
                 onClick={async () => {
@@ -532,7 +530,7 @@ export default function LoginPage() {
               >
                 Super Admin Access
               </button>
-            </div>
+            </div> */}
           </div>
           
           {/* Developer Section for Business Credentials */}
