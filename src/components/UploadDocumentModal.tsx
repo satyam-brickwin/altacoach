@@ -149,7 +149,7 @@ export default function UploadDocumentModal({ isOpen, onClose, onSuccess, transl
                   >
                     <option value="business">{translate('business')}</option>
                     <option value="admin">{translate('admin')}</option>
-                    <option value="other">{translate('other')}</option>
+                    {/* <option value="other">{translate('other')}</option> */}
                   </select>
                 </div>
 

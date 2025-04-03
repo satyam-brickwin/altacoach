@@ -11,6 +11,8 @@ import ViewUserModal from '@/components/ViewUserModal';
 import EditUserModal from '@/components/EditUserModal';
 import UploadDocumentModal from '@/components/UploadDocumentModal';
 import UserDataActions from '@/components/UserDataActions';
+import ViewDocumentModal from '@/components/ViewDocumentModal';
+import { convertToCSV, downloadCSV } from '@/utils/exportHelpers';
 
 // Sample business data
 const businessData = [
@@ -99,6 +101,20 @@ interface Document {
   status: string;
   created: string;
   source: string;
+  url?: string; // Add this field for document URL
+}
+
+// Add this interface definition at the top of the file with other interfaces
+interface BusinessDocument {
+  id: string;
+  title: string;
+  description: string;
+  type: string;
+  status: string;
+  created: string;
+  source: string;
+  url?: string;
+  content?: string;
 }
 
 // Define User type for better type safety
@@ -113,7 +129,7 @@ interface User {
 }
 
 // Dummy data for documents and users
-const dummyDocuments: Document[] = [
+const dummyDocuments: BusinessDocument[] = [
   {
     id: '1',
     title: 'Business Plan 2024',
@@ -121,7 +137,8 @@ const dummyDocuments: Document[] = [
     type: 'PDF',
     status: 'active',
     created: '2024-01-15',
-    source: 'business'
+    source: 'business',
+    url: 'https://your-domain.com/path/to/business-plan.pdf' // Replace with actual URL
   },
   {
     id: '2',
@@ -130,7 +147,8 @@ const dummyDocuments: Document[] = [
     type: 'DOCX',
     status: 'active',
     created: '2024-02-01',
-    source: 'admin'
+    source: 'admin',
+    url: 'https://your-domain.com/path/to/handbook.docx' // Replace with actual URL
   }
 ];
 
@@ -913,6 +931,90 @@ export default function AdminBusinesses() {
   // State for upload document modal
   const [isUploadDocumentModalOpen, setIsUploadDocumentModalOpen] = useState(false);
 
+  // State for view document modal
+  const [isViewDocumentModalOpen, setIsViewDocumentModalOpen] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<BusinessDocument | null>(null);
+
+  const handleDownload = async (doc: BusinessDocument) => {
+    try {
+      if (doc.url) {
+        // For URL-based documents (PDF, DOC, etc.)
+        const response = await fetch(doc.url);
+        
+        // Check if the response is ok
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+
+        // Set the correct file extension based on document type
+        const fileExtension = doc.type.toLowerCase();
+        const fileName = `${doc.title}.${fileExtension}`;
+        
+        // Set content type based on file type
+        let contentType = 'application/octet-stream';
+        switch (fileExtension) {
+          case 'pdf':
+            contentType = 'application/pdf';
+            break;
+          case 'doc':
+          case 'docx':
+            contentType = 'application/msword';
+            break;
+          default:
+            contentType = 'application/octet-stream';
+        }
+
+        // Create blob with correct content type
+        const fileBlob = new Blob([blob], { type: contentType });
+        const fileUrl = window.URL.createObjectURL(fileBlob);
+
+        // Create download link
+        const downloadLink = document.createElement('a');
+        downloadLink.href = fileUrl;
+        downloadLink.download = fileName;
+
+        // Append, click, and cleanup
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+        window.URL.revokeObjectURL(fileUrl);
+      } else {
+        // For non-URL documents, export as CSV
+        const exportData = [{
+          Title: doc.title,
+          Type: doc.type,
+          Description: doc.description,
+          Source: doc.source,
+          Created: doc.created,
+          Status: doc.status
+        }];
+
+        const csvString = [
+          Object.keys(exportData[0]).join(','),
+          Object.values(exportData[0]).join(',')
+        ].join('\n');
+
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${doc.title}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      }
+    } catch (error) {
+      console.error('Error downloading document:', error);
+      alert('Error downloading document. Please try again.');
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header with logo and Admin badge */}
@@ -1312,7 +1414,7 @@ export default function AdminBusinesses() {
                         onClick={() => setActiveFilter(filter)}
                         className={`${
                           activeFilter === filter
-                            ? 'border-blue-500 text-blue-600'
+                            ? 'border-purple-500 text-purple-600 dark:text-purple-400' // Changed from blue to purple
                             : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                         } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm capitalize`}
                       >
@@ -1368,7 +1470,7 @@ export default function AdminBusinesses() {
                         ? setUserSearchTerm(e.target.value)
                         : setDocumentSearchTerm(e.target.value)
                       }
-                      className="w-full px-3 py-2 border rounded-md"
+                      className="w-full px-3 py-2 border rounded-md focus:ring-purple-500 focus:border-purple-500"
                     />
                   </div>
 
@@ -1414,7 +1516,7 @@ export default function AdminBusinesses() {
                                       setSelectedUser(user);
                                       setIsViewUserModalOpen(true);
                                     }}
-                                    className="text-blue-600 hover:text-blue-900 dark:hover:text-blue-400"
+                                    className="text-purple-600 hover:text-purple-900 dark:hover:text-purple-400"
                                   >
                                     View
                                   </button>
@@ -1474,8 +1576,36 @@ export default function AdminBusinesses() {
                                   {document.created}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                  <button className="text-blue-600 hover:text-blue-900 mr-3">View</button>
-                                  <button className="text-purple-600 hover:text-purple-900">Download</button>
+                                  <div className="flex space-x-3">
+                                    <button 
+                                      className="text-purple-600 hover:text-purple-900 mr-3"
+                                      onClick={() => {
+                                        setSelectedDocument(document);
+                                        setIsViewDocumentModalOpen(true);
+                                      }}
+                                    >
+                                      View
+                                    </button>
+                                    <button 
+                                      className="text-purple-600 hover:text-purple-900 inline-flex items-center"
+                                      onClick={() => handleDownload(document)}
+                                    >
+                                      <svg 
+                                        className="w-4 h-4 mr-1" 
+                                        fill="none" 
+                                        stroke="currentColor" 
+                                        viewBox="0 0 24 24" 
+                                      >
+                                        <path 
+                                          strokeLinecap="round" 
+                                          strokeLinejoin="round" 
+                                          strokeWidth={2} 
+                                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                                        />
+                                      </svg>
+                                      Download
+                                    </button>
+                                  </div>
                                 </td>
                               </tr>
                             ))}
@@ -1986,6 +2116,12 @@ export default function AdminBusinesses() {
           setIsUploadDocumentModalOpen(false);
           // Refresh documents list if needed
         }}
+        translate={t}
+      />
+      <ViewDocumentModal
+        isOpen={isViewDocumentModalOpen}
+        onClose={() => setIsViewDocumentModalOpen(false)}
+        document={selectedDocument}
         translate={t}
       />
     </div>

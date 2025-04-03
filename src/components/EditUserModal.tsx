@@ -141,7 +141,7 @@ export default function EditUserModal({ isOpen, onClose, user, translate: t, onS
                   />
                 </div>
 
-                <div>
+                {/* <div>
                   <label htmlFor="role" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     {t('role')}
                   </label>
@@ -173,7 +173,7 @@ export default function EditUserModal({ isOpen, onClose, user, translate: t, onS
                     <option value="pending">{t('pending')}</option>
                     <option value="suspended">{t('suspended')}</option>
                   </select>
-                </div>
+                </div> */}
 
                 <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
                   <button

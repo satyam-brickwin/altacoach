@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { cn } from '../lib/utils';
-import { Edit, Check, X, Trash2 } from 'lucide-react';
+import { Edit, Check, X, Trash2, Lightbulb } from 'lucide-react'; // Add Lightbulb import
 
 interface ChatMessageProps {
   message: {
@@ -64,6 +64,11 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     if (onDeleteMessage) {
       onDeleteMessage(message.id);
     }
+  };
+
+  const handleInsight = () => {
+    // You can enhance this function later with more sophisticated analysis
+    alert("Key insights from this response:\n\n1. Main points\n2. Action items\n3. Follow-up questions");
   };
 
   return (
@@ -145,6 +150,19 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                   aria-label="Save edit"
                 >
                   <Check className="h-4 w-4 text-indigo-600 dark:text-white" /> {/* Changed from text-primary */}
+                </button>
+              </div>
+            )}
+            
+            {/* Add bulb icon for assistant messages */}
+            {!isUser && !isEditing && (
+              <div className="opacity-0 group-hover:opacity-100 absolute top-6 -right-10 flex flex-col gap-1 transition-opacity duration-200">
+                <button
+                  onClick={handleInsight}
+                  className="p-1 rounded-full hover:bg-muted transition-colors duration-200"
+                  aria-label="Show insights"
+                >
+                  <Lightbulb className="h-4 w-4 text-gray-500 dark:text-white" />
                 </button>
               </div>
             )}

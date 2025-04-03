@@ -50,6 +50,7 @@ const translations = {
       quizMode: 'Quiz Mode',
       cannedQuestions: 'Canned Questions',
       history: 'History',
+      suggestions: 'Suggestions',
     },
     quizModeActive: 'Quiz Mode Active',
     categories: {
@@ -106,6 +107,7 @@ const translations = {
       quizMode: 'Mode Quiz',
       cannedQuestions: 'Questions prédéfinies',
       history: 'Historique',
+      suggestions: 'Suggestions',
     },
     quizModeActive: 'Mode Quiz Actif',
     categories: {
@@ -162,6 +164,7 @@ const translations = {
       quizMode: 'Quiz-Modus',
       cannedQuestions: 'Vorgefertigte Fragen',
       history: 'Verlauf',
+      suggestions: 'Vorschläge',
     },
     quizModeActive: 'Quiz-Modus Aktiv',
     categories: {
@@ -218,6 +221,7 @@ const translations = {
       quizMode: 'Modalità Quiz',
       cannedQuestions: 'Domande predefinite',
       history: 'Cronologia',
+      suggestions: 'Suggerimenti',
     },
     quizModeActive: 'Modalità Quiz Attiva',
     categories: {
@@ -274,6 +278,7 @@ const translations = {
       quizMode: 'Modo Cuestionario',
       cannedQuestions: 'Preguntas predefinidas',
       history: 'Historial',
+      suggestions: 'Sugerencias',
     },
     quizModeActive: 'Modo Cuestionario Activo',
     categories: {
@@ -1408,6 +1413,78 @@ export default function StaffDashboard() {
               </div>
             )}
           </div>
+
+          {/* Suggestions Dropdown */}
+          <div className="border-b dark:border-gray-700">
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                toggleSection('suggestions');
+              }}
+              className="flex items-center justify-between w-full px-3 py-3 rounded-md text-sm hover:bg-gray-100 dark:hover:bg-gray-700/50 group"
+            >
+              <div className="flex items-center">
+                <PlusCircle size={16} className="mr-3 text-purple-600 dark:text-purple-400" />
+                <span>{translations[language]?.menu.suggestions || 'Suggestions'}</span>
+              </div>
+              <svg 
+                className={`w-4 h-4 transition-transform ${expandedSection === 'suggestions' ? 'rotate-180' : ''}`}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24" 
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            
+            {/* Suggestions Content */}
+            {expandedSection === 'suggestions' && (
+              <div className="pl-8 pr-3 pb-3 space-y-3 animate-fadeIn">
+                <div>
+                  <div className="text-xs font-medium text-purple-600 dark:text-purple-400 mb-2">
+                    Quick Suggestions
+                  </div>
+                  <button
+                    className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
+                    onClick={() => handleQuestionClick("How can I improve customer engagement?", "suggestion-1")}
+                  >
+                    Improve customer engagement
+                  </button>
+                  <button
+                    className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
+                    onClick={() => handleQuestionClick("What are the best practices for client retention?", "suggestion-2")}
+                  >
+                    Client retention best practices
+                  </button>
+                  <button
+                    className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
+                    onClick={() => handleQuestionClick("How to handle difficult customer conversations?", "suggestion-3")}
+                  >
+                    Handle difficult conversations
+                  </button>
+                </div>
+                
+                <div>
+                  <div className="text-xs font-medium text-purple-600 dark:text-purple-400 mb-2">
+                    Problem Solving
+                  </div>
+                  <button
+                    className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
+                    onClick={() => handleQuestionClick("How to resolve customer complaints effectively?", "suggestion-4")}
+                  >
+                    Resolve customer complaints
+                  </button>
+                  <button
+                    className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
+                    onClick={() => handleQuestionClick("What are effective conflict resolution strategies?", "suggestion-5")}
+                  >
+                    Conflict resolution strategies
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Spacer to push any future bottom content down */}
@@ -1534,7 +1611,7 @@ export default function StaffDashboard() {
                   <span className="dark:text-white">{translations[language]?.settings.account || 'Account'}</span>
                 </button>
                 <div className="border-t dark:border-gray-700 my-1"></div>
-                {/* Add forgot password option */}
+                {/* Add Reset password option */}
                 <button
                   onClick={() => alert('Password reset functionality would be integrated here')}
                   className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
@@ -1543,7 +1620,7 @@ export default function StaffDashboard() {
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
-                  Forgot Password
+                  Reset Password
                 </button>
                 <button
                   onClick={handleLogout}
@@ -1658,6 +1735,12 @@ export default function StaffDashboard() {
         } right-0 transition-all duration-300`}>
           <div className="max-w-3xl mx-auto px-4">
             <EnhancedInput />
+            {/* Add disclaimer here */}
+            <div className="mt-2 text-center text-xs text-gray-500 dark:text-gray-400">
+              <p className="italic">
+                ⚠️ AltaCoach is an AI and may make mistakes. Please verify any important information.
+              </p>
+            </div>
           </div>
         </div>
       )}
