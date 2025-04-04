@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useLanguage, languageLabels, SupportedLanguage } from '@/contexts/LanguageContext';
 import { useDarkMode } from '@/contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
@@ -24,7 +25,7 @@ const businessData = [
     status: 'active',
     joinedDate: '2023-05-15',
     logo: '',
-    colorTheme: '#4F46E5',
+    colorTheme: '#C72026',
     isActive: true,
     createdBy: 'John Smith'
   },
@@ -123,8 +124,9 @@ interface User {
   name: string;
   email: string;
   role: string;
-  lastActive?: string;
   status: string;
+  createdBy?: string;
+  lastActive?: string;
   joinDate?: string;
 }
 
@@ -558,6 +560,8 @@ interface BusinessFormData {
   colorTheme: string;
   isActive: boolean;
   createdBy: string; // Add this field
+  startDate: string; // Add this field
+  endDate: string; // Add this field
 }
 
 export default function AdminBusinesses() {
@@ -587,9 +591,11 @@ export default function AdminBusinesses() {
     phoneNumber: '',
     address: '',
     logo: '',
-    colorTheme: '#4F46E5',
+    colorTheme: '#C72026',
     isActive: true,
-    createdBy: 'Current Admin' // Default value
+    createdBy: 'Current Admin', // Default value
+    startDate: '', // Default value
+    endDate: '' // Default value
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -604,9 +610,11 @@ export default function AdminBusinesses() {
     phoneNumber: '',
     address: '',
     logo: '',
-    colorTheme: '#4F46E5',
+    colorTheme: '#C72026',
     isActive: true,
-    createdBy: 'Current Admin' // Set default or get from user context
+    createdBy: 'Current Admin', // Set default or get from user context
+    startDate: '', // Default value
+    endDate: '' // Default value
   });
   const [isEditSubmitting, setIsEditSubmitting] = useState(false);
 
@@ -753,9 +761,11 @@ export default function AdminBusinesses() {
       phoneNumber: '',
       address: '',
       logo: business.logo || '',
-      colorTheme: business.colorTheme || '#4F46E5',
+      colorTheme: business.colorTheme || '#C72026',
       isActive: business.isActive,
-      createdBy: business.createdBy // Preserve the original creator
+      createdBy: business.createdBy, // Preserve the original creator
+      startDate: '', // Default value
+      endDate: '' // Default value
     });
     setIsEditModalOpen(true);
   };
@@ -850,9 +860,11 @@ export default function AdminBusinesses() {
         phoneNumber: '',
         address: '',
         logo: '',
-        colorTheme: '#4F46E5',
+        colorTheme: '#C72026',
         isActive: true,
-        createdBy: 'Current Admin' // Reset this too
+        createdBy: 'Current Admin', // Reset this too
+        startDate: '', // Reset this too
+        endDate: '' // Reset this too
       });
 
       // Show success message
@@ -1019,16 +1031,40 @@ export default function AdminBusinesses() {
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header with logo and Admin badge */}
       <header className="bg-white dark:bg-gray-800 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-2">
           <div className="flex items-center justify-between h-16">
-            {/* Left side - Logo and Admin badge */}
-            <div className="flex items-center">
+            {/* Left - Logo */}
+            <div className="flex-shrink-0">
               <Link href="/" className="flex items-center">
-                <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">altacoach</span>
-                <span className="ml-2 px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-sm font-medium rounded">
+                <Image
+                  src="/Logo_Altamedia_sans-fond.png"
+                  alt="Altamedia Logo"
+                  width={120}
+                  height={120}
+                  className="h-10 w-auto"
+                  priority
+                  quality={100}
+                  style={{
+                    objectFit: 'contain',
+                    maxWidth: '100%',
+                    height: 'auto'
+                  }}
+                />
+              </Link>
+            </div>
+
+            {/* Center - Title and Admin badge */}
+            <div className="flex-1 flex justify-center">
+              <div className="flex items-center">
+                <span className="text-lg font-bold tracking-wider font-['Helvetica'] italic">
+                  <span className="text-gray-900 dark:text-white tracking-[.10em]">alta</span>
+                  <span className="text-[#C72026] tracking-[.10em]">c</span>
+                  <span className="text-gray-900 dark:text-white tracking-[.10em]">oach</span>
+                </span>
+                <span className="ml-2 px-2 py-1 bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] text-sm font-medium rounded">
                   Admin
                 </span>
-              </Link>
+              </div>
             </div>
 
             {/* Right-side items - dark mode, language, profile */}
@@ -1037,7 +1073,7 @@ export default function AdminBusinesses() {
               <button
                 type="button"
                 onClick={toggleDarkMode}
-                className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#C72026]"
                 aria-label="Toggle dark mode"
               >
                 {isDarkMode ? (
@@ -1055,7 +1091,7 @@ export default function AdminBusinesses() {
               <div className="relative">
                 <button
                   type="button"
-                  className="flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full p-1"
+                  className="flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#C72026] rounded-full p-1"
                   onClick={() => setIsLanguageMenuOpen(!isLanguageMenuOpen)}
                   aria-expanded={isLanguageMenuOpen}
                 >
@@ -1097,13 +1133,13 @@ export default function AdminBusinesses() {
                 <div>
                   <button
                     type="button"
-                    className="max-w-xs bg-white dark:bg-gray-800 rounded-full flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="max-w-xs bg-white dark:bg-gray-800 rounded-full flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-[#C72026]"
                     id="user-menu"
                     aria-expanded={isUserMenuOpen}
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   >
                     <span className="sr-only">Open user menu</span>
-                    <div className="h-8 w-8 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center text-purple-600 dark:text-purple-400 font-semibold">
+                    <div className="h-8 w-8 rounded-full bg-[#C72026]/10 dark:bg-[#C72026]/20 flex items-center justify-center text-[#C72026] dark:text-[#C72026] font-semibold">
                       {userDisplayName}
                     </div>
                   </button>
@@ -1124,7 +1160,7 @@ export default function AdminBusinesses() {
 
                     <button
                       onClick={handleLogout}
-                      className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
+                      className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-[#C72026]/10 dark:hover:bg-[#C72026]/20"
                       role="menuitem"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1151,7 +1187,7 @@ export default function AdminBusinesses() {
                 </Link>
               </li>
               <li>
-                <Link href="/admin/businesses" className="block px-4 py-2 rounded-md bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-200 font-medium">
+                <Link href="/admin/businesses" className="block px-4 py-2 rounded-md bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] dark:text-[#C72026]">
                   {t('businesses')}
                 </Link>
               </li>
@@ -1196,7 +1232,7 @@ export default function AdminBusinesses() {
                     </div>
                     <button 
                       onClick={openModal}
-                      className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                      className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#C72026] hover:bg-[#C72026]/90"
                     >
                       <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -1215,7 +1251,7 @@ export default function AdminBusinesses() {
                     <select
                       value={statusFilter}
                       onChange={(e) => setStatusFilter(e.target.value)}
-                      className="mt-1 block w-40 pl-3 pr-10 py-2 text-sm text-black border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:outline-none focus:ring-purple-500 focus:border-purple-500 rounded-md"
+                      className="mt-1 block w-42 pl-3 pr-10 py-2 text-sm text-black border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] rounded-md"
                     >
                       <option value="all">{t('allBusinesses')}</option>
                       <option value="active">{t('active')}</option>
@@ -1229,7 +1265,7 @@ export default function AdminBusinesses() {
                       placeholder={t('searchBusinesses')}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-sm"
+                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] text-sm"
                     />
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -1250,7 +1286,7 @@ export default function AdminBusinesses() {
                 <div className="overflow-x-auto">
                   {isLoading ? (
                     <div className="flex justify-center items-center p-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-700"></div>
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72026]"></div>
                       <span className="ml-2">{t('loading')}</span>
                     </div>
                   ) : (
@@ -1270,7 +1306,7 @@ export default function AdminBusinesses() {
                             {t('status')}
                           </th>
                           <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            {t('joined')}
+                            {t('Start Date')}
                           </th>
                           <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             {t('createdBy')}
@@ -1293,15 +1329,15 @@ export default function AdminBusinesses() {
                               {/* Name cell */}
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="flex items-center">
-                                  <div className="h-10 w-10 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
-                                    <span className="text-lg font-semibold text-purple-600 dark:text-purple-400">
+                                  <div className="h-10 w-10 rounded-full bg-[#C72026]/10 dark:bg-[#C72026]/20 flex items-center justify-center">
+                                    <span className="text-lg font-semibold text-[#C72026] dark:text-[#C72026]">
                                       {business.name.charAt(0)}
                                     </span>
                                   </div>
                                   <div className="ml-4">
                                     <button 
                                       onClick={() => handleBusinessClick(business)}
-                                      className="text-sm font-medium text-gray-900 dark:text-white hover:text-purple-600 dark:hover:text-purple-400"
+                                      className="text-sm font-medium text-gray-900 dark:text-white hover:text-[#C72026] dark:hover:text-[#C72026]/80"
                                     >
                                       {business.name}
                                     </button>
@@ -1341,7 +1377,7 @@ export default function AdminBusinesses() {
                                 <div className="flex space-x-2">
                                   <button 
                                     onClick={() => openViewModal(business)}
-                                    className="text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300"
+                                    className="text-[#C72026] hover:text-[#C72026]/80"
                                   >
                                     {t('view')}
                                   </button>
@@ -1366,7 +1402,7 @@ export default function AdminBusinesses() {
                                       {t('approve')}
                                     </button>
                                   )}
-                                  <button 
+                                  {/* <button 
                                     onClick={() => toggleBusinessActive(business)}
                                     className={`${
                                       business.isActive 
@@ -1375,7 +1411,7 @@ export default function AdminBusinesses() {
                                     }`}
                                   >
                                     {business.isActive ? t('deactivate') : t('activate')}
-                                  </button>
+                                  </button> */}
                                 </div>
                               </td>
                             </tr>
@@ -1414,7 +1450,7 @@ export default function AdminBusinesses() {
                         onClick={() => setActiveFilter(filter)}
                         className={`${
                           activeFilter === filter
-                            ? 'border-purple-500 text-purple-600 dark:text-purple-400' // Changed from blue to purple
+                            ? 'border-[#C72026] text-[#C72026] dark:text-[#C72026]' // Changed from blue to purple
                             : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                         } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm capitalize`}
                       >
@@ -1446,7 +1482,7 @@ export default function AdminBusinesses() {
                         />
                         <button 
                           onClick={handleAddUser}
-                          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700"
+                          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#C72026] hover:bg-[#C72026]/90"
                         >
                           Add User
                         </button>
@@ -1454,7 +1490,7 @@ export default function AdminBusinesses() {
                     ) : (
                       <button 
                         onClick={handleUploadDocument}
-                        className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700"
+                        className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#C72026] hover:bg-[#C72026]/90"
                       >
                         Upload Document
                       </button>
@@ -1470,7 +1506,7 @@ export default function AdminBusinesses() {
                         ? setUserSearchTerm(e.target.value)
                         : setDocumentSearchTerm(e.target.value)
                       }
-                      className="w-full px-3 py-2 border rounded-md focus:ring-purple-500 focus:border-purple-500"
+                      className="w-full px-3 py-2 border rounded-md focus:ring-[#C72026] focus:border-[#C72026]"
                     />
                   </div>
 
@@ -1485,6 +1521,8 @@ export default function AdminBusinesses() {
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email</th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Role</th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created By</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Last Active</th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                           </tr>
                         </thead>
@@ -1510,34 +1548,40 @@ export default function AdminBusinesses() {
                                 </span>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-500 dark:text-gray-400">{user.createdBy || 'Admin'}</div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-500 dark:text-gray-400">{user.lastActive || 'N/A'}</div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="flex space-x-3">
-                                  <button 
+                                  {/* <button
                                     onClick={() => {
                                       setSelectedUser(user);
                                       setIsViewUserModalOpen(true);
                                     }}
-                                    className="text-purple-600 hover:text-purple-900 dark:hover:text-purple-400"
+                                    className="text-[#C72026] hover:text-[#C72026]/80"
                                   >
                                     View
-                                  </button>
-                                  <button 
+                                  </button> */}
+                                  <button
                                     onClick={() => {
                                       setSelectedUser(user);
                                       setIsEditUserModalOpen(true);
                                     }}
-                                    className="text-purple-600 hover:text-purple-900 dark:hover:text-purple-400"
+                                    className="text-blue-600 hover:text-blue-900"
                                   >
                                     Edit
                                   </button>
-                                  <button 
+                                  <button
                                     onClick={() => handleToggleUserStatus(user)}
                                     className={`${
                                       user.status === 'active'
-                                        ? 'text-red-600 hover:text-red-900 dark:hover:text-red-400'
-                                        : 'text-green-600 hover:text-green-900 dark:hover:text-green-400'
+                                        ? 'text-red-600 hover:text-red-900'
+                                        : 'text-green-600 hover:text-green-900'
                                     }`}
                                   >
-                                    {user.status === 'active' ? 'Suspend' : 'Activate'}
+                                    {user.status === 'active' ? 'Deactivate' : 'Activate'}
                                   </button>
                                 </div>
                               </td>
@@ -1578,7 +1622,7 @@ export default function AdminBusinesses() {
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <div className="flex space-x-3">
                                     <button 
-                                      className="text-purple-600 hover:text-purple-900 mr-3"
+                                      className="text-[#C72026] hover:text-[#C72026]/80 mr-3"
                                       onClick={() => {
                                         setSelectedDocument(document);
                                         setIsViewDocumentModalOpen(true);
@@ -1587,7 +1631,7 @@ export default function AdminBusinesses() {
                                       View
                                     </button>
                                     <button 
-                                      className="text-purple-600 hover:text-purple-900 inline-flex items-center"
+                                      className="text-[#C72026] hover:text-[#C72026]/80 inline-flex items-center"
                                       onClick={() => handleDownload(document)}
                                     >
                                       <svg 
@@ -1644,7 +1688,7 @@ export default function AdminBusinesses() {
                       value={formData.name}
                       onChange={handleInputChange}
                       required
-                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                     />
                   </div>
                   
@@ -1659,7 +1703,7 @@ export default function AdminBusinesses() {
                       value={formData.email}
                       onChange={handleInputChange}
                       required
-                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                     />
                   </div>
                   
@@ -1673,7 +1717,7 @@ export default function AdminBusinesses() {
                       id="phoneNumber"
                       value={formData.phoneNumber}
                       onChange={handleInputChange}
-                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                     />
                   </div>
                   
@@ -1687,25 +1731,36 @@ export default function AdminBusinesses() {
                       value={formData.address}
                       onChange={handleInputChange}
                       rows={3}
-                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                     ></textarea>
                   </div>
-                  
+
                   <div>
-                    <label htmlFor="plan" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {t('plan')}
+                    <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {t('startDate')}
                     </label>
-                    <select
-                      name="plan"
-                      id="plan"
-                      value={formData.plan}
+                    <input
+                      type="date"
+                      name="startDate"
+                      id="startDate"
+                      value={formData.startDate}
                       onChange={handleInputChange}
-                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
-                    >
-                      <option value="Starter">Starter</option>
-                      <option value="Business">Business</option>
-                      <option value="Enterprise">Enterprise</option>
-                    </select>
+                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {t('endDate')}
+                    </label>
+                    <input
+                      type="date"
+                      name="endDate"
+                      id="endDate"
+                      value={formData.endDate}
+                      onChange={handleInputChange}
+                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
+                    />
                   </div>
                   
                   <div>
@@ -1717,14 +1772,14 @@ export default function AdminBusinesses() {
                       id="status"
                       value={formData.status}
                       onChange={handleInputChange}
-                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                     >
                       <option value="pending">{t('pending')}</option>
                       <option value="active">{t('active')}</option>
                       <option value="suspended">{t('suspended')}</option>
                     </select>
                   </div>
-
+{/* 
                   <div>
                     <label htmlFor="createdBy" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       {t('createdBy')}
@@ -1736,22 +1791,22 @@ export default function AdminBusinesses() {
                       value={formData.createdBy}
                       onChange={handleInputChange}
                       required
-                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                     />
-                  </div>
+                  </div> */}
                   
                   <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-600 text-base font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:col-start-2 sm:text-sm"
+                      className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#C72026] text-white hover:bg-[#C72026]/90 sm:col-start-2 sm:text-sm"
                     >
                       {isSubmitting ? t('submitting') : t('add')}
                     </button>
                     <button
                       type="button"
                       onClick={closeModal}
-                      className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:mt-0 sm:col-start-1 sm:text-sm"
+                      className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026] sm:mt-0 sm:col-start-1 sm:text-sm"
                     >
                       {t('cancel')}
                     </button>
@@ -1780,7 +1835,7 @@ export default function AdminBusinesses() {
                   <button
                     type="button"
                     onClick={closeViewModal}
-                    className="bg-white dark:bg-gray-800 rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                    className="bg-white dark:bg-gray-800 rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026]"
                   >
                     <span className="sr-only">Close</span>
                     <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -1801,7 +1856,7 @@ export default function AdminBusinesses() {
                     ) : (
                       <div 
                         className="h-24 w-24 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center"
-                        style={{ backgroundColor: selectedBusiness.colorTheme || '#4F46E5' }}
+                        style={{ backgroundColor: selectedBusiness.colorTheme || '#C72026' }}
                       >
                         <span className="text-3xl font-bold text-white">
                           {selectedBusiness.name.charAt(0)}
@@ -1835,7 +1890,7 @@ export default function AdminBusinesses() {
                       <p className="mt-1 text-sm text-gray-900 dark:text-white">{selectedBusiness.userCount}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('joined')}</p>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('Start Date')}</p>
                       <p className="mt-1 text-sm text-gray-900 dark:text-white">{selectedBusiness.joinedDate}</p>
                     </div>
                     <div>
@@ -1843,9 +1898,9 @@ export default function AdminBusinesses() {
                       <div className="mt-1 flex items-center">
                         <div 
                           className="h-6 w-6 rounded-full mr-2" 
-                          style={{ backgroundColor: selectedBusiness.colorTheme || '#4F46E5' }}
+                          style={{ backgroundColor: selectedBusiness.colorTheme || '#C72026' }}
                         ></div>
-                        <p className="text-sm text-gray-900 dark:text-white">{selectedBusiness.colorTheme || '#4F46E5'}</p>
+                        <p className="text-sm text-gray-900 dark:text-white">{selectedBusiness.colorTheme || '#C72026'}</p>
                       </div>
                     </div>
                     <div>
@@ -1870,7 +1925,7 @@ export default function AdminBusinesses() {
                       closeViewModal();
                       openEditModal(selectedBusiness);
                     }}
-                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-600 text-base font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:text-sm"
+                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#C72026] text-base font-medium text-white hover:bg-[#C72026]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026] sm:text-sm"
                   >
                     {t('edit')}
                   </button>
@@ -1898,7 +1953,7 @@ export default function AdminBusinesses() {
                   <button
                     type="button"
                     onClick={closeEditModal}
-                    className="bg-white dark:bg-gray-800 rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                    className="bg-white dark:bg-gray-800 rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026]"
                   >
                     <span className="sr-only">Close</span>
                     <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -1920,7 +1975,7 @@ export default function AdminBusinesses() {
                       value={editFormData.name}
                       onChange={handleEditInputChange}
                       required
-                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                     />
                   </div>
                   
@@ -1958,7 +2013,7 @@ export default function AdminBusinesses() {
                         </div>
                       )}
                       <label htmlFor="logo-upload" className="ml-5 cursor-pointer">
-                        <span className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                        <span className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026]">
                           {t('uploadLogo')}
                         </span>
                         <input
@@ -1992,7 +2047,7 @@ export default function AdminBusinesses() {
                         name="colorTheme"
                         value={editFormData.colorTheme}
                         onChange={handleEditInputChange}
-                        className="ml-2 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                        className="ml-2 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                       />
                     </div>
                   </div>
@@ -2007,7 +2062,7 @@ export default function AdminBusinesses() {
                       id="edit-plan"
                       value={editFormData.plan}
                       onChange={handleEditInputChange}
-                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                     >
                       <option value="Starter">Starter</option>
                       <option value="Business">Business</option>
@@ -2025,7 +2080,7 @@ export default function AdminBusinesses() {
                       id="edit-status"
                       value={editFormData.status}
                       onChange={handleEditInputChange}
-                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                     >
                       <option value="pending">{t('pending')}</option>
                       <option value="active">{t('active')}</option>
@@ -2043,7 +2098,7 @@ export default function AdminBusinesses() {
                       id="edit-createdBy"
                       value={editFormData.createdBy}
                       onChange={handleEditInputChange}
-                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                     />
                   </div>
                   
@@ -2055,7 +2110,7 @@ export default function AdminBusinesses() {
                       type="checkbox"
                       checked={editFormData.isActive}
                       onChange={handleCheckboxChange}
-                      className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                      className="h-4 w-4 text-[#C72026] focus:ring-[#C72026] border-gray-300 rounded"
                     />
                     <label htmlFor="isActive" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
                       {t('isActive')}
@@ -2066,14 +2121,14 @@ export default function AdminBusinesses() {
                     <button
                       type="submit"
                       disabled={isEditSubmitting}
-                      className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-600 text-base font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:col-start-2 sm:text-sm"
+                      className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#C72026] text-white hover:bg-[#C72026]/90 sm:col-start-2 sm:text-sm"
                     >
                       {isEditSubmitting ? t('submitting') : t('saveChanges')}
                     </button>
                     <button
                       type="button"
                       onClick={closeEditModal}
-                      className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:mt-0 sm:col-start-1 sm:text-sm"
+                      className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026] sm:mt-0 sm:col-start-1 sm:text-sm"
                     >
                       {t('cancel')}
                     </button>

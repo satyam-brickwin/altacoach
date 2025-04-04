@@ -66,7 +66,7 @@ function HomePageContent() {
               </p>
               <div className="mt-8 flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
                 <Link href="/login" className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700">
-                  {translate('tryAltaCoach')}
+                  {translate('tryaltacoach')}
                 </Link>
                 <Link href="/pricing" className="inline-flex items-center justify-center px-6 py-3 border border-gray-300 dark:border-gray-600 text-base font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
                   {translate('viewPricing')}
@@ -84,7 +84,7 @@ function HomePageContent() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                       </svg>
                     </div>
-                    <h3 className="text-white text-xl font-bold mb-2">ALTACOACH</h3>
+                    <h3 className="text-white text-xl font-bold mb-2">altacoach</h3>
                     <p className="text-teal-100 text-sm text-center mb-6">Continual Learning Beyond the Classroom</p>
                     
                     {/* App Interface */}
@@ -282,7 +282,7 @@ function HomePageContent() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-lg font-semibold mb-4">AltaCoach</h3>
+              <h3 className="text-lg font-semibold mb-4">altacoach</h3>
               <p className="text-gray-400">
                 {translate('aiPoweredAssistant')}
               </p>
@@ -313,7 +313,7 @@ function HomePageContent() {
             </div>
           </div>
           <div className="mt-8 pt-8 border-t border-gray-700 text-center text-gray-400">
-            <p>© {new Date().getFullYear()} AltaCoach. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} altacoach. All rights reserved.</p>
           </div>
         </div>
       </footer>

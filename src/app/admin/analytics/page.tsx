@@ -7,6 +7,7 @@ import { useDarkMode } from '@/contexts/DarkModeContext';
 import { useAuthProtection, UserRole } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import Image from 'next/image';
 
 // Sample analytics data for fallback
 const sampleAnalyticsData = {
@@ -565,7 +566,7 @@ export default function AdminAnalytics() {
             }
             
             .report-header p {
-              color: var(--gray-600);
+              color: var (--gray-600);
               font-size: 1.1rem;
               max-width: 800px;
             }
@@ -905,16 +906,40 @@ export default function AdminAnalytics() {
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header with logo and Admin badge */}
       <header className="bg-white dark:bg-gray-800 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-2">
           <div className="flex items-center justify-between h-16">
-            {/* Left side */}
-            <div className="flex items-center">
+            {/* Left - Logo */}
+            <div className="flex-shrink-0">
               <Link href="/" className="flex items-center">
-                <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">altacoach</span>
-                <span className="ml-2 px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-sm font-medium rounded">
+                <Image
+                  src="/Logo_Altamedia_sans-fond.png"
+                  alt="Altamedia Logo"
+                  width={120}  // Increased size
+                  height={120} // Increased size
+                  className="h-12 w-auto" // Increased height
+                  priority
+                  quality={100}
+                  style={{
+                    objectFit: 'contain',
+                    maxWidth: '100%',
+                    height: 'auto' // Explicit height
+                  }}
+                />
+              </Link>
+            </div>
+
+            {/* Center - Title and Admin badge */}
+            <div className="flex-1 flex justify-center">
+              <div className="flex items-center">
+                <span className="text-lg font-bold tracking-wider font-['Helvetica'] italic">
+                  <span className="text-gray-900 dark:text-white tracking-[.10em]">alta</span>
+                  <span className="text-[#C72026] tracking-[.10em]">c</span>
+                  <span className="text-gray-900 dark:text-white tracking-[.10em]">oach</span>
+                </span>
+                <span className="ml-2 px-2 py-1 bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] text-sm font-medium rounded">
                   Admin
                 </span>
-              </Link>
+              </div>
             </div>
 
             {/* Right-side items - dark mode, language, profile */}
@@ -923,7 +948,7 @@ export default function AdminAnalytics() {
               <button
                 type="button"
                 onClick={toggleDarkMode}
-                className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#C72026]"
                 aria-label="Toggle dark mode"
               >
                 {isDarkMode ? (
@@ -941,7 +966,7 @@ export default function AdminAnalytics() {
               <div className="relative">
                 <button
                   type="button"
-                  className="flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full p-1"
+                  className="flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#C72026] rounded-full p-1"
                   onClick={() => setIsLanguageMenuOpen(!isLanguageMenuOpen)}
                   aria-expanded={isLanguageMenuOpen}
                 >
@@ -983,13 +1008,13 @@ export default function AdminAnalytics() {
                 <div>
                   <button
                     type="button"
-                    className="max-w-xs bg-white dark:bg-gray-800 rounded-full flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="max-w-xs bg-white dark:bg-gray-800 rounded-full flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-[#C72026]"
                     id="user-menu"
                     aria-expanded={isUserMenuOpen}
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   >
                     <span className="sr-only">Open user menu</span>
-                    <div className="h-8 w-8 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center text-purple-600 dark:text-purple-400 font-semibold">
+                    <div className="h-8 w-8 rounded-full bg-[#C72026]/10 dark:bg-[#C72026]/20 flex items-center justify-center text-[#C72026] dark:text-[#C72026] font-semibold">
                       {userDisplayName}
                     </div>
                   </button>
@@ -1028,7 +1053,7 @@ export default function AdminAnalytics() {
       <div className="flex flex-col md:flex-row">
         {/* Sidebar Navigation */}
         <div className="bg-white dark:bg-gray-800 shadow-md w-full md:w-64 md:min-h-screen">
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="p-0 border-b border-gray-200 dark:border-gray-700">
             {/* Empty div - language selector removed */}
           </div>
           <nav className="p-4">
@@ -1054,7 +1079,8 @@ export default function AdminAnalytics() {
                 </Link>
               </li> */}
               <li>
-                <Link href="/admin/analytics" className="block px-4 py-2 rounded-md bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-200 font-medium">
+                <Link href="/admin/analytics" 
+                  className="block px-4 py-2 rounded-md bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] dark:text-[#C72026] font-medium">
                   {t('analytics')}
                 </Link>
               </li>
@@ -1088,7 +1114,7 @@ export default function AdminAnalytics() {
                 <select
                   value={timeRange}
                   onChange={(e) => setTimeRange(e.target.value)}
-                  className="mt-1 block w-40 pl-3 pr-10 py-2 text-sm text-black border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:outline-none focus:ring-purple-500 focus:border-purple-500 rounded-md"
+                  className="mt-1 block w-40 pl-3 pr-10 py-2 text-sm text-black border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] rounded-md"
                 >
                   <option value="today">{t('today')}</option>
                   <option value="thisWeek">{t('thisWeek')}</option>
@@ -1099,7 +1125,7 @@ export default function AdminAnalytics() {
               <div className="flex space-x-2">
                 <button
                   onClick={handleViewDetailedReport}
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#C72026] hover:bg-[#C72026]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026]"
                 >
                   <svg className="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -1108,10 +1134,10 @@ export default function AdminAnalytics() {
                 </button>
                 <button 
                   onClick={handleExportData}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                  className="inline-flex items-center px-4 py-2 border border-[#C72026] dark:border-[#C72026] rounded-md shadow-sm text-sm font-medium text-[#C72026] dark:text-[#C72026] bg-white dark:bg-gray-800 hover:bg-[#C72026]/10 dark:hover:bg-[#C72026]/20"
                 >
                   <svg className="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                   {t('exportData')}
                 </button>
@@ -1137,7 +1163,7 @@ export default function AdminAnalytics() {
                   title={t('totalUsers')}
                   value={analyticsData.userStats.totalUsers}
                   isLoading={isLoading}
-                  iconBackground="bg-blue-500"
+                  iconBackground="bg-[#C72026]"
                 />
                 <StatCard 
                   icon={<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>}
@@ -1146,13 +1172,13 @@ export default function AdminAnalytics() {
                   isLoading={isLoading}
                   iconBackground="bg-green-500"
                 />
-                <StatCard 
-                  icon={<div className="bg-purple-600 text-white text-xs font-bold rounded px-1 absolute top-0 right-0">NEW</div>}
+                {/* <StatCard 
+                  icon={<div className="bg-[#C72026] text-white text-xs font-bold rounded px-1 absolute top-0 right-0">NEW</div>}
                   title={t('newUsersThisMonth')}
                   value={analyticsData.userStats.newUsersThisMonth}
                   isLoading={isLoading}
-                  iconBackground="bg-purple-500"
-                />
+                  iconBackground="bg-[#C72026]"
+                /> */}
                 <StatCard 
                   icon={<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>}
                   title={t('averageSessionTime')}
@@ -1173,7 +1199,7 @@ export default function AdminAnalytics() {
                   title={t('totalBusinesses')}
                   value={analyticsData.businessStats.totalBusinesses}
                   isLoading={isLoading}
-                  iconBackground="bg-blue-500"
+                  iconBackground="bg-[#C72026]"
                 />
                 <StatCard 
                   icon={<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>}
@@ -1182,18 +1208,18 @@ export default function AdminAnalytics() {
                   isLoading={isLoading}
                   iconBackground="bg-green-500"
                 />
-                <StatCard 
-                  icon={<div className="bg-purple-600 text-white text-xs font-bold rounded px-1 absolute top-0 right-0">NEW</div>}
+                {/* <StatCard 
+                  icon={<div className="bg-[#C72026] text-white text-xs font-bold rounded px-1 absolute top-0 right-0">NEW</div>}
                   title={t('newBusinessesThisMonth')}
                   value={analyticsData.businessStats.newBusinessesThisMonth}
                   isLoading={isLoading}
-                  iconBackground="bg-purple-500"
-                />
+                  iconBackground="bg-[#C72026]"
+                /> */}
                 <StatCard 
                   icon={<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>}
                   title={t('averageUsersPerBusiness')}
                   value={analyticsData.businessStats.averageUsersPerBusiness}
-                  iconBackground="bg-blue-500"
+                  iconBackground="bg-[#C72026]"
                 />
               </div>
             </section>
@@ -1209,7 +1235,7 @@ export default function AdminAnalytics() {
                   title={t('totalContent')}
                   value={analyticsData.contentStats.totalContent}
                   isLoading={isLoading}
-                  iconBackground="bg-pink-500"
+                  iconBackground="bg-[#C72026]"
                 />
                 <StatCard 
                   icon={<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>}
@@ -1246,7 +1272,7 @@ export default function AdminAnalytics() {
                   title={t('totalInteractions')}
                   value={analyticsData.aiStats.totalInteractions}
                   isLoading={isLoading}
-                  iconBackground="bg-purple-500"
+                  iconBackground="bg-[#C72026]"
                 />
                 <StatCard 
                   icon={<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>}
@@ -1267,7 +1293,7 @@ export default function AdminAnalytics() {
                   title={t('mostCommonQueries')}
                   value={analyticsData.aiStats.mostCommonQueries}
                   isLoading={isLoading}
-                  iconBackground="bg-blue-500"
+                  iconBackground="bg-[#C72026]"
                 />
               </div>
             </section>

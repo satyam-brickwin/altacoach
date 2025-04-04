@@ -123,7 +123,7 @@ export default function EditUserModal({ isOpen, onClose, user, translate: t, onS
                     id="name"
                     value={formData.name}
                     onChange={handleChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#C72026] focus:ring-[#C72026] dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm"
                   />
                 </div>
 
@@ -137,7 +137,7 @@ export default function EditUserModal({ isOpen, onClose, user, translate: t, onS
                     id="email"
                     value={formData.email}
                     onChange={handleChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#C72026] focus:ring-[#C72026] dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm"
                   />
                 </div>
 
@@ -150,7 +150,7 @@ export default function EditUserModal({ isOpen, onClose, user, translate: t, onS
                     id="role"
                     value={formData.role}
                     onChange={handleChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#C72026] focus:ring-[#C72026] dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm"
                   >
                     <option value="USER">{t('user')}</option>
                     <option value="BUSINESS">{t('businessAdmin')}</option>
@@ -167,7 +167,7 @@ export default function EditUserModal({ isOpen, onClose, user, translate: t, onS
                     id="status"
                     value={formData.status}
                     onChange={handleChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#C72026] focus:ring-[#C72026] dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm"
                   >
                     <option value="active">{t('active')}</option>
                     <option value="pending">{t('pending')}</option>
@@ -179,14 +179,14 @@ export default function EditUserModal({ isOpen, onClose, user, translate: t, onS
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-600 text-base font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:ml-3 sm:w-auto sm:text-sm"
+                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#C72026] text-base font-medium text-white hover:bg-[#C72026]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026] sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
                   >
                     {isLoading ? t('Saving...') : t('Save Changes')}
                   </button>
                   <button
                     type="button"
                     onClick={onClose}
-                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:mt-0 sm:w-auto sm:text-sm dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600"
+                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026] sm:mt-0 sm:w-auto sm:text-sm dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600"
                   >
                     {t('Cancel')}
                   </button>

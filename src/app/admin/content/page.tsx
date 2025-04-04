@@ -8,6 +8,7 @@ import { useAuthProtection, UserRole } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import UploadContentForm from '@/components/admin/UploadContentForm';
 import { useAuth } from '@/contexts/AuthContext';
+import Image from 'next/image';
 
 // Define interface for Content type
 interface Content {
@@ -329,7 +330,7 @@ export default function AdminContent() {
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
-        <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-12 h-12 border-4 border-[#C72026] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -343,16 +344,40 @@ export default function AdminContent() {
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header with logo and Admin badge */}
       <header className="bg-white dark:bg-gray-800 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-2">
           <div className="flex items-center justify-between h-16">
-            {/* Left side - Logo and Admin badge */}
-            <div className="flex items-center">
+            {/* Left - Logo */}
+            <div className="flex-shrink-0">
               <Link href="/" className="flex items-center">
-                <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">altacoach</span>
-                <span className="ml-2 px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-sm font-medium rounded">
+                <Image
+                  src="/Logo_Altamedia_sans-fond.png"
+                  alt="Altamedia Logo"
+                  width={120}
+                  height={120}
+                  className="h-10 w-auto"
+                  priority
+                  quality={100}
+                  style={{
+                    objectFit: 'contain',
+                    maxWidth: '100%',
+                    height: 'auto'
+                  }}
+                />
+              </Link>
+            </div>
+
+            {/* Center - Title and Admin badge */}
+            <div className="flex-1 flex justify-center">
+              <div className="flex items-center">
+                <span className="text-lg font-bold tracking-wider font-['Helvetica'] italic">
+                  <span className="text-gray-900 dark:text-white tracking-[.10em]">alta</span>
+                  <span className="text-[#C72026] tracking-[.10em]">c</span>
+                  <span className="text-gray-900 dark:text-white tracking-[.10em]">oach</span>
+                </span>
+                <span className="ml-2 px-2 py-1 bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] text-sm font-medium rounded">
                   Admin
                 </span>
-              </Link>
+              </div>
             </div>
 
             {/* Right-side items - dark mode, language, profile */}
@@ -361,7 +386,7 @@ export default function AdminContent() {
               <button
                 type="button"
                 onClick={toggleDarkMode}
-                className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#C72026]"
                 aria-label="Toggle dark mode"
               >
                 {isDarkMode ? (
@@ -379,7 +404,7 @@ export default function AdminContent() {
               <div className="relative">
                 <button
                   type="button"
-                  className="flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full p-1"
+                  className="flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#C72026] rounded-full p-1"
                   onClick={() => setIsLanguageMenuOpen(!isLanguageMenuOpen)}
                   aria-expanded={isLanguageMenuOpen}
                 >
@@ -421,13 +446,13 @@ export default function AdminContent() {
                 <div>
                   <button
                     type="button"
-                    className="max-w-xs bg-white dark:bg-gray-800 rounded-full flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="max-w-xs bg-white dark:bg-gray-800 rounded-full flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-[#C72026]"
                     id="user-menu"
                     aria-expanded={isUserMenuOpen}
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   >
                     <span className="sr-only">Open user menu</span>
-                    <div className="h-8 w-8 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center text-purple-600 dark:text-purple-400 font-semibold">
+                    <div className="h-8 w-8 rounded-full bg-[#C72026]/10 dark:bg-[#C72026]/20 flex items-center justify-center text-[#C72026] dark:text-[#C72026] font-semibold">
                       {userDisplayName}
                     </div>
                   </button>
@@ -483,7 +508,10 @@ export default function AdminContent() {
                 </Link>
               </li>
               <li>
-                <Link href="/admin/content" className="block px-4 py-2 rounded-md bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-200 font-medium">
+                <Link 
+                  href="/admin/content" 
+                  className="block px-4 py-2 rounded-md bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] dark:text-[#C72026] font-medium"
+                >
                   {t('content')}
                 </Link>
               </li>
@@ -527,7 +555,7 @@ export default function AdminContent() {
                 <select
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value)}
-                  className="mt-1 block w-40 pl-3 pr-10 py-2 text-sm text-black border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:outline-none focus:ring-purple-500 focus:border-purple-500 rounded-md"
+                  className="mt-1 block w-40 pl-3 pr-10 py-2 text-sm text-black border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] rounded-md"
                 >
                   <option value="all">{t('allContent')}</option>
                   <option value="course">{t('course')}</option>
@@ -542,7 +570,7 @@ export default function AdminContent() {
                   placeholder={t('searchContent')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-sm"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] text-sm"
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -572,7 +600,7 @@ export default function AdminContent() {
                 </h2>
                 <button 
                   onClick={() => setShowUploadForm(true)}
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#C72026] hover:bg-[#C72026]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026]"
                 >
                   <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -608,7 +636,7 @@ export default function AdminContent() {
                       <tr>
                         <td colSpan={5} className="px-6 py-8 text-center">
                           <div className="flex justify-center">
-                            <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                            <div className="w-8 h-8 border-4 border-[#C72026] border-t-transparent rounded-full animate-spin"></div>
                           </div>
                           <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                             Loading content...
@@ -627,7 +655,7 @@ export default function AdminContent() {
                             {error}
                           </p>
                           <button 
-                            className="mt-2 px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700"
+                            className="mt-2 px-4 py-2 text-sm font-medium text-white bg-[#C72026] rounded-md hover:bg-[#C72026]/90"
                             onClick={() => fetchContent()}
                           >
                             Retry
@@ -647,7 +675,7 @@ export default function AdminContent() {
                           </p>
                           {(searchTerm || typeFilter !== 'all') && (
                             <button 
-                              className="mt-2 px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700"
+                              className="mt-2 px-4 py-2 text-sm font-medium text-white bg-[#C72026] rounded-md hover:bg-[#C72026]/90"
                               onClick={() => {
                                 setSearchTerm('');
                                 setTypeFilter('all');
@@ -663,8 +691,8 @@ export default function AdminContent() {
                         <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
-                              <div className="h-10 w-10 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
-                                <span className="text-lg font-semibold text-purple-600 dark:text-purple-400">
+                              <div className="h-10 w-10 rounded-full bg-[#C72026]/10 dark:bg-[#C72026]/20 flex items-center justify-center">
+                                <span className="text-lg font-semibold text-[#C72026] dark:text-[#C72026]">
                                   {item.title.charAt(0).toUpperCase()}
                                 </span>
                               </div>
@@ -704,7 +732,7 @@ export default function AdminContent() {
                               href={item.filePath} 
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 mr-3"
+                              className="text-[#C72026] dark:text-[#C72026] hover:text-[#C72026]/80 dark:hover:text-[#C72026]/80 mr-3"
                             >
                               {t('view')}
                             </a>

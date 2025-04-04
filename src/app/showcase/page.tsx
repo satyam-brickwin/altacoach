@@ -20,7 +20,7 @@ export default function ShowcasePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <Link href="/" className="text-2xl font-bold text-blue-600">
-              AltaCoach
+              altacoach
             </Link>
             <div className="flex items-center space-x-4">
               <Link
@@ -44,7 +44,7 @@ export default function ShowcasePage() {
       <main className="flex-grow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">AltaCoach Dashboard Showcase</h1>
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">altacoach Dashboard Showcase</h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Experience our platform's powerful dashboards designed for different user roles.
               Each dashboard is tailored to provide the specific functionality needed for that role.
@@ -93,7 +93,7 @@ export default function ShowcasePage() {
             {activeTab === 'admin' && (
               <div className="bg-white border-b border-gray-200 p-4">
                 <div className="flex items-center">
-                  <span className="text-2xl font-bold text-purple-600">AltaCoach</span>
+                  <span className="text-2xl font-bold text-purple-600">altacoach</span>
                   <span className="ml-2 text-sm bg-purple-100 text-purple-800 px-2 py-1 rounded-full">Admin</span>
                 </div>
               </div>
@@ -101,7 +101,7 @@ export default function ShowcasePage() {
             {activeTab === 'business' && (
               <div className="bg-white border-b border-gray-200 p-4">
                 <div className="flex items-center">
-                  <span className="text-2xl font-bold text-blue-600">AltaCoach</span>
+                  <span className="text-2xl font-bold text-blue-600">altacoach</span>
                   <span className="ml-2 text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Business</span>
                 </div>
               </div>
@@ -109,7 +109,7 @@ export default function ShowcasePage() {
             {activeTab === 'staff' && (
               <div className="bg-white border-b border-gray-200 p-4">
                 <div className="flex items-center">
-                  <span className="text-2xl font-bold text-green-600">AltaCoach</span>
+                  <span className="text-2xl font-bold text-green-600">altacoach</span>
                   <span className="ml-2 text-sm bg-green-100 text-green-800 px-2 py-1 rounded-full">Staff</span>
                 </div>
               </div>
@@ -122,7 +122,7 @@ export default function ShowcasePage() {
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900 mb-4">Admin Dashboard</h2>
                   <p className="text-gray-600 mb-6">
-                    Complete control over your entire AltaCoach platform. Manage businesses, content, and system settings.
+                    Complete control over your entire altacoach platform. Manage businesses, content, and system settings.
                   </p>
                   
                   {/* Stats Cards */}
@@ -369,7 +369,7 @@ export default function ShowcasePage() {
           <div className="mt-16 text-center">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Ready to get started?</h2>
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              Join thousands of organizations that use AltaCoach to improve their training outcomes and employee performance.
+              Join thousands of organizations that use altacoach to improve their training outcomes and employee performance.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Link
@@ -392,7 +392,7 @@ export default function ShowcasePage() {
       {/* Footer */}
       <footer className="bg-gray-800 text-white py-8 mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p>© {new Date().getFullYear()} AltaCoach. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} altacoach. All rights reserved.</p>
           <div className="flex justify-center space-x-6 mt-4">
             <a href="#" className="text-gray-400 hover:text-white">
               Privacy Policy

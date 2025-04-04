@@ -120,7 +120,7 @@ export default function UploadDocumentModal({ isOpen, onClose, onSuccess, transl
                     required
                     value={formData.title}
                     onChange={handleInputChange}
-                    className="mt-1 block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm"
+                    className="mt-1 block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026]"
                   />
                 </div>
 
@@ -133,7 +133,7 @@ export default function UploadDocumentModal({ isOpen, onClose, onSuccess, transl
                     rows={3}
                     value={formData.description}
                     onChange={handleInputChange}
-                    className="mt-1 block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm"
+                    className="mt-1 block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026]"
                   />
                 </div>
 
@@ -145,7 +145,7 @@ export default function UploadDocumentModal({ isOpen, onClose, onSuccess, transl
                     name="type"
                     value={formData.type}
                     onChange={handleInputChange}
-                    className="mt-1 block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm"
+                    className="mt-1 block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026]"
                   >
                     <option value="business">{translate('business')}</option>
                     <option value="admin">{translate('admin')}</option>
@@ -160,7 +160,7 @@ export default function UploadDocumentModal({ isOpen, onClose, onSuccess, transl
                   <div 
                     className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md ${
                       dragActive 
-                        ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20' 
+                        ? 'border-[#C72026] bg-[#C72026]/5 dark:bg-[#C72026]/20' 
                         : 'border-gray-300 dark:border-gray-600'
                     }`}
                     onDragEnter={handleDrag}
@@ -173,7 +173,7 @@ export default function UploadDocumentModal({ isOpen, onClose, onSuccess, transl
                         <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                       <div className="flex text-sm text-gray-600 dark:text-gray-400">
-                        <label className="relative cursor-pointer bg-white dark:bg-gray-700 rounded-md font-medium text-purple-600 hover:text-purple-500">
+                        <label className="relative cursor-pointer bg-white dark:bg-gray-700 rounded-md font-medium text-[#C72026] hover:text-[#C72026]/80">
                           <span>{translate('Upload A File')}</span>
                           <input
                             type="file"
@@ -188,7 +188,7 @@ export default function UploadDocumentModal({ isOpen, onClose, onSuccess, transl
                         PDF, DOC, DOCX up to 10MB
                       </p>
                       {formData.file && (
-                        <p className="text-sm text-purple-600">{formData.file.name}</p>
+                        <p className="text-sm text-[#C72026]">{formData.file.name}</p>
                       )}
                     </div>
                   </div>
@@ -199,14 +199,14 @@ export default function UploadDocumentModal({ isOpen, onClose, onSuccess, transl
                 <button
                   type="submit"
                   disabled={isSubmitting || !formData.file}
-                  className="inline-flex justify-center w-full px-4 py-2 text-sm font-medium text-white bg-purple-600 border border-transparent rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50"
+                  className="inline-flex justify-center w-full px-4 py-2 text-sm font-medium text-white bg-[#C72026] border border-transparent rounded-md hover:bg-[#C72026]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026] disabled:opacity-50"
                 >
                   {isSubmitting ? translate('uploading') : translate('upload')}
                 </button>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="mt-3 sm:mt-0 inline-flex justify-center w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                  className="mt-3 sm:mt-0 inline-flex justify-center w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026]"
                 >
                   {translate('cancel')}
                 </button>

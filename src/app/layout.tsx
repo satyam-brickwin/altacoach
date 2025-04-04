@@ -11,7 +11,7 @@ import { Toaster } from "sonner";
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'AltaCoach - Business Coaching Platform',
+  title: 'altacoach - Business Coaching Platform',
   description: 'A comprehensive platform for business coaching and training',
 };
 

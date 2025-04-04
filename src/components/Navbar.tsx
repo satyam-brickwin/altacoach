@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useLanguage, languageLabels, SupportedLanguage } from '@/contexts/LanguageContext';
 import { useDarkMode } from '@/contexts/DarkModeContext';
 import React from 'react';
+import Image from 'next/image';
 
 export default function Navbar() {
   const { user, logout } = useAuth() || {};
@@ -62,23 +63,43 @@ export default function Navbar() {
     <nav className="bg-white shadow-md dark:bg-gray-800 dark:text-white">
       <div className="container mx-auto px-6 py-3">
         <div className="flex justify-between items-center">
-          <div className="flex items-center">
-            <Link href="/" className="text-xl font-bold">
-              <span className="text-purple-600 dark:text-purple-400">alta</span><span className="text-blue-600 dark:text-blue-400">coach</span>
+          {/* Left - Logo */}
+          <div className="flex-shrink-0">
+            <Link href="/" className="flex items-center">
+              <Image
+                src="/Logo_Altamedia_sans-fond.png"
+                alt="Altamedia Logo"
+                width={120}
+                height={120}
+                className="h-12 w-auto"
+                priority
+                quality={100}
+                style={{
+                  objectFit: 'contain',
+                  maxWidth: '100%',
+                  height: 'auto'
+                }}
+              />
             </Link>
           </div>
 
-          <div className="flex items-center space-x-4">
-            {/* <Link href="/features" className="text-gray-700 hover:text-purple-600 dark:text-gray-300 dark:hover:text-purple-400">
-              {translate('features')}
-            </Link>
-            <Link href="/pricing" className="text-gray-700 hover:text-purple-600 dark:text-gray-300 dark:hover:text-purple-400">
-              {translate('pricing')}
-            </Link>
-            <Link href="/contact" className="text-gray-700 hover:text-purple-600 dark:text-gray-300 dark:hover:text-purple-400">
-              {translate('contact')}
-            </Link> */}
+          {/* Center - Brand Name */}
+            {/* Center - Title and Admin badge */}
+            <div className="flex-1 flex justify-center">
+              <div className="flex items-center">
+                <span className="text-lg font-bold tracking-wider font-['Helvetica'] italic">
+                  <span className="text-gray-900 dark:text-white tracking-[.10em]">alta</span>
+                  <span className="text-[#C72026] tracking-[.10em]">c</span>
+                  <span className="text-gray-900 dark:text-white tracking-[.10em]">oach</span>
+                </span>
+                <span className="ml-2 px-2 py-1 bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] text-sm font-medium rounded">
+                  Admin
+                </span>
+              </div>
+            </div>
 
+          {/* Right - Controls */}
+          <div className="flex items-center space-x-4">
             {/* Dark Mode Toggle */}
             <button
               onClick={toggleDarkMode}
@@ -150,4 +171,4 @@ export default function Navbar() {
       </div>
     </nav>
   );
-} 
+}

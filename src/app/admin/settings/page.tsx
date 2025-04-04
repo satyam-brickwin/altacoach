@@ -6,6 +6,7 @@ import { useLanguage, languageLabels, SupportedLanguage } from '@/contexts/Langu
 import { useDarkMode } from '@/contexts/DarkModeContext';
 import { useAuthProtection, useAuth, UserRole } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 // Add this helper function before your AdminSettings component
 const titleCase = (str: string): string => {
@@ -461,16 +462,40 @@ const AdminSettings = () => {
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header with logo and Admin badge */}
       <header className="bg-white dark:bg-gray-800 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-2">
           <div className="flex items-center justify-between h-16">
-            {/* Left side - Logo and Admin badge */}
-            <div className="flex items-center">
+            {/* Left - Logo */}
+            <div className="flex-shrink-0">
               <Link href="/" className="flex items-center">
-                <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">altacoach</span>
-                <span className="ml-2 px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-sm font-medium rounded">
-                  {translate('admin')}
-                </span>
+                <Image
+                  src="/Logo_Altamedia_sans-fond.png"
+                  alt="Altamedia Logo"
+                  width={120}
+                  height={120}
+                  className="h-12 w-auto"
+                  priority
+                  quality={100}
+                  style={{
+                    objectFit: 'contain',
+                    maxWidth: '100%',
+                    height: 'auto'
+                  }}
+                />
               </Link>
+            </div>
+
+            {/* Center - Title and Admin badge */}
+            <div className="flex-1 flex justify-center">
+              <div className="flex items-center">
+                <span className="text-lg font-bold tracking-wider font-['Helvetica'] italic">
+                  <span className="text-gray-900 dark:text-white tracking-[.10em]">alta</span>
+                  <span className="text-[#C72026] tracking-[.10em]">c</span>
+                  <span className="text-gray-900 dark:text-white tracking-[.10em]">oach</span>
+                </span>
+                <span className="ml-2 px-2 py-1 bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] text-sm font-medium rounded">
+                  Admin
+                </span>
+              </div>
             </div>
 
             {/* Right-side items - dark mode, language, profile */}
@@ -479,7 +504,7 @@ const AdminSettings = () => {
               <button
                 type="button"
                 onClick={toggleDarkMode}
-                className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#C72026]"
                 aria-label="Toggle dark mode"
               >
                 {isDarkMode ? (
@@ -497,7 +522,7 @@ const AdminSettings = () => {
               <div className="relative">
                 <button
                   type="button"
-                  className="flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full p-1"
+                  className="flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#C72026] rounded-full p-1"
                   onClick={() => setIsLanguageMenuOpen(!isLanguageMenuOpen)}
                   aria-expanded={isLanguageMenuOpen}
                 >
@@ -540,13 +565,13 @@ const AdminSettings = () => {
                 <div>
                   <button
                     type="button"
-                    className="max-w-xs bg-white dark:bg-gray-800 rounded-full flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="max-w-xs bg-white dark:bg-gray-800 rounded-full flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-[#C72026]"
                     id="user-menu"
                     aria-expanded={isUserMenuOpen}
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   >
                     <span className="sr-only">Open user menu</span>
-                    <div className="h-8 w-8 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center text-purple-600 dark:text-purple-400 font-semibold">
+                    <div className="h-8 w-8 rounded-full bg-[#C72026]/10 dark:bg-[#C72026]/20 flex items-center justify-center text-[#C72026] dark:text-[#C72026] font-semibold">
                       {userDisplayName}
                     </div>
                   </button>
@@ -617,7 +642,8 @@ const AdminSettings = () => {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/admin/settings" className="block px-4 py-2 rounded-md bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-200 font-medium">
+                  <Link href="/admin/settings" 
+                    className="block px-4 py-2 rounded-md bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] dark:text-[#C72026] font-medium">
                     {translate('settings')}
                   </Link>
                 </li>
@@ -656,8 +682,8 @@ const AdminSettings = () => {
                   onClick={() => setActiveTab('general')}
                   className={`py-4 px-1 border-b-2 font-medium text-sm ${
                     activeTab === 'general'
-                      ? 'border-purple-500 text-purple-600 dark:text-purple-400'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                      ? 'border-[#C72026] text-[#C72026]'
+                      : 'border-transparent text-gray-500'
                   }`}
                 >
                   {translate('general')}
@@ -686,8 +712,8 @@ const AdminSettings = () => {
                   onClick={() => setActiveTab('resetPassword')}
                   className={`py-4 px-1 border-b-2 font-medium text-sm ${
                     activeTab === 'resetPassword'
-                      ? 'border-purple-500 text-purple-600 dark:text-purple-400'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                      ? 'border-[#C72026] text-[#C72026]'
+                      : 'border-transparent text-gray-500'
                   }`}
                 >
                   {formatTabName(translate('resetPassword'))}
@@ -722,7 +748,7 @@ const AdminSettings = () => {
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{translate('aiPromptsManagement')}</h2>
                   <button
                     onClick={handleAddNewPrompt}
-                    className="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded flex items-center"
+                    className="bg-[#C72026] hover:bg-[#C72026]/90 text-white font-semibold py-2 px-4 rounded flex items-center"
                   >
                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -830,7 +856,7 @@ const AdminSettings = () => {
                     <div className="mt-4">
                       <button
                         onClick={handleConfigureApiKey}
-                        className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-500 hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                        className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#C72026] hover:bg-[#C72026]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026]"
                       >
                         {translate('configureApiKey')}
                       </button>
@@ -883,7 +909,7 @@ const AdminSettings = () => {
                           name="current-password"
                           value={currentPassword}
                           onChange={handlePasswordChange}
-                          className="block w-full px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                          className="block w-full px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                           placeholder="••••••••••••"
                         />
                       </div>
@@ -900,7 +926,7 @@ const AdminSettings = () => {
                           name="new-password"
                           value={newPassword}
                           onChange={handlePasswordChange}
-                          className="block w-full px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                          className="block w-full px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                           placeholder="••••••••••••"
                         />
                         <div className="mt-2 flex space-x-1">
@@ -909,14 +935,14 @@ const AdminSettings = () => {
                               key={index} 
                               className={`h-1 flex-1 rounded-full ${
                                 passwordStrength >= index 
-                                  ? 'bg-green-500 dark:bg-green-400' 
+                                  ? 'bg-[#C72026] dark:bg-[#C72026]' 
                                   : 'bg-gray-300 dark:bg-gray-600'
                               }`}
                             ></span>
                           ))}
                         </div>
                       </div>
-                      <div className="mt-3 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-100 dark:border-purple-800/30">
+                      <div className="mt-3 p-3 bg-[#C72026]/5 dark:bg-[#C72026]/10 rounded-lg border border-[#C72026]/20 dark:border-[#C72026]/30">
                         <p className="font-medium text-sm text-gray-700 dark:text-gray-300 mb-2">
                           {formatTabName(translate('passwordRequirements'))}:
                         </p>
@@ -928,16 +954,22 @@ const AdminSettings = () => {
                             "At least one special character (!@#$%^&*)"
                           ].map((req, i) => (
                             <li key={i} className="flex items-center text-xs text-gray-600 dark:text-gray-400">
-                              <svg className="w-3.5 h-3.5 mr-1.5 text-purple-500 dark:text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-3.5 h-3.5 mr-1.5 text-[#C72026] dark:text-[#C72026] flex-shrink-0" 
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24"
+                              >
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                               </svg>
                               {req}
                             </li>
                           ))}
                         </ul>
-                        <div className="pt-2 border-t border-purple-100 dark:border-purple-800/30 flex items-center">
+                        <div className="pt-2 border-t border-[#C72026]/20 dark:border-[#C72026]/30 flex items-center">
                           <span className="text-xs font-medium text-gray-600 dark:text-gray-400 mr-2">Example:</span>
-                          <code className="px-2 py-0.5 bg-white dark:bg-gray-800 rounded border border-purple-200 dark:border-purple-700 text-xs font-mono text-purple-600 dark:text-purple-400">Secure@2025!</code>
+                          <code className="px-2 py-0.5 bg-white dark:bg-gray-800 rounded border border-[#C72026]/20 dark:border-[#C72026]/30 text-xs font-mono text-[#C72026] dark:text-[#C72026]">
+                            Secure@2025!
+                          </code>
                         </div>
                       </div>
                     </div>
@@ -952,7 +984,7 @@ const AdminSettings = () => {
                         name="confirm-password"
                         value={confirmPassword}
                         onChange={handlePasswordChange}
-                        className="block w-full px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                        className="block w-full px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                         placeholder="••••••••••••"
                       />
                     </div>
@@ -962,11 +994,15 @@ const AdminSettings = () => {
                     <button
                       type="submit"
                       disabled={isPasswordSubmitting}
-                      className="bg-purple-500 hover:bg-purple-600 text-white font-medium py-3 px-6 rounded-md transition duration-150 ease-in-out flex items-center disabled:opacity-70 disabled:cursor-not-allowed"
+                      className="bg-[#C72026] hover:bg-[#C72026]/90 text-white font-medium py-3 px-6 rounded-md transition duration-150 ease-in-out flex items-center disabled:opacity-70 disabled:cursor-not-allowed"
                     >
                       {isPasswordSubmitting ? (
                         <>
-                          <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            fill="none" 
+                            viewBox="0 0 24 24"
+                          >
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                           </svg>
@@ -1002,7 +1038,7 @@ const AdminSettings = () => {
                         id="api-key"
                         value={apiKey}
                         onChange={(e) => setApiKey(e.target.value)}
-                        className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                        className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                         placeholder="sk-..."
                       />
                       <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -1031,12 +1067,12 @@ const AdminSettings = () => {
                       </button>
                       <button
                         type="submit"
-                        className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600 transition flex items-center"
+                        className="bg-[#C72026] hover:bg-[#C72026]/90 text-white px-4 py-2 rounded-md transition flex items-center"
                         disabled={isSubmitting}
                       >
                         {isSubmitting ? (
                           <>
-                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 border-2 border-[#C72026]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
@@ -1067,7 +1103,7 @@ const AdminSettings = () => {
                         name="name"
                         value={promptData.name}
                         onChange={handlePromptFormChange}
-                        className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                        className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                         placeholder={translate('systemInstructions')}
                       />
                     </div>
@@ -1082,7 +1118,7 @@ const AdminSettings = () => {
                         name="description"
                         value={promptData.description}
                         onChange={handlePromptFormChange}
-                        className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                        className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                         placeholder={translate('briefDescriptionPrompt')}
                       />
                     </div>
@@ -1097,7 +1133,7 @@ const AdminSettings = () => {
                         rows={10}
                         value={promptData.content}
                         onChange={handlePromptFormChange}
-                        className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                        className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                         placeholder={translate('promptPlaceholder')}
                       ></textarea>
                       <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -1113,7 +1149,7 @@ const AdminSettings = () => {
                           name="isActive"
                           checked={promptData.isActive}
                           onChange={handlePromptFormChange}
-                          className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                          className="h-4 w-4 text-[#C72026] focus:ring-[#C72026] border-gray-300 rounded"
                         />
                         <label htmlFor="isActive" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
                           {translate('setAsActivePrompt')}
@@ -1145,12 +1181,12 @@ const AdminSettings = () => {
                       </button>
                       <button
                         type="submit"
-                        className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600 transition flex items-center"
+                        className="bg-[#C72026] hover:bg-[#C72026]/90 text-white px-4 py-2 rounded-md transition flex items-center"
                         disabled={isSubmitting}
                       >
                         {isSubmitting ? (
                           <>
-                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 border-2 border-[#C72026]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>

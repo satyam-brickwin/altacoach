@@ -35,7 +35,7 @@ export default function ChatPage() {
     if (messages.length === 0) {
       const welcomeMessage: Message = {
         id: 'welcome',
-        text: "👋 Hello! I'm your AltaCoach assistant. How can I help you today?",
+        text: "👋 Hello! I'm your altacoach assistant. How can I help you today?",
         sender: 'ai',
         timestamp: new Date(),
       };

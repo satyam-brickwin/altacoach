@@ -5,12 +5,12 @@ import React from 'react';
 export default function AboutPage() {
   return (
     <div className="container mx-auto px-4 py-12">
-      <h1 className="text-3xl font-bold mb-6">About AltaCoach</h1>
+      <h1 className="text-3xl font-bold mb-6">About altacoach</h1>
       
       <div className="bg-white shadow rounded-lg p-6 mb-8">
         <h2 className="text-2xl font-semibold mb-4">Our Mission</h2>
         <p className="text-gray-700 mb-4">
-          AltaCoach is dedicated to revolutionizing the way professionals receive coaching and training support. 
+          altacoach is dedicated to revolutionizing the way professionals receive coaching and training support. 
           Our AI-powered platform provides personalized guidance, reinforcement, and continuous learning opportunities 
           that extend beyond traditional training programs.
         </p>
@@ -24,7 +24,7 @@ export default function AboutPage() {
       <div className="bg-white shadow rounded-lg p-6 mb-8">
         <h2 className="text-2xl font-semibold mb-4">Our Story</h2>
         <p className="text-gray-700 mb-4">
-          AltaCoach was founded by a team of learning and development experts who recognized a critical gap 
+          altacoach was founded by a team of learning and development experts who recognized a critical gap 
           in traditional corporate training: the lack of effective post-training support. 
           Studies show that without reinforcement, professionals retain only a fraction of what they learn during training.
         </p>

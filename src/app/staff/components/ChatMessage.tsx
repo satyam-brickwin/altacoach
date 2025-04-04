@@ -85,7 +85,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
           isUser ? "justify-end" : "justify-start"
         )}>
           {!isUser && (
-            <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-accent text-accent-foreground mt-1">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] mt-1">
               <span className="text-xs font-medium">AC</span>
             </div>
           )}
@@ -108,8 +108,8 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
               className={cn(
                 "px-4 py-3 rounded-2xl",
                 isUser
-                  ? "bg-primary text-gray-900 dark:text-white rounded-br-none" // Force dark text for user messages
-                  : "bg-secondary/50 dark:bg-gray-800 rounded-bl-none text-gray-900 dark:chat-text-dark"
+                  ? "bg-[#C72026] text-white rounded-br-none" // User messages in red with white text
+                  : "bg-[#C72026]/10 dark:bg-[#C72026]/20 rounded-bl-none text-gray-900 dark:text-gray-100" // Assistant messages with light red bg
               )}
             >
               {isEditing ? (
@@ -125,8 +125,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                 <div
                   className={cn(
                     "prose prose-sm max-w-none break-words",
-                    // Both user and assistant messages use dark text in light mode (gray-900)
-                    isUser ? "text-gray-900 dark:text-white" : "text-gray-900 dark:chat-text-dark"
+                    isUser ? "text-white dark:text-white" : "text-gray-900 dark:chat-text-dark"
                   )}
                 >
                   {message.text}
@@ -139,30 +138,30 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
               <div className="flex items-center justify-end gap-2 mt-2">
                 <button
                   onClick={handleCancelEdit}
-                  className="p-1 rounded-full hover:bg-muted transition-colors duration-200"
+                  className="p-1 rounded-full hover:bg-[#C72026]/10 dark:hover:bg-[#C72026]/20 transition-colors duration-200"
                   aria-label="Cancel edit"
                 >
-                  <X className="h-4 w-4 text-gray-500 dark:text-white" /> {/* Changed from text-muted-foreground */}
+                  <X className="h-4 w-4 text-[#C72026] dark:text-[#C72026]" />
                 </button>
                 <button
                   onClick={handleSaveEdit}
-                  className="p-1 rounded-full hover:bg-muted transition-colors duration-200"
+                  className="p-1 rounded-full hover:bg-[#C72026]/10 dark:hover:bg-[#C72026]/20 transition-colors duration-200"
                   aria-label="Save edit"
                 >
-                  <Check className="h-4 w-4 text-indigo-600 dark:text-white" /> {/* Changed from text-primary */}
+                  <Check className="h-4 w-4 text-[#C72026] dark:text-[#C72026]" />
                 </button>
               </div>
             )}
             
             {/* Add bulb icon for assistant messages */}
             {!isUser && !isEditing && (
-              <div className="opacity-0 group-hover:opacity-100 absolute top-6 -right-10 flex flex-col gap-1 transition-opacity duration-200">
+              <div className="opacity-0 group-hover:opacity-100 absolute bottom-0 right-0 transform translate-x-8 translate-y-1/2 transition-opacity duration-200">
                 <button
                   onClick={handleInsight}
-                  className="p-1 rounded-full hover:bg-muted transition-colors duration-200"
+                  className="p-2 rounded-full bg-yellow-100 hover:bg-yellow-200 transition-colors duration-200"
                   aria-label="Show insights"
                 >
-                  <Lightbulb className="h-4 w-4 text-gray-500 dark:text-white" />
+                  <Lightbulb className="h-4 w-4 text-yellow-500 dark:text-yellow-400" />
                 </button>
               </div>
             )}
@@ -172,24 +171,24 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
               <div className="opacity-0 group-hover:opacity-100 absolute top-6 -left-10 flex flex-col gap-1 transition-opacity duration-200">
                 <button
                   onClick={handleEdit}
-                  className="p-1 rounded-full hover:bg-muted transition-colors duration-200"
+                  className="p-1 rounded-full hover:bg-[#C72026]/10 dark:hover:bg-[#C72026]/20 transition-colors duration-200"
                   aria-label="Edit message"
                 >
-                  <Edit className="h-4 w-4 text-gray-500 dark:text-white" /> {/* Changed from text-muted-foreground */}
+                  <Edit className="h-4 w-4 text-[#C72026] dark:text-[#C72026]" />
                 </button>
                 <button
                   onClick={handleDelete}
-                  className="p-1 rounded-full hover:bg-muted transition-colors duration-200"
+                  className="p-1 rounded-full hover:bg-[#C72026]/10 dark:hover:bg-[#C72026]/20 transition-colors duration-200"
                   aria-label="Delete message"
                 >
-                  <Trash2 className="h-4 w-4 text-gray-500 dark:text-white" /> {/* Changed from text-muted-foreground */}
+                  <Trash2 className="h-4 w-4 text-[#C72026] dark:text-[#C72026]" />
                 </button>
               </div>
             )}
           </div>
           
           {isUser && (
-            <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-primary text-gray-900 mt-1">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-[#C72026] text-white mt-1">
               <span className="text-xs font-medium">You</span>
             </div>
           )}

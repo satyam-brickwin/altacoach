@@ -6,6 +6,8 @@ import { useDarkMode } from '@/contexts/DarkModeContext';
 import { useAuthProtection, useAuth, UserRole } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
+import Image from 'next/image';
+import Link from 'next/link';
 
 // Import components
 import { ChatMessage } from './components/ChatMessage';
@@ -13,6 +15,7 @@ import { TypingIndicator } from './components/TypingIndicator';
 import { ChatInput } from './components/ChatInput';
 import { EmptyState } from './components/EmptyState';
 import { cn } from './lib/utils';
+import { SuggestionModal } from '@/components/SuggestionModal';
 
 // Import icons
 import { 
@@ -40,7 +43,7 @@ import {
 // Import translations
 const translations = {
   en: {
-    aiAssistant: 'AltaCoach',
+    aiAssistant: 'altacoach',
     askQuestion: 'Ask a question...',
     askAI: 'Ask AI',
     typeYourAnswer: 'Type your answer...',
@@ -326,6 +329,9 @@ const translations = {
   }
 };
 
+// Default response constant
+const DEFAULT_RESPONSE = "Sorry, AltaCoach is designed to coach you about client experience. For any other topic, please contact your manager or send a suggestion to the team.";
+
 export default function StaffDashboard() {
   // Core hooks and auth logic
   const router = useRouter();
@@ -365,28 +371,32 @@ export default function StaffDashboard() {
   const [lastClickTime, setLastClickTime] = useState<{ [key: string]: number }>({});
   const [inputValue, setInputValue] = useState('');
   
+  // Add state for suggestion modal
+  const [isSuggestionModalOpen, setIsSuggestionModalOpen] = useState(false);
+  const [suggestionInput, setSuggestionInput] = useState('');
+
   // Toggle dropdown section function - MODIFIED HERE
   const toggleSection = (section: string) => {
-    // If we're opening a new section that's different from the currently open one
+    // Clear messages and reset UI when switching sections
     if (expandedSection !== section) {
-      // Reset quiz mode when switching away from quizMode
-      if (expandedSection === 'quizMode') {
-        setQuizMode(false);
-      }
+      // Reset all states
+      setMessages([]); // Clear chat messages
+      setIsLoading(false); // Reset loading state
+      setQuizMode(false); // Reset quiz mode
+      setInputValue(''); // Clear input field
       
-      // Clear messages when switching between sections (if needed)
-      if ((expandedSection === 'quizMode' && section === 'cannedQuestions') || 
-          (expandedSection === 'cannedQuestions' && section === 'quizMode')) {
-        // Use a timeout to ensure state updates don't interfere with each other
-        setTimeout(() => {
-          setMessages([]);
-        }, 0);
-      }
+      // Set active view to chat for proper UI update
+      setActiveView('chat');
       
-      // Set the new expanded section (do this last to avoid UI glitches)
+      // Set the new expanded section
       setExpandedSection(section);
+      
+      // If on mobile, close the menu
+      if (window.innerWidth < 1024) {
+        setMenuOpen(false);
+      }
     } else {
-      // Toggle off the current section
+      // Toggle off current section
       setExpandedSection(null);
     }
   };
@@ -477,11 +487,22 @@ export default function StaffDashboard() {
     };
   }, [menuOpen, settingsOpen]);
 
+  // Cleanup effect
+  useEffect(() => {
+    // Cleanup function
+    return () => {
+      setMessages([]);
+      setIsLoading(false);
+      setQuizMode(false);
+      setInputValue('');
+    };
+  }, []);
+
   // Early return for loading
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C72026]"></div>
       </div>
     );
   }
@@ -519,9 +540,15 @@ export default function StaffDashboard() {
 
   // Handle view switching
   const handleViewChange = (view: 'chat' | 'history' | 'cannedQuestions' | 'quizMode') => {
-    // ONLY toggle the section, don't change the activeView
+    // Reset states
+    setMessages([]);
+    setIsLoading(false);
+    setQuizMode(false);
+    setInputValue('');
+    
+    // Update view
+    setActiveView(view);
     toggleSection(view);
-    // Removed the setActiveView call that was happening somewhere else
   };
   
   // Function to handle quiz subject selection
@@ -551,144 +578,93 @@ export default function StaffDashboard() {
     }, 50);
   };
 
+  // Add this function near the isBusinessRelatedQuery function
+  const isBusinessRelatedQuery = (query: string): boolean => {
+    const businessKeywords = [
+      'client', 'customer', 'business', 'service', 'product', 
+      'sales', 'marketing', 'strategy', 'support', 'experience'
+    ];
+
+    const lowercaseQuery = query.toLowerCase();
+    return businessKeywords.some(keyword => lowercaseQuery.includes(keyword));
+  };
+
   // Handle AI Assistant chat submission - modified to work with the new UI
   const handleSendMessage = async (content: string) => {
     if (!content.trim()) return;
 
-    // Check if input is too short or not business-related
-    if (content.length < 2 || !isBusinessRelatedQuery(content)) {
-      const restrictedMessage = {
-        id: uuidv4(),
-        role: 'assistant' as const,
-        text: "Sorry, AltaCoach is designed to coach you about client experience. For any other topic, please contact your manager or send a suggestion to the team.",
-        timestamp: new Date().toISOString(),
-      };
-
-      setMessages(prev => [...prev, {
-        id: uuidv4(),
-        role: 'user' as const,
-        text: content,
-        timestamp: new Date().toISOString(),
-      }, restrictedMessage]);
-      return;
-    }
-
-    // Create a user message
     const userMessage = {
       id: uuidv4(),
       role: 'user' as const,
       text: content,
       timestamp: new Date().toISOString(),
     };
-    
-    // Add the user message to the chat
-    setMessages(prevMessages => [...prevMessages, userMessage]);
-    
-    // Set loading state
+
+    setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
-    
+
     try {
-      // If in quiz mode, handle the submission as an answer to a quiz question
+      // Check if it's a non-business query (random text)
+      if (!isBusinessRelatedQuery(content) && !quizMode) {
+        const restrictedMessage = {
+          id: uuidv4(),
+          role: 'assistant' as const,
+          text: DEFAULT_RESPONSE,
+          timestamp: new Date().toISOString(),
+        };
+
+        setMessages(prev => [...prev, restrictedMessage]);
+        setIsLoading(false);
+        return;
+      }
+
+      // Always send default response for canned questions
+      const isCannedQuestion = [
+        ...exampleQuestions,
+        // Add other canned questions arrays here
+      ].includes(content);
+
+      if (isCannedQuestion) {
+        const restrictedMessage = {
+          id: uuidv4(),
+          role: 'assistant' as const,
+          text: DEFAULT_RESPONSE,
+          timestamp: new Date().toISOString(),
+        };
+
+        setMessages(prev => [...prev, restrictedMessage]);
+        setIsLoading(false);
+        return;
+      }
+
+      // Rest of the existing code for handling regular messages
       if (quizMode && messages.length > 0 && messages[messages.length - 1].role === 'assistant') {
-        // Generate feedback based on the user's answer
         const feedback = evaluateQuizAnswer(content);
-        
-        // Create a feedback message first
         const feedbackMessage = {
           id: uuidv4(),
           role: 'assistant' as const,
           text: feedback,
           timestamp: new Date().toISOString(),
         };
-        
-        // Add the feedback message to the chat
+
         setMessages(prev => [...prev, feedbackMessage]);
-        
-        // Small delay before sending the next question to make it feel more natural
+
         setTimeout(() => {
-          // Create a new question to ask
           const newQuestion = generateQuizQuestion();
-          
-          // Create the assistant's next question message
           const questionMessage = {
             id: uuidv4(),
             role: 'assistant' as const,
             text: newQuestion,
             timestamp: new Date().toISOString(),
           };
-          
-          // Add the question message to the chat
+
           setMessages(prev => [...prev, questionMessage]);
-        }, 1500); // 1.5 second delay between feedback and new question
-        
-        // Set loading to false since we're handling the response ourselves
+        }, 1500);
+
         setIsLoading(false);
         return;
       }
-      
-      // Check if the message is a canned question and use a dedicated response
-      const isCannedQuestion = [
-        ...["What are effective strategies for small business growth?", 
-           "How can I create a competitive analysis for my industry?", 
-           "What metrics should I track for my business performance?"],
-        ...["How can I improve my social media marketing?",
-           "What are the latest digital marketing trends?",
-           "How to create an effective email marketing campaign?",
-           "What content marketing strategies work best for B2B companies?"],
-        ...["How to improve customer satisfaction scores?",
-           "What are best practices for handling customer complaints?",
-           "How can AI enhance our customer service operations?"],
-        ...["Can you summarize this document for me?",
-           "What are the key points in this document?",
-           "How does this document compare to industry standards?"],
-        ...exampleQuestions
-      ].includes(content);
 
-      if (isCannedQuestion) {
-        // For canned questions, we'll provide a thorough response instead of using the default
-        let response;
-        
-        if (content === "What metrics should I track for my business performance?") {
-          response = "For business performance, you should track both financial and operational metrics. Key financial metrics include revenue growth, profit margin, cash flow, and customer acquisition cost (CAC). Important operational metrics are customer retention rate, employee productivity, sales conversion rate, and inventory turnover. Also consider customer satisfaction metrics like Net Promoter Score (NPS). The ideal metrics vary by industry and business goals, so focus on those most relevant to your specific objectives.";
-        } else {
-          // Use the API for other canned questions
-          console.log('Calling API for canned question:', content);
-          const apiResponse = await fetch('/api/chat-simple', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              message: content,
-              isCannedQuestion: true, // Add a flag to indicate this is a canned question
-            }),
-          });
-          
-          if (apiResponse.ok) {
-            const data = await apiResponse.json();
-            response = data.message;
-          } else {
-            // Fallback response if API fails
-            response = "I'd be happy to help with that question. Please note that our system is currently experiencing high demand. Could you please try again in a moment?";
-          }
-        }
-
-        // Add response as assistant message
-        const aiMessage = {
-          id: uuidv4(),
-          role: 'assistant' as const,
-          text: response,
-          timestamp: new Date().toISOString(),
-        };
-
-        setMessages(prev => [...prev, aiMessage]);
-        setIsLoading(false);
-        return;
-      }
-      
-      // Regular chat API logic for non-canned questions
-      // Try the simple chat endpoint first as it's more reliable
-      console.log('Calling simple chat API with message:', content);
       const simpleResponse = await fetch('/api/chat-simple', {
         method: 'POST',
         headers: {
@@ -698,27 +674,21 @@ export default function StaffDashboard() {
           message: content,
         }),
       });
-      
+
       if (simpleResponse.ok) {
         const simpleData = await simpleResponse.json();
-        console.log('Simple API response data:', simpleData);
-        
-        // Add AI response from simple endpoint
         const aiMessage = {
           id: uuidv4(),
           role: 'assistant' as const,
           text: simpleData.message,
           timestamp: new Date().toISOString(),
         };
-  
+
         setMessages(prev => [...prev, aiMessage]);
         setIsLoading(false);
-        return; // Exit early since we already have a response
+        return;
       }
-      
-      // If simple endpoint failed, try the main chat API
-      console.log('Simple API failed, trying main chat API...');
-      console.log('Calling chat API with message:', content);
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -729,16 +699,12 @@ export default function StaffDashboard() {
         }),
       });
 
-      console.log('API response status:', response.status);
-      
       const data = await response.json();
-      console.log('API response data:', data);
 
       if (!response.ok) {
         throw new Error(`Failed to get response: ${data.error || response.statusText}`);
       }
 
-      // Add AI response
       const aiMessage = {
         id: uuidv4(),
         role: 'assistant' as const,
@@ -749,12 +715,11 @@ export default function StaffDashboard() {
       setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
       console.error('Error in chat submission:', error);
-      
-      // Add error message
+
       const errorMessage = {
         id: uuidv4(),
         role: 'assistant' as const,
-        text: `Sorry, I encountered an error. Please try again. (Error: ${error instanceof Error ? error.message : String(error)})`,
+        text: DEFAULT_RESPONSE,
         timestamp: new Date().toISOString(),
       };
 
@@ -764,31 +729,13 @@ export default function StaffDashboard() {
     }
   };
 
-  // Add a helper function to check if query is business-related
-  const isBusinessRelatedQuery = (query: string): boolean => {
-    // List of business-related keywords
-    const businessKeywords = [
-      'client', 'customer', 'business', 'service', 'product', 
-      'sales', 'marketing', 'strategy', 'support', 'experience',
-      'market', 'growth', 'revenue', 'satisfaction', 'feedback',
-      'complaint', 'improvement', 'quality', 'performance', 'metrics'
-    ];
-
-    // Check if query contains any business-related keywords
-    const lowercaseQuery = query.toLowerCase();
-    return businessKeywords.some(keyword => lowercaseQuery.includes(keyword)) || 
-           query.length > 10; // Allow longer queries as they're likely more specific
-  };
-
   // Handle regenerate response
   const handleRegenerateResponse = () => {
     const lastUserMessageIndex = [...messages].reverse().findIndex(m => m.role === 'user');
     if (lastUserMessageIndex !== -1) {
       const actualIndex = messages.length - 1 - lastUserMessageIndex;
       const userMessage = messages[actualIndex];
-      // Keep messages up to and including the user message, but remove any after it
       setMessages(prev => prev.filter((_, i) => i <= actualIndex));
-      // Resubmit the query
       handleSendMessage(userMessage.text);
     }
   };
@@ -808,39 +755,26 @@ export default function StaffDashboard() {
   
   // Handle suggested question click
   const handleSuggestedQuestion = (question: string) => {
-    // Use a callback for state updates to ensure they're applied in the correct order
-    setMessages([]); // First clear all messages
-    
-    // Use setTimeout to ensure the messages state is fully cleared before sending the new message
+    setMessages([]);
     setTimeout(() => {
-      // Create a user message
       const userMessage = {
         id: uuidv4(),
         role: 'user' as const,
         text: question,
         timestamp: new Date().toISOString(),
       };
-      
-      // Add the user message
+
       setMessages([userMessage]);
       setActiveView('chat');
-      
-      // Set quiz mode off (if it was on)
       setQuizMode(false);
-      
-      // Show typing indicator
       setIsLoading(true);
-      
-      // Calculate response time based on length of potential response
-      // This simulates a natural typing experience
-      // Short responses: 1-2 seconds, Medium: 2-3.5 seconds, Longer: 3.5-5 seconds
-      const estimatedLength = question.length * 5; // Rough estimate of response length
+
+      const estimatedLength = question.length * 5;
       const typingDelay = Math.min(
-        Math.max(1000, estimatedLength / 20), // Min 1 second, scales with estimated length
-        5000 // Max 5 seconds
+        Math.max(1000, estimatedLength / 20),
+        5000
       );
-      
-      // Call API for this canned question after a short delay to show initial typing
+
       setTimeout(() => {
         fetch('/api/chat-simple', {
           method: 'POST',
@@ -854,38 +788,33 @@ export default function StaffDashboard() {
         })
         .then(response => response.json())
         .then(data => {
-          // Add AI response
           const aiMessage = {
             id: uuidv4(),
             role: 'assistant' as const,
             text: data.message || "I'm sorry, I couldn't generate a response.",
             timestamp: new Date().toISOString(),
           };
-          
-          // Update messages to include both user and assistant message
+
           setMessages(prev => [...prev, aiMessage]);
         })
         .catch(error => {
           console.error("Error fetching canned question response:", error);
-          
-          // Add error message
+
           const errorMessage = {
             id: uuidv4(),
             role: 'assistant' as const,
             text: `Sorry, I encountered an error. Please try again.`,
             timestamp: new Date().toISOString(),
           };
-          
+
           setMessages(prev => [...prev, errorMessage]);
         })
         .finally(() => {
           setIsLoading(false);
         });
-      }, typingDelay); // Dynamic delay based on expected response length
-      
+      }, typingDelay);
     }, 50);
-    
-    // Close menu on mobile
+
     if (window.innerWidth < 1024) {
       setMenuOpen(false);
     }
@@ -895,45 +824,33 @@ export default function StaffDashboard() {
   const handleQuestionClick = (question: string, questionId: string) => {
     const now = Date.now();
     const lastClick = lastClickTime[questionId] || 0;
-    const isDoubleClick = now - lastClick < 300; // 300ms threshold for double click
-    
-    // Update the last click time regardless
+    const isDoubleClick = now - lastClick < 300;
+
     setLastClickTime(prev => ({
       ...prev,
       [questionId]: now
     }));
-    
-    if (isDoubleClick) {
-      // Double click - send immediately
-      setQuizMode(false); // Explicitly turn off quiz mode
-      handleSuggestedQuestion(question);
-    } else {
-      // Single click - put in input box
-      setQuizMode(false); // Explicitly turn off quiz mode
-      setInputValue(question); // Set the value
-      setActiveView('chat'); // Ensure we're in chat view
-      
-      // Set focus and position cursor at end in next tick
-      setTimeout(() => {
-        if (inputRef.current) {
-          // Focus the input
-          inputRef.current.focus();
-          
-          // Position cursor at the end
-          const length = question.length;
-          inputRef.current.setSelectionRange(length, length);
-          
-          // Manually trigger height adjustment
-          const newHeight = `${Math.min(inputRef.current.scrollHeight, 100)}px`;
-          inputRef.current.style.height = 'auto';
-          inputRef.current.style.height = newHeight;
-        }
-      }, 50);
-      
-      // Close menu on mobile if needed
-      if (window.innerWidth < 1024) {
-        setMenuOpen(false);
-      }
+
+    // Add new messages to existing ones instead of replacing them
+    const userMessage = {
+      id: uuidv4(),
+      role: 'user' as const,
+      text: question,
+      timestamp: new Date().toISOString(),
+    };
+
+    const restrictedMessage = {
+      id: uuidv4(),
+      role: 'assistant' as const,
+      text: DEFAULT_RESPONSE,
+      timestamp: new Date().toISOString(),
+    };
+
+    // Append new messages instead of replacing
+    setMessages(prev => [...prev, userMessage, restrictedMessage]);
+
+    if (window.innerWidth < 1024) {
+      setMenuOpen(false);
     }
   };
 
@@ -945,8 +862,8 @@ export default function StaffDashboard() {
   // Function to load a historical chat
   const handleLoadChat = (id: string) => {
     alert(`Loading chat ${id} in a real application`);
-    setActiveView('chat'); // This is correct - we want to change the view
-    setMenuOpen(false); // Close the sidebar
+    setActiveView('chat');
+    setMenuOpen(false);
   };
 
   // Handle file upload
@@ -976,53 +893,46 @@ export default function StaffDashboard() {
     router.push('/login');
   };
 
+  // Handle suggestion submission
+  const handleSuggestionSubmit = (suggestion: string) => {
+    alert('Thank you for your suggestion: ' + suggestion);
+    setSuggestionInput('');
+    setIsSuggestionModalOpen(false);
+  };
+
   // Enhanced custom input component
   const EnhancedInput = () => {
-    // Track textarea height separately to avoid re-renders during typing
     const heightRef = useRef('auto');
     
-    // Handle input value changes - completely rewritten
     const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      // Update the input value in state
       setInputValue(e.target.value);
-      
-      // Store current cursor position and selection
       const selectionStart = e.target.selectionStart;
       const selectionEnd = e.target.selectionEnd;
       
-      // Use setTimeout to ensure DOM updates properly
       setTimeout(() => {
         if (inputRef.current) {
-          // Clone the current input element to measure height without affecting the UI
           const clone = document.createElement('textarea');
           const styles = window.getComputedStyle(inputRef.current);
           
-          // Copy all relevant styles to ensure accurate height calculation
           Array.from(styles).forEach(key => {
             clone.style.setProperty(key, styles.getPropertyValue(key));
           });
           
-          // Set the clone's value to the current text
           clone.value = e.target.value;
           clone.style.position = 'absolute';
           clone.style.visibility = 'hidden';
           clone.style.height = 'auto';
           document.body.appendChild(clone);
           
-          // Measure the clone's height
           const newHeight = `${Math.min(clone.scrollHeight, 100)}px`;
-          
-          // Remove the clone from the DOM
           document.body.removeChild(clone);
           
-          // Only update the height if it has changed
           if (heightRef.current !== newHeight) {
             heightRef.current = newHeight;
             inputRef.current.style.height = 'auto';
             inputRef.current.style.height = newHeight;
           }
           
-          // Restore cursor position after any height changes
           inputRef.current.focus();
           inputRef.current.setSelectionRange(selectionStart, selectionEnd);
         }
@@ -1041,7 +951,6 @@ export default function StaffDashboard() {
         handleSendMessage(inputValue);
         setInputValue('');
         
-        // Reset height reference and input height
         heightRef.current = 'auto';
         if (inputRef.current) {
           inputRef.current.style.height = 'auto';
@@ -1067,7 +976,6 @@ export default function StaffDashboard() {
             />
           </div>
           
-          {/* Send button - smaller on mobile */}
           <button
             type="button"
             onClick={handleSubmit}
@@ -1075,7 +983,7 @@ export default function StaffDashboard() {
             className={`p-1.5 sm:p-2 rounded-full transition-colors ${
               !inputValue.trim() || isLoading
                 ? 'text-gray-400 dark:text-gray-600'
-                : 'text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/30'
+                : 'text-[#C72026] dark:text-[#C72026] hover:bg-[#C72026]/10 dark:hover:bg-[#C72026]/30'
             }`}
           >
             <Send size={16} className="sm:w-[18px] sm:h-[18px]" />
@@ -1085,42 +993,37 @@ export default function StaffDashboard() {
     );
   };
 
-  // New UI layout with top navbar and enhanced UI
   return (
     <div className="h-screen flex overflow-hidden">
-      {/* Sidebar */}
       <div className={`fixed top-0 left-0 h-full bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 w-[260px] z-50 flex flex-col transition-transform duration-300 ease-in-out shadow-lg overflow-y-auto ${
         menuOpen ? "translate-x-0" : "-translate-x-full"
       }`}>
-        {/* New Chat Button */}
         <div className="p-2">
           <button
             onClick={() => {
               setMessages([]);
               setActiveView('chat');
-              setQuizMode(false); // Add this to ensure quiz mode is off for new chats
+              setQuizMode(false);
               setMenuOpen(false);
             }}
             className="flex items-center gap-2 w-full px-3 py-3 rounded-md border border-gray-200 dark:border-gray-700 text-sm hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors"
           >
-            <PlusCircle size={16} className="text-purple-600 dark:text-purple-400" />
+            <PlusCircle size={16} className="text-[#C72026] dark:text-[#C72026]" />
             <span>{translations[language]?.newChat || 'New chat'}</span>
           </button>
         </div>
 
-        {/* Navigation Dropdowns */}
         <div className="p-2 space-y-1">
-          {/* Quiz Mode Dropdown (replacing the toggle) */}
           <div className="border-b dark:border-gray-700">
             <button
               onClick={(e) => {
                 e.preventDefault();
-                toggleSection('quizMode'); // Toggle the dropdown
+                toggleSection('quizMode');
               }}
               className="flex items-center justify-between w-full px-3 py-3 rounded-md text-sm hover:bg-gray-100 dark:hover:bg-gray-700/50 group"
             >
               <div className="flex items-center">
-                <Brain size={16} className="mr-3 text-purple-600 dark:text-purple-400" />
+                <Brain size={16} className="mr-3 text-[#C72026] dark:text-[#C72026]" />
                 <span>{translations[language]?.menu.quizMode || 'Quiz Mode'}</span>
               </div>
               <svg 
@@ -1134,12 +1037,10 @@ export default function StaffDashboard() {
               </svg>
             </button>
             
-            {/* Quiz Mode Content */}
             {expandedSection === 'quizMode' && (
               <div className="pl-8 pr-3 pb-3 space-y-3 animate-fadeIn">
-                {/* Business */}
                 <div>
-                  <div className="text-xs font-medium text-purple-600 dark:text-purple-400 mb-2">
+                  <div className="text-xs font-medium text-[#C72026] dark:text-[#C72026] mb-2">
                     Business
                   </div>
                   <button
@@ -1176,9 +1077,8 @@ export default function StaffDashboard() {
                   </button>
                 </div>
                 
-                {/* Product Knowledge */}
                 <div>
-                  <div className="text-xs font-medium text-purple-600 dark:text-purple-400 mb-2">
+                  <div className="text-xs font-medium text-[#C72026] dark:text-[#C72026] mb-2">
                     Product Knowledge
                   </div>
                   <button
@@ -1215,9 +1115,8 @@ export default function StaffDashboard() {
                   </button>
                 </div>
                 
-                {/* Industry Knowledge */}
                 <div>
-                  <div className="text-xs font-medium text-purple-600 dark:text-purple-400 mb-2">
+                  <div className="text-xs font-medium text-[#C72026] dark:text-[#C72026] mb-2">
                     Industry Knowledge
                   </div>
                   <button
@@ -1257,17 +1156,16 @@ export default function StaffDashboard() {
             )}
           </div>
 
-          {/* Canned Questions Dropdown */}
           <div className="border-b dark:border-gray-700">
             <button
               onClick={(e) => {
-                e.preventDefault(); // Prevent any default behavior
-                toggleSection('cannedQuestions'); // Only toggle the dropdown
+                e.preventDefault();
+                toggleSection('cannedQuestions');
               }}
               className="flex items-center justify-between w-full px-3 py-3 rounded-md text-sm hover:bg-gray-100 dark:hover:bg-gray-700/50 group"
             >
               <div className="flex items-center">
-                <MessageSquare size={16} className="mr-3 text-purple-600 dark:text-purple-400" />
+                <MessageSquare size={16} className="mr-3 text-[#C72026] dark:text-[#C72026]" />
                 <span>{translations[language]?.menu.cannedQuestions || 'Canned Questions'}</span>
               </div>
               <svg 
@@ -1281,12 +1179,10 @@ export default function StaffDashboard() {
               </svg>
             </button>
             
-            {/* Canned Questions Content */}
             {expandedSection === 'cannedQuestions' && (
               <div className="pl-8 pr-3 pb-3 space-y-3 animate-fadeIn">
-                {/* Business Strategy */}
                 <div>
-                  <div className="text-xs font-medium text-purple-600 dark:text-purple-400 mb-1.5">
+                  <div className="text-xs font-medium text-[#C72026] dark:text-[#C72026] mb-1.5">
                     {translations[language]?.categories.businessStrategy || 'Business Strategy'}
                   </div>
                   {[
@@ -1304,9 +1200,8 @@ export default function StaffDashboard() {
                   ))}
                 </div>
                 
-                {/* Marketing */}
                 <div>
-                  <div className="text-xs font-medium text-purple-600 dark:text-purple-400 mb-1.5">
+                  <div className="text-xs font-medium text-[#C72026] dark:text-[#C72026] mb-1.5">
                     {translations[language]?.categories.marketing || 'Marketing'}
                   </div>
                   {[
@@ -1325,9 +1220,8 @@ export default function StaffDashboard() {
                   ))}
                 </div>
                 
-                {/* Customer Support */}
                 <div>
-                  <div className="text-xs font-medium text-purple-600 dark:text-purple-400 mb-1.5">
+                  <div className="text-xs font-medium text-[#C72026] dark:text-[#C72026] mb-1.5">
                     {translations[language]?.categories.customerSupport || 'Customer Support'}
                   </div>
                   {[
@@ -1345,9 +1239,8 @@ export default function StaffDashboard() {
                   ))}
                 </div>
                 
-                {/* Document Analysis */}
                 <div>
-                  <div className="text-xs font-medium text-purple-600 dark:text-purple-400 mb-1.5">
+                  <div className="text-xs font-medium text-[#C72026] dark:text-[#C72026] mb-1.5">
                     {translations[language]?.categories.documentAnalysis || 'Document Analysis'}
                   </div>
                   {[
@@ -1368,17 +1261,16 @@ export default function StaffDashboard() {
             )}
           </div>
 
-          {/* Chat History Dropdown */}
           <div className="border-b dark:border-gray-700">
             <button
               onClick={(e) => {
-                e.preventDefault(); // Prevent any default behavior
-                toggleSection('history'); // Only toggle the dropdown
+                e.preventDefault();
+                toggleSection('history');
               }}
               className="flex items-center justify-between w-full px-3 py-3 rounded-md text-sm hover:bg-gray-100 dark:hover:bg-gray-700/50 group"
             >
               <div className="flex items-center">
-                <Clock size={16} className="mr-3 text-purple-600 dark:text-purple-400" />
+                <Clock size={16} className="mr-3 text-[#C72026] dark:text-[#C72026]" />
                 <span>{translations[language]?.menu.history || 'History'}</span>
               </div>
               <svg 
@@ -1392,20 +1284,16 @@ export default function StaffDashboard() {
               </svg>
             </button>
             
-            {/* History Content */}
             {expandedSection === 'history' && (
-              <div className="pl-8 pr-3 pb-3 space-y-2 animate-fadeIn">
+              <div className="pl-8 pr-3 pb-3 space-y-3 animate-fadeIn">
                 {chatHistory.map((chat) => (
                   <button
                     key={chat.id}
                     className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
-                    onClick={() => {
-                      handleLoadChat(chat.id);
-                      setMenuOpen(true);
-                    }}
+                    onClick={() => handleLoadChat(chat.id)}
                   >
-                    <div className="font-medium truncate">{chat.title}</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    <div className="truncate font-medium">{chat.title}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       {chat.date}
                     </div>
                   </button>
@@ -1413,106 +1301,65 @@ export default function StaffDashboard() {
               </div>
             )}
           </div>
+        </div>
 
-          {/* Suggestions Dropdown */}
-          <div className="border-b dark:border-gray-700">
+        <div className="border-b dark:border-gray-700">
             <button
-              onClick={(e) => {
-                e.preventDefault();
-                toggleSection('suggestions');
-              }}
+              onClick={() => setIsSuggestionModalOpen(true)}
               className="flex items-center justify-between w-full px-3 py-3 rounded-md text-sm hover:bg-gray-100 dark:hover:bg-gray-700/50 group"
             >
               <div className="flex items-center">
-                <PlusCircle size={16} className="mr-3 text-purple-600 dark:text-purple-400" />
+                <PlusCircle size={16} className="mr-3 text-[#C72026] dark:text-[#C72026]" />
                 <span>{translations[language]?.menu.suggestions || 'Suggestions'}</span>
               </div>
-              <svg 
-                className={`w-4 h-4 transition-transform ${expandedSection === 'suggestions' ? 'rotate-180' : ''}`}
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24" 
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
             </button>
-            
-            {/* Suggestions Content */}
-            {expandedSection === 'suggestions' && (
-              <div className="pl-8 pr-3 pb-3 space-y-3 animate-fadeIn">
-                <div>
-                  <div className="text-xs font-medium text-purple-600 dark:text-purple-400 mb-2">
-                    Quick Suggestions
-                  </div>
-                  <button
-                    className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
-                    onClick={() => handleQuestionClick("How can I improve customer engagement?", "suggestion-1")}
-                  >
-                    Improve customer engagement
-                  </button>
-                  <button
-                    className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
-                    onClick={() => handleQuestionClick("What are the best practices for client retention?", "suggestion-2")}
-                  >
-                    Client retention best practices
-                  </button>
-                  <button
-                    className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
-                    onClick={() => handleQuestionClick("How to handle difficult customer conversations?", "suggestion-3")}
-                  >
-                    Handle difficult conversations
-                  </button>
-                </div>
-                
-                <div>
-                  <div className="text-xs font-medium text-purple-600 dark:text-purple-400 mb-2">
-                    Problem Solving
-                  </div>
-                  <button
-                    className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
-                    onClick={() => handleQuestionClick("How to resolve customer complaints effectively?", "suggestion-4")}
-                  >
-                    Resolve customer complaints
-                  </button>
-                  <button
-                    className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
-                    onClick={() => handleQuestionClick("What are effective conflict resolution strategies?", "suggestion-5")}
-                  >
-                    Conflict resolution strategies
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
-        </div>
 
-        {/* Spacer to push any future bottom content down */}
         <div className="flex-1"></div>
       </div>
 
-      {/* Main Content Area */}
       <div className={`flex-1 flex flex-col ${menuOpen ? "lg:ml-[260px]" : "ml-0"} transition-all duration-300`}>
-        {/* Header - Fixed height */}
         <header className="h-14 flex items-center justify-between px-4 backdrop-blur-md bg-white/0 dark:bg-gray-900/0">
-          {/* Left: Menu Button */}
-          <div className="flex items-center">
+          {/* Left - Menu Button and Logo */}
+          <div className="flex items-center space-x-3">
             <button 
               className="p-2 hover:bg-gray-100/60 dark:hover:bg-gray-700/60 rounded-md"
               onClick={() => setMenuOpen(!menuOpen)}
             >
               <MenuIcon size={20} className="text-gray-700 dark:text-gray-300" />
             </button>
+
+            {/* Logo moved next to menu button */}
+            <div className="flex-shrink-0">
+              <Link href="/" className="flex items-center">
+                <Image
+                  src="/Logo_Altamedia_sans-fond.png"
+                  alt="Altamedia Logo"
+                  width={120}
+                  height={120}
+                  className="h-12 w-auto"
+                  priority
+                  quality={100}
+                  style={{
+                    objectFit: 'contain',
+                    maxWidth: '100%',
+                    height: 'auto'
+                  }}
+                />
+              </Link>
+            </div>
           </div>
 
-          {/* Center: AltaCoach Title */}
+          {/* Center - Title */}
           <div className="absolute left-1/2 transform -translate-x-1/2">
-            <h1 className="text-xl font-bold text-purple-600 dark:text-purple-400">
-              {translations[language]?.aiAssistant || 'AltaCoach'}
+            <h1 className="text-lg font-bold tracking-wider font-['Helvetica'] italic">
+              <span className="text-gray-900 dark:text-white tracking-[.15em]">alta</span>
+              <span className="text-[#C72026] tracking-[.15em]">c</span>
+              <span className="text-gray-900 dark:text-white tracking-[.15em]">oach</span>
             </h1>
           </div>
 
-          {/* Right: Settings */}
+          {/* Right - Settings */}
           <div className="relative">
             <button
               className="p-2 hover:bg-gray-100/60 dark:hover:bg-gray-700/60 rounded-md settings-trigger"
@@ -1525,7 +1372,6 @@ export default function StaffDashboard() {
               <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border dark:border-gray-700 z-50 settings-dropdown">
                 <button
                   onClick={() => {
-                    // Toggle language dropdown instead of immediately closing settings
                     setIsLanguageDropdownOpen(!isLanguageDropdownOpen);
                   }}
                   className="flex items-center w-full px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -1543,9 +1389,8 @@ export default function StaffDashboard() {
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
-                </button>
+                </button> 
                 
-                {/* Language dropdown */}
                 {isLanguageDropdownOpen && (
                   <div className="border-t dark:border-gray-700">
                     <div className="py-1 px-2">
@@ -1563,13 +1408,13 @@ export default function StaffDashboard() {
                             }}
                             className={`flex items-center justify-center px-2 py-2 text-sm rounded-md ${
                               language === lang.code 
-                                ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' 
+                                ? 'bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] dark:text-[#C72026]' 
                                 : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200'
                             }`}
                           >
                             <span>{lang.name}</span>
                             {language === lang.code && (
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-600 dark:text-purple-400 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#C72026] dark:text-[#C72026] ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                               </svg>
                             )}
@@ -1611,7 +1456,6 @@ export default function StaffDashboard() {
                   <span className="dark:text-white">{translations[language]?.settings.account || 'Account'}</span>
                 </button>
                 <div className="border-t dark:border-gray-700 my-1"></div>
-                {/* Add Reset password option */}
                 <button
                   onClick={() => alert('Password reset functionality would be integrated here')}
                   className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
@@ -1637,11 +1481,9 @@ export default function StaffDashboard() {
           </div>
         </header>
 
-        {/* Chat Container - Remaining height */}
         <div className="flex-1 overflow-hidden">
           <div className="max-w-3xl mx-auto px-4">
             {activeView === 'history' ? (
-              // Chat History View
               <div className="space-y-4">
                 <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Chat History</h2>
                 {chatHistory.map((chat) => (
@@ -1668,7 +1510,6 @@ export default function StaffDashboard() {
                 ))}
               </div>
             ) : activeView === 'cannedQuestions' ? (
-              // Canned Questions View
               <div className="space-y-4">
                 <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Quick Questions</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -1684,7 +1525,6 @@ export default function StaffDashboard() {
                 </div>
               </div>
             ) : activeView === 'quizMode' ? (
-              // Quiz Mode View
               <div className="space-y-4">
                 <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Quiz Mode</h2>
                 <p className="text-gray-600 dark:text-gray-300 mb-4">
@@ -1712,7 +1552,7 @@ export default function StaffDashboard() {
                 suggestions={translations[language]?.emptyState?.suggestions}
               />
             ) : (
-              <div className="space-y-4 pb-24"> {/* Added pb-24 for bottom padding */}
+              <div className="space-y-4 pb-24">
                 {messages.map((message, index) => (
                   <ChatMessage 
                     key={message.id} 
@@ -1722,23 +1562,21 @@ export default function StaffDashboard() {
                   />
                 ))}
                 {isLoading && <TypingIndicator />}
-                <div ref={messagesEndRef} /> {/* Reference element for auto-scrolling */}
+                <div ref={messagesEndRef} />
               </div>
             )}
           </div>
         </div>
 
-      {/* Fixed Chat Input - Only show in chat view */}
       {activeView === 'chat' && (
         <div className={`fixed bottom-0 z-10 bg-gradient-to-t from-white dark:from-gray-900 pt-6 pb-4 ${
           menuOpen ? "lg:left-[260px]" : "left-0"
         } right-0 transition-all duration-300`}>
           <div className="max-w-3xl mx-auto px-4">
             <EnhancedInput />
-            {/* Add disclaimer here */}
             <div className="mt-2 text-center text-xs text-gray-500 dark:text-gray-400">
               <p className="italic">
-                ⚠️ AltaCoach is an AI and may make mistakes. Please verify any important information.
+                  altacoach is an AI and may make mistakes. Please verify any important information.
               </p>
             </div>
           </div>
@@ -1746,7 +1584,6 @@ export default function StaffDashboard() {
       )}
       </div>
 
-      {/* Mobile Overlay */}
       {menuOpen && (
         <div 
           className="fixed inset-0 bg-black/40 z-40 lg:hidden"
@@ -1754,7 +1591,18 @@ export default function StaffDashboard() {
         />
       )}
       
-      {/* Add the missing animation styles */}
+      <SuggestionModal
+        isOpen={isSuggestionModalOpen}
+        onClose={() => {
+          setSuggestionInput('');
+          setIsSuggestionModalOpen(false);
+        }}
+        onSubmit={handleSuggestionSubmit}
+        suggestionInput={suggestionInput}
+        setSuggestionInput={setSuggestionInput}
+        language={language}
+      />
+
       <style jsx global>{`
         @keyframes fadeIn {
           from { 
