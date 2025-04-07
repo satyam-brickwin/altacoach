@@ -1764,10 +1764,12 @@ export default function AdminBusinesses() {
                       <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead className="bg-gray-50 dark:bg-gray-800">
                           <tr>
-                            {/* Add checkbox column for all document views */}
-                            <th scope="col" className="px-6 py-4 whitespace-nowrap text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                              Select
-                            </th>
+                            {/* Only show checkbox column for admin documents */}
+                            {activeFilter === 'admin' && (
+                              <th scope="col" className="px-6 py-4 whitespace-nowrap text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                
+                              </th>
+                            )}
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Title</th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Source</th>
@@ -1780,15 +1782,17 @@ export default function AdminBusinesses() {
                             .filter(doc => activeFilter === 'all' || doc.source === activeFilter)
                             .map((document) => (
                               <tr key={document.id}>
-                                {/* Add checkbox for all rows */}
-                                <td className="px-6 py-4 whitespace-nowrap text-center">
-                                  <input
-                                    type="checkbox"
-                                    checked={selectedDocuments[document.id] || false}
-                                    onChange={() => handleDocumentSelection(document.id, activeFilter as 'all' | 'admin' | 'business')}
-                                    className="h-4 w-4 text-[#C72026] border-gray-300 rounded focus:ring-[#C72026] focus:ring-offset-0"
-                                  />
-                                </td>
+                                {/* Only show checkbox cell for admin documents */}
+                                {activeFilter === 'admin' && (
+                                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedDocuments[document.id] || false}
+                                      onChange={() => handleDocumentSelection(document.id, activeFilter as 'all' | 'admin' | 'business')}
+                                      className="h-4 w-4 text-[#C72026] border-gray-300 rounded focus:ring-[#C72026] focus:ring-offset-0"
+                                    />
+                                  </td>
+                                )}
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <div className="text-sm font-medium text-gray-900 dark:text-white">{document.title}</div>
                                   <div className="text-sm text-gray-500 dark:text-gray-400">{document.description}</div>
@@ -1840,17 +1844,6 @@ export default function AdminBusinesses() {
                       </table>
                     )}
                   </div>
-                  {Object.values(selectedDocuments).some(Boolean) && (
-                    <div className="mb-4 flex space-x-2">
-                      <button
-                        onClick={() => handleBulkAction('download')}
-                        className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-[#C72026] hover:bg-[#C72026]/90"
-                      >
-                        Download Selected
-                      </button>
-                      {/* Add other bulk action buttons as needed */}
-                    </div>
-                  )}
                 </div>
               </div>
             )}

@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { useLanguage, languageLabels, SupportedLanguage } from '@/contexts/LanguageContext';
 import { useDarkMode } from '@/contexts/DarkModeContext';
 import { useAuthProtection, UserRole, useAuth } from '@/contexts/AuthContext';
-import UploadContentForm from '@/components/admin/UploadContentForm';
+import UploadContentForm from '@/components/adminsuper/UploadContentForm';
 
 // Define interface for Content type
 interface Content {
@@ -189,6 +190,7 @@ export default function AdminContent() {
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   // Memoized value for userDisplayName
   const userDisplayName = useMemo(() => {
@@ -348,26 +350,45 @@ export default function AdminContent() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header with logo and Admin badge */}
       <header className="bg-white dark:bg-gray-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            {/* Left side - Logo and Title */}
-            <div className="flex items-center">
+          <div className="flex items-center h-20">
+            {/* Left side - Logo */}
+            <div className="flex-shrink-0">
               <Link href="/" className="flex items-center">
-                <span className="text-lg font-bold tracking-wider font-['Helvetica'] italic">
-                  <span className="text-gray-900 dark:text-white tracking-[.10em]">alta</span>
-                  <span className="text-[#C72026] tracking-[.10em]">c</span>
-                  <span className="text-gray-900 dark:text-white tracking-[.10em]">oach</span>
-                </span>
-                <span className="ml-2 px-2 py-1 bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] text-sm font-medium rounded">
-                  Super Admin
-                </span>
+                <Image
+                  src="/Logo_Altamedia_sans-fond.png"
+                  alt="Altamedia Logo"
+                  width={120}
+                  height={120}
+                  className="h-10 w-auto"
+                  priority
+                  quality={100}
+                  style={{
+                    objectFit: 'contain',
+                    maxWidth: '100%',
+                    height: 'auto'
+                  }}
+                />
               </Link>
             </div>
 
+            {/* Center - Title and Admin badge */}
+            <div className="flex-1 flex justify-center">
+              <div className="flex items-center space-x-3">
+                <span className="text-xl font-bold tracking-wider font-['Helvetica'] italic">
+                  <span className="text-gray-900 dark:text-white tracking-[.15em]">alta</span>
+                  <span className="text-[#C72026] tracking-[.15em]">c</span>
+                  <span className="text-gray-900 dark:text-white tracking-[.15em]">oach</span>
+                </span>
+                <span className="px-3 py-1.5 bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] text-sm font-medium rounded-md">
+                  Super Admin
+                </span>
+              </div>
+            </div>
+
             {/* Right side - Controls */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-6">
               {/* Dark mode toggle */}
               <button
                 type="button"
@@ -388,66 +409,47 @@ export default function AdminContent() {
 
               {/* Language selector */}
               <div className="relative">
-                <button
-                  type="button"
-                  className="flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#C72026] rounded-full p-2"
-                  onClick={() => setIsLanguageMenuOpen(!isLanguageMenuOpen)}
-                  aria-expanded={isLanguageMenuOpen}
+                <select
+                  value={language}
+                  onChange={handleLanguageChange}
+                  className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md px-2 py-1 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#C72026]"
                 >
-                  <span>{languageLabels[language as SupportedLanguage]}</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="ml-1 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-
-                {isLanguageMenuOpen && (
-                  <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 z-50">
-                    {Object.entries(languageLabels).map(([code, label]) => (
-                      <button
-                        key={code}
-                        onClick={() => {
-                          setLanguage(code as SupportedLanguage);
-                          setIsLanguageMenuOpen(false);
-                        }}
-                        className={`${
-                          language === code
-                            ? 'bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white'
-                            : 'text-gray-700 dark:text-gray-200'
-                        } block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600`}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                  {Object.entries(languageLabels).map(([code, label]) => (
+                    <option key={code} value={code}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Profile dropdown */}
               <div className="relative">
                 <button
-                  type="button"
-                  className="max-w-xs bg-white dark:bg-gray-800 rounded-full flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-[#C72026]"
-                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  <span className="sr-only">Open user menu</span>
-                  <div className="h-8 w-8 rounded-full bg-[#C72026]/10 dark:bg-[#C72026]/20 flex items-center justify-center text-[#C72026] font-semibold">
-                    {userDisplayName}
+                  <div className="w-8 h-8 bg-[#C72026]/10 dark:bg-[#C72026]/20 rounded-full flex items-center justify-center">
+                    <span className="text-sm font-medium text-[#C72026] dark:text-[#C72026]">
+                      {user?.name?.[0]?.toUpperCase()}
+                    </span>
                   </div>
                 </button>
 
-                {isUserMenuOpen && (
-                  <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                {/* Profile Dropdown Menu */}
+                {isProfileOpen && (
+                  <div className="profile-dropdown absolute right-0 mt-2 w-50 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5 z-50">
                     <div className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600">
                       {user?.email}
                     </div>
                     <button
                       onClick={handleLogout}
                       className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
+                      role="menuitem"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                       </svg>
-                      {t('signOut')}
+                      {translate('signOut')}
                     </button>
                   </div>
                 )}
@@ -456,7 +458,6 @@ export default function AdminContent() {
           </div>
         </div>
       </header>
-
       <div className="flex flex-col md:flex-row">
         {/* Sidebar Navigation */}
         <div className="bg-white dark:bg-gray-800 shadow-md w-full md:w-64 md:min-h-screen">

@@ -24,7 +24,7 @@ export default function UploadContentForm({ onUploadSuccess, onCancel }: UploadC
   const { language, translate } = useLanguage();
   
   // Protect component - only for admin users
-  const { user } = useAuthProtection(['admin']);
+  const { user } = useAuthProtection(['super_admin']);
   
   // State for form fields
   const [title, setTitle] = useState('');
@@ -118,7 +118,7 @@ export default function UploadContentForm({ onUploadSuccess, onCancel }: UploadC
       }
       
       // API call to upload content
-      const response = await fetch('/api/admin/content/upload', {
+      const response = await fetch('/apisuper/superadmin/content/upload', {
         method: 'POST',
         body: formData,
       });

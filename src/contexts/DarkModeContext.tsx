@@ -74,6 +74,10 @@ export function DarkModeProvider({ children }: DarkModeProviderProps) {
 }
 
 // Custom hook to use dark mode context
-export function useDarkMode() {
-  return useContext(DarkModeContext);
-} 
+export const useDarkMode = (): DarkModeContextType => {
+  const context = useContext(DarkModeContext);
+  if (!context) {
+    throw new Error('useDarkMode must be used within a DarkModeProvider');
+  }
+  return context;
+};

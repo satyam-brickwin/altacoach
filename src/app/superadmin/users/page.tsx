@@ -6,9 +6,10 @@ import { useLanguage, languageLabels, SupportedLanguage } from '@/contexts/Langu
 import { useDarkMode } from '@/contexts/DarkModeContext';
 import { useAuthProtection, UserRole } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import AddUserModal from '@/components/AddUserModal';
+import AddAdminModal from '@/components/AddAdminModal';
 import ViewAdminModal from '@/componentsuper/ViewAdminModal';
 import EditAdminModal from '@/componentsuper/EditAdminModal';
+import Image from 'next/image';
 
 // Define user type
 interface User {
@@ -332,7 +333,7 @@ const adminTranslations = {
 
 export default function AdminUsers() {
   const { language, setLanguage, translate } = useLanguage();
-  const { isDarkMode } = useDarkMode();
+  const { isDarkMode, toggleDarkMode } = useDarkMode();
   const router = useRouter();
   
   // Define all state hooks at the top of the component
@@ -346,6 +347,7 @@ export default function AdminUsers() {
   const [isViewUserModalOpen, setIsViewUserModalOpen] = useState(false);
   const [editUser, setEditUser] = useState<User | null>(null);
   const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   
   // Protect this page - only allow admin users
   const { isLoading: authLoading, isAuthenticated, user } = useAuthProtection([UserRole.SUPER_ADMIN]);
@@ -457,18 +459,140 @@ export default function AdminUsers() {
     setIsEditUserModalOpen(true);
   };
 
+  // Add this function before the return statement, alongside other handlers
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        // Clear any local storage/state if needed
+        localStorage.removeItem('token'); // Adjust based on your auth storage
+        // Redirect to login page
+        router.push('/login');
+      } else {
+        console.error('Logout failed');
+      }
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
+    
+    // Close the profile dropdown
+    setIsProfileOpen(false);
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header with logo and Admin badge */}
       <header className="bg-white dark:bg-gray-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center h-16">
-            <Link href="/" className="flex items-center">
-              <span className="text-2xl font-bold text-[#C72026] dark:text-[#C72026]">altacoach</span>
-              <span className="ml-2 px-2 py-1 bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] dark:text-[#C72026] text-sm font-medium rounded">
-                Super Admin
-              </span>
-            </Link>
+          <div className="flex items-center h-20">
+            {/* Left side - Logo */}
+            <div className="flex-shrink-0">
+              <Link href="/" className="flex items-center">
+                <Image
+                  src="/Logo_Altamedia_sans-fond.png"
+                  alt="Altamedia Logo"
+                  width={120}
+                  height={120}
+                  className="h-10 w-auto"
+                  priority
+                  quality={100}
+                  style={{
+                    objectFit: 'contain',
+                    maxWidth: '100%',
+                    height: 'auto'
+                  }}
+                />
+              </Link>
+            </div>
+
+            {/* Center - Title and Admin badge */}
+            <div className="flex-1 flex justify-center">
+              <div className="flex items-center space-x-3">
+                <span className="text-xl font-bold tracking-wider font-['Helvetica'] italic">
+                  <span className="text-gray-900 dark:text-white tracking-[.15em]">alta</span>
+                  <span className="text-[#C72026] tracking-[.15em]">c</span>
+                  <span className="text-gray-900 dark:text-white tracking-[.15em]">oach</span>
+                </span>
+                <span className="px-3 py-1.5 bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] text-sm font-medium rounded-md">
+                  Super Admin
+                </span>
+              </div>
+            </div>
+
+            {/* Right side - Controls */}
+            <div className="flex items-center space-x-6">
+              {/* Dark mode toggle */}
+              <button
+                type="button"
+                onClick={toggleDarkMode}
+                className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#C72026]"
+                aria-label="Toggle dark mode"
+              >
+                {isDarkMode ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                  </svg>
+                )}
+              </button>
+
+              {/* Language selector */}
+              <div className="relative">
+                <select
+                  value={language}
+                  onChange={handleLanguageChange}
+                  className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md px-2 py-1 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#C72026]"
+                >
+                  {Object.entries(languageLabels).map(([code, label]) => (
+                    <option key={code} value={code}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Profile dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <div className="w-8 h-8 bg-[#C72026]/10 dark:bg-[#C72026]/20 rounded-full flex items-center justify-center">
+                    <span className="text-sm font-medium text-[#C72026] dark:text-[#C72026]">
+                      {user?.name?.[0]?.toUpperCase()}
+                    </span>
+                  </div>
+                </button>
+
+                {/* Profile Dropdown Menu */}
+                {isProfileOpen && (
+                  <div className="profile-dropdown absolute right-0 mt-2 w-50 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5 z-50">
+                    <div className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600">
+                      {user?.email}
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
+                      role="menuitem"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      {t('signOut')}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </header>
@@ -708,7 +832,7 @@ export default function AdminUsers() {
       </div>
 
       {/* Add User Modal */}
-      <AddUserModal
+      <AddAdminModal
         isOpen={isAddUserModalOpen}
         onClose={() => setIsAddUserModalOpen(false)}
         onSuccess={fetchUsers}

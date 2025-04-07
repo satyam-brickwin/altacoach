@@ -475,7 +475,7 @@ interface BusinessFormData {
 
 export default function AdminBusinesses() {
   const { language, setLanguage, translate } = useLanguage();
-  const { isDarkMode } = useDarkMode();
+  const { isDarkMode, toggle: toggleDarkMode } = useDarkMode();
   const router = useRouter();
 
   // State for loading and error handling
@@ -786,26 +786,20 @@ export default function AdminBusinesses() {
     router.push('/login');
   };
 
-  // Toggle dark mode handler
-  const toggleDarkMode = () => {
-    // This should be handled by your DarkModeContext
-    // If not already defined, implement the toggle logic
-  };
-
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
       <header className="bg-white dark:bg-gray-800 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-1">
-          <div className="flex items-center h-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center h-20">
             {/* Left side - Logo */}
             <div className="flex-shrink-0">
               <Link href="/" className="flex items-center">
                 <Image
                   src="/Logo_Altamedia_sans-fond.png"
                   alt="Altamedia Logo"
-                  width={120}  // Increased from 80
-                  height={120} // Increased from 80
-                  className="h-10 w-auto" // Increased from h-10
+                  width={120}
+                  height={120}
+                  className="h-10 w-auto"
                   priority
                   quality={100}
                   style={{
@@ -819,25 +813,25 @@ export default function AdminBusinesses() {
 
             {/* Center - Title and Admin badge */}
             <div className="flex-1 flex justify-center">
-              <div className="flex items-center">
-                <span className="text-lg font-bold tracking-wider font-['Helvetica'] italic">
-                  <span className="text-gray-900 dark:text-white tracking-[.10em]">alta</span>
-                  <span className="text-[#C72026] tracking-[.10em]">c</span>
-                  <span className="text-gray-900 dark:text-white tracking-[.10em]">oach</span>
+              <div className="flex items-center space-x-3">
+                <span className="text-xl font-bold tracking-wider font-['Helvetica'] italic">
+                  <span className="text-gray-900 dark:text-white tracking-[.15em]">alta</span>
+                  <span className="text-[#C72026] tracking-[.15em]">c</span>
+                  <span className="text-gray-900 dark:text-white tracking-[.15em]">oach</span>
                 </span>
-                <span className="ml-2 px-2 py-1 bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] text-xs font-medium rounded">
+                <span className="px-3 py-1.5 bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] text-sm font-medium rounded-md">
                   Super Admin
                 </span>
               </div>
             </div>
 
             {/* Right side - Controls */}
-            <div className="flex items-center space-x-4 ml-auto">
+            <div className="flex items-center space-x-6">
               {/* Dark mode toggle */}
               <button
                 type="button"
                 onClick={toggleDarkMode}
-                className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#C72026] focus:ring-offset-2"
+                className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#C72026]"
                 aria-label="Toggle dark mode"
               >
                 {isDarkMode ? (
@@ -856,7 +850,7 @@ export default function AdminBusinesses() {
                 <select
                   value={language}
                   onChange={handleLanguageChange}
-                  className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md px-2 py-1 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#C72026] focus:ring-offset-2"
+                  className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md px-2 py-1 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#C72026]"
                 >
                   {Object.entries(languageLabels).map(([code, label]) => (
                     <option key={code} value={code}>

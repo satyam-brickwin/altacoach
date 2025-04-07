@@ -7,6 +7,7 @@ import { useDarkMode } from '@/contexts/DarkModeContext';
 import { useAuthProtection, UserRole } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import Image from 'next/image';
 
 // Sample analytics data for fallback
 const sampleAnalyticsData = {
@@ -914,19 +915,43 @@ export default function AdminAnalytics() {
       {/* Header with logo and Admin badge */}
       <header className="bg-white dark:bg-gray-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            {/* Left side - Logo and Title */}
-            <div className="flex items-center">
+          <div className="flex items-center justify-between h-20">
+            {/* Left side - Logo */}
+            <div className="flex-shrink-0">
               <Link href="/" className="flex items-center">
-                <span className="text-2xl font-bold text-[#C72026] dark:text-[#C72026]">altacoach</span>
-                <span className="ml-2 px-2 py-1 bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] text-sm font-medium rounded">
-                  Super Admin
-                </span>
+                <Image
+                  src="/Logo_Altamedia_sans-fond.png"
+                  alt="Altamedia Logo"
+                  width={120}
+                  height={120}
+                  className="h-10 w-auto"
+                  priority
+                  quality={100}
+                  style={{
+                    objectFit: 'contain',
+                    maxWidth: '100%',
+                    height: 'auto'
+                  }}
+                />
               </Link>
             </div>
 
-            {/* Right-side items - dark mode, language, profile */}
-            <div className="flex items-center space-x-4">
+            {/* Center - Title and Admin badge */}
+            <div className="flex-1 flex justify-center">
+              <div className="flex items-center space-x-3">
+                <span className="text-xl font-bold tracking-wider font-['Helvetica'] italic">
+                  <span className="text-gray-900 dark:text-white tracking-[.15em]">alta</span>
+                  <span className="text-[#C72026] tracking-[.15em]">c</span>
+                  <span className="text-gray-900 dark:text-white tracking-[.15em]">oach</span>
+                </span>
+                <span className="px-3 py-1.5 bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] text-sm font-medium rounded-md">
+                  Super Admin
+                </span>
+              </div>
+            </div>
+
+            {/* Right side - Controls */}
+            <div className="flex items-center space-x-6">
               {/* Dark mode toggle */}
               <button
                 type="button"
@@ -945,7 +970,7 @@ export default function AdminAnalytics() {
                 )}
               </button>
 
-              {/* Language selector */}
+              {/* Language selector and Profile dropdown remain the same */}
               <div className="relative">
                 <button
                   type="button"

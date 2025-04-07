@@ -166,6 +166,98 @@ const adminTranslations = {
   // Add other languages as needed
 };
 
+const dummyContent: Content[] = [
+  {
+    id: '1',
+    title: 'Introduction to Sales Management',
+    description: 'Comprehensive guide to modern sales management techniques',
+    type: 'course',
+    filePath: '/content/sales-management.pdf',
+    language: 'en',
+    lastUpdated: '2025-04-05',
+    createdAt: '2025-03-01',
+    updatedAt: '2025-04-05',
+    createdBy: {
+      id: 'admin1',
+      name: 'Admin User',
+      email: 'admin@altacoach.com'
+    }
+  },
+  {
+    id: '2',
+    title: 'Guide de Vente Efficace',
+    description: 'Guide complet des techniques de vente modernes',
+    type: 'guide',
+    filePath: '/content/guide-vente.pdf',
+    language: 'fr',
+    lastUpdated: '2025-04-06',
+    createdAt: '2025-03-15',
+    updatedAt: '2025-04-06',
+    createdBy: {
+      id: 'admin2',
+      name: 'Marie Admin',
+      email: 'marie@altacoach.com'
+    }
+  },
+  {
+    id: '3',
+    title: 'Customer Relationship Exercise',
+    description: 'Interactive exercises for improving customer relationships',
+    type: 'exercise',
+    filePath: '/content/crm-exercise.pdf',
+    language: 'en',
+    lastUpdated: '2025-04-07',
+    createdAt: '2025-03-20',
+    updatedAt: '2025-04-07',
+    createdBy: {
+      id: 'admin1',
+      name: 'Admin User',
+      email: 'admin@altacoach.com'
+    }
+  },
+  {
+    id: '4',
+    title: 'FAQ - Formation Commercial',
+    description: 'Questions fréquentes sur la formation commerciale',
+    type: 'faq',
+    filePath: '/content/faq-commercial.pdf',
+    language: 'fr',
+    lastUpdated: '2025-04-08',
+    createdAt: '2025-03-25',
+    updatedAt: '2025-04-08',
+    createdBy: {
+      id: 'admin2',
+      name: 'Marie Admin',
+      email: 'marie@altacoach.com'
+    }
+  },
+  {
+    id: '5',
+    title: 'Sales Pipeline Management',
+    description: 'Best practices for managing your sales pipeline',
+    type: 'course',
+    filePath: '/content/pipeline-management.pdf',
+    language: 'en',
+    lastUpdated: '2025-04-09',
+    createdAt: '2025-03-30',
+    updatedAt: '2025-04-09',
+    createdBy: {
+      id: 'admin1',
+      name: 'Admin User',
+      email: 'admin@altacoach.com'
+    }
+  }
+];
+
+// Add initial stats
+const initialContentStats: ContentStats = {
+  total: 5,
+  courses: 2,
+  guides: 1,
+  exercises: 1,
+  faqs: 1
+};
+
 export default function AdminContent() {
   const { language, setLanguage, translate } = useLanguage();
   const { isDarkMode, toggleDarkMode } = useDarkMode();
@@ -198,32 +290,11 @@ export default function AdminContent() {
   const fetchContent = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/admin/content');
-      if (!response.ok) {
-        throw new Error('Failed to fetch content');
-      }
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      const data = await response.json();
-      
-      // Transform the data to match our Content interface
-      const formattedContent = data.content ? data.content.map((item: any) => ({
-        ...item,
-        // Format dates to match the expected format
-        lastUpdated: new Date(item.lastUpdated).toISOString().split('T')[0],
-        createdAt: new Date(item.createdAt).toISOString(),
-        updatedAt: new Date(item.updatedAt).toISOString(),
-        // Ensure type is lowercase for filtering
-        type: item.type.toLowerCase()
-      })) : [];
-      
-      setContent(formattedContent);
-      setContentStats(data.stats || {
-        total: 0,
-        courses: 0,
-        guides: 0,
-        exercises: 0,
-        faqs: 0
-      });
+      setContent(dummyContent);
+      setContentStats(initialContentStats);
       setError(null);
     } catch (error) {
       console.error('Error fetching content:', error);
