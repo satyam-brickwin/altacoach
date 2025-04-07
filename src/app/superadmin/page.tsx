@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useLanguage, languageLabels, SupportedLanguage } from '@/contexts/LanguageContext';
 import { useDarkMode } from '@/contexts/DarkModeContext';
 import { useAuthProtection, useAuth, UserRole } from '@/contexts/AuthContext';
@@ -335,7 +336,7 @@ const SuperAdminDashboard = () => {
   if (authLoading || !isAuthenticated) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
-        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-12 h-12 border-4 border-[#C72026] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -350,15 +351,41 @@ const SuperAdminDashboard = () => {
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header with logo and Admin badge */}
       <header className="bg-white dark:bg-gray-800 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-1">
+          <div className="flex items-center h-16">
             {/* Left side - Logo */}
-            <Link href="/" className="flex items-center">
-              <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">altacoach</span>
-              <span className="ml-2 px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-sm font-medium rounded">
-                Super Admin
-              </span>
-            </Link>
+            <div className="flex-shrink-0">
+              <Link href="/" className="flex items-center">
+                <Image
+                  src="/Logo_Altamedia_sans-fond.png"
+                  alt="Altamedia Logo"
+                  width={120}  // Increased from 80
+                  height={120} // Increased from 80
+                  className="h-10 w-auto" // Increased from h-10
+                  priority
+                  quality={100}
+                  style={{
+                    objectFit: 'contain',
+                    maxWidth: '100%',
+                    height: 'auto'
+                  }}
+                />
+              </Link>
+            </div>
+
+            {/* Center - Title and Admin badge */}
+            <div className="flex-1 flex justify-center">
+              <div className="flex items-center">
+                <span className="text-lg font-bold tracking-wider font-['Helvetica'] italic">
+                  <span className="text-gray-900 dark:text-white tracking-[.10em]">alta</span>
+                  <span className="text-[#C72026] tracking-[.10em]">c</span>
+                  <span className="text-gray-900 dark:text-white tracking-[.10em]">oach</span>
+                </span>
+                <span className="ml-2 px-2 py-1 bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] text-xs font-medium rounded">
+                  Super Admin
+                </span>
+              </div>
+            </div>
 
             {/* Right side - Controls */}
             <div className="flex items-center space-x-4">
@@ -366,7 +393,7 @@ const SuperAdminDashboard = () => {
               <button
                 type="button"
                 onClick={toggleDarkMode}
-                className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#C72026]"
                 aria-label="Toggle dark mode"
               >
                 {isDarkMode ? (
@@ -385,7 +412,7 @@ const SuperAdminDashboard = () => {
                 <select
                   value={language}
                   onChange={handleLanguageChange}
-                  className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md px-2 py-1 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md px-2 py-1 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#C72026]"
                 >
                   {Object.entries(languageLabels).map(([code, label]) => (
                     <option key={code} value={code}>
@@ -401,8 +428,8 @@ const SuperAdminDashboard = () => {
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                   className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium text-purple-700 dark:text-purple-200">
+                  <div className="w-8 h-8 bg-[#C72026]/10 dark:bg-[#C72026]/20 rounded-full flex items-center justify-center">
+                    <span className="text-sm font-medium text-[#C72026] dark:text-[#C72026]">
                       {user?.name?.[0]?.toUpperCase()}
                     </span>
                   </div>
@@ -439,7 +466,7 @@ const SuperAdminDashboard = () => {
             <nav className="p-4">
               <ul className="space-y-2">
                 <li>
-                  <Link href="/superadmin" className="block px-4 py-2 rounded-md bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-200 font-medium">
+                  <Link href="/superadmin" className="block px-4 py-2 rounded-md bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] dark:text-[#C72026] font-medium">
                     {translate('dashboard')}
                   </Link>
                 </li>
@@ -450,7 +477,7 @@ const SuperAdminDashboard = () => {
                 </li>
                 <li>
                   <Link href="/superadmin/content" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
-                    {translate('content')}
+                    {translate('altamedia Content')}
                   </Link>
                 </li>
                 <li>
@@ -491,14 +518,14 @@ const SuperAdminDashboard = () => {
               <div className="flex items-center space-x-2">
                 <button
                   onClick={refreshDashboardData}
-                  className="flex items-center px-3 py-2 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded-md hover:bg-purple-200 dark:hover:bg-purple-800 transition-colors"
+                  className="flex items-center px-3 py-2 bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] dark:text-[#C72026] rounded-md hover:bg-[#C72026]/20 dark:hover:bg-[#C72026]/30 transition-colors"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
                   {translate('refresh')}
                 </button>
-                <select
+                {/* <select
                   value={language}
                   onChange={handleLanguageChange}
                   className="ml-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md px-2 py-1"
@@ -508,7 +535,7 @@ const SuperAdminDashboard = () => {
                       {label}
                     </option>
                   ))}
-                </select>
+                </select> */}
               </div>
             </div>
             
@@ -519,46 +546,46 @@ const SuperAdminDashboard = () => {
             {/* Dashboard Overview Cards - Simplified to match the image */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               {/* Card: Businesses */}
-              <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-6">
+              <div className="bg-[#C72026]/5 dark:bg-[#C72026]/10 rounded-lg p-6">
                 <div className="flex items-center">
-                  <div className="bg-purple-100 dark:bg-purple-800 rounded-full p-3 mr-4">
-                    <svg className="h-8 w-8 text-purple-600 dark:text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="bg-[#C72026]/10 dark:bg-[#C72026]/20 rounded-full p-3 mr-4">
+                    <svg className="h-8 w-8 text-[#C72026] dark:text-[#C72026]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                   </div>
                   <div>
                     <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200">{translate('businesses')}</h2>
-                    <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">{businessStats.totalBusinesses}</p>
+                    <p className="text-3xl font-bold text-[#C72026] dark:text-[#C72026]">{businessStats.totalBusinesses}</p>
                   </div>
                 </div>
               </div>
 
               {/* Card: Total Users */}
-              <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-6">
+              <div className="bg-[#C72026]/5 dark:bg-[#C72026]/10 rounded-lg p-6">
                 <div className="flex items-center">
-                  <div className="bg-purple-100 dark:bg-purple-800 rounded-full p-3 mr-4">
-                    <svg className="h-8 w-8 text-purple-600 dark:text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="bg-[#C72026]/10 dark:bg-[#C72026]/20 rounded-full p-3 mr-4">
+                    <svg className="h-8 w-8 text-[#C72026] dark:text-[#C72026]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                     </svg>
                   </div>
                   <div>
                     <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200">{translate('totalUsers')}</h2>
-                    <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">{userStats.totalUsers}</p>
+                    <p className="text-3xl font-bold text-[#C72026] dark:text-[#C72026]">{userStats.totalUsers}</p>
                   </div>
                 </div>
               </div>
 
               {/* Card: Content Items */}
-              <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-6">
+              <div className="bg-[#C72026]/5 dark:bg-[#C72026]/10 rounded-lg p-6">
                 <div className="flex items-center">
-                  <div className="bg-purple-100 dark:bg-purple-800 rounded-full p-3 mr-4">
-                    <svg className="h-8 w-8 text-purple-600 dark:text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="bg-[#C72026]/10 dark:bg-[#C72026]/20 rounded-full p-3 mr-4">
+                    <svg className="h-8 w-8 text-[#C72026] dark:text-[#C72026]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                   </div>
                   <div>
                     <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200">{translate('contentItems')}</h2>
-                    <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">{contentStats.totalContent}</p>
+                    <p className="text-3xl font-bold text-[#C72026] dark:text-[#C72026]">{contentStats.totalContent}</p>
                   </div>
                 </div>
               </div>
@@ -567,7 +594,7 @@ const SuperAdminDashboard = () => {
             {/* Additional Dashboard Sections - Can be kept if needed */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               {/* Card: Business Overview */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-[0_2px_4px_rgba(199,32,38,0.1)] p-6">
                 <div className="flex items-center mb-4">
                   <div className="bg-purple-100 dark:bg-purple-900 rounded-full p-3 mr-4">
                     <svg className="h-5 w-5 text-purple-600 dark:text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -579,21 +606,21 @@ const SuperAdminDashboard = () => {
                 <div className="grid grid-cols-1 gap-4">
                   <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex justify-between items-center">
                     <span className="text-sm text-gray-700 dark:text-gray-300">{translate('activeBusinesses')}</span>
-                    <span className="text-sm font-medium text-purple-600 dark:text-purple-400">{businessStats.activeBusinesses}</span>
+                    <span className="text-sm font-medium text-[#C72026] dark:text-[#C72026]">{businessStats.activeBusinesses}</span>
                   </div>
                   <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex justify-between items-center">
                     <span className="text-sm text-gray-700 dark:text-gray-300">{translate('pendingBusinesses')}</span>
-                    <span className="text-sm font-medium text-purple-600 dark:text-purple-400">{businessStats.pendingBusinesses}</span>
+                    <span className="text-sm font-medium text-[#C72026] dark:text-[#C72026]">{businessStats.pendingBusinesses}</span>
                   </div>
                   <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex justify-between items-center">
                     <span className="text-sm text-gray-700 dark:text-gray-300">{translate('suspendedBusinesses')}</span>
-                    <span className="text-sm font-medium text-purple-600 dark:text-purple-400">{businessStats.suspendedBusinesses}</span>
+                    <span className="text-sm font-medium text-[#C72026] dark:text-[#C72026]">{businessStats.suspendedBusinesses}</span>
                   </div>
                 </div>
               </div>
 
               {/* Card: Content Management */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-[0_2px_4px_rgba(199,32,38,0.1)] p-6">
                 <div className="flex items-center mb-4">
                   <div className="bg-purple-100 dark:bg-purple-900 rounded-full p-3 mr-4">
                     <svg className="h-5 w-5 text-purple-600 dark:text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -605,21 +632,21 @@ const SuperAdminDashboard = () => {
                 <div className="grid grid-cols-1 gap-4">
                   <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex justify-between items-center">
                     <span className="text-sm text-gray-700 dark:text-gray-300">{translate('courses')}</span>
-                    <span className="text-sm font-medium text-purple-600 dark:text-purple-400">{contentStats.courses}</span>
+                    <span className="text-sm font-medium text-[#C72026] dark:text-[#C72026]">{contentStats.courses}</span>
                   </div>
                   <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex justify-between items-center">
                     <span className="text-sm text-gray-700 dark:text-gray-300">{translate('guides')}</span>
-                    <span className="text-sm font-medium text-purple-600 dark:text-purple-400">{contentStats.guides}</span>
+                    <span className="text-sm font-medium text-[#C72026] dark:text-[#C72026]">{contentStats.guides}</span>
                   </div>
                   <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex justify-between items-center">
                     <span className="text-sm text-gray-700 dark:text-gray-300">{translate('exercises')}</span>
-                    <span className="text-sm font-medium text-purple-600 dark:text-purple-400">{contentStats.exercises}</span>
+                    <span className="text-sm font-medium text-[#C72026] dark:text-[#C72026]">{contentStats.exercises}</span>
                   </div>
                 </div>
               </div>
 
               {/* Card: User Stats */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-[0_2px_4px_rgba(199,32,38,0.1)] p-6">
                 <div className="flex items-center mb-4">
                   <div className="bg-purple-100 dark:bg-purple-900 rounded-full p-3 mr-4">
                     <svg className="h-5 w-5 text-purple-600 dark:text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -631,15 +658,15 @@ const SuperAdminDashboard = () => {
                 <div className="grid grid-cols-1 gap-4">
                   <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex justify-between items-center">
                     <span className="text-sm text-gray-700 dark:text-gray-300">{translate('activeUsers')}</span>
-                    <span className="text-sm font-medium text-purple-600 dark:text-purple-400">{userStats.activeUsers}</span>
+                    <span className="text-sm font-medium text-[#C72026] dark:text-[#C72026]">{userStats.activeUsers}</span>
                   </div>
                   <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex justify-between items-center">
                     <span className="text-sm text-gray-700 dark:text-gray-300">{translate('adminUsers')}</span>
-                    <span className="text-sm font-medium text-purple-600 dark:text-purple-400">{userStats.adminUsers}</span>
+                    <span className="text-sm font-medium text-[#C72026] dark:text-[#C72026]">{userStats.adminUsers}</span>
                   </div>
                   <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex justify-between items-center">
                     <span className="text-sm text-gray-700 dark:text-gray-300">{translate('businessUsers')}</span>
-                    <span className="text-sm font-medium text-purple-600 dark:text-purple-400">{userStats.businessUsers}</span>
+                    <span className="text-sm font-medium text-[#C72026] dark:text-[#C72026]">{userStats.businessUsers}</span>
                   </div>
                 </div>
               </div>
@@ -681,11 +708,11 @@ const SuperAdminDashboard = () => {
                   </thead>
                   <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     {recentBusinesses.map((business) => (
-                      <tr key={business.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <tr key={business.id} className="hover:bg-[#C72026]/5 dark:hover:bg-[#C72026]/10">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            <div className="h-10 w-10 flex-shrink-0 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
-                              <span className="text-lg font-semibold text-purple-700 dark:text-purple-300">
+                            <div className="h-10 w-10 flex-shrink-0 bg-[#C72026]/10 dark:bg-[#C72026]/20 rounded-full flex items-center justify-center">
+                              <span className="text-lg font-semibold text-[#C72026] dark:text-[#C72026]">
                                 {business.name.charAt(0)}
                               </span>
                             </div>
@@ -721,7 +748,7 @@ const SuperAdminDashboard = () => {
                           {business.joinedDate}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button className="text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 mr-3">
+                          <button className="text-[#C72026] dark:text-[#C72026] hover:text-[#C72026]/80 dark:hover:text-[#C72026]/80 mr-3">
                             {translate('view')}
                           </button>
                           <button className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300">
@@ -739,10 +766,9 @@ const SuperAdminDashboard = () => {
       </div>
 
       {isLoading && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 flex items-center space-x-3">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500"></div>
-            <p className="text-gray-700 dark:text-gray-300">Loading...</p>
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-800 shadow-[0_4px_6px_rgba(199,32,38,0.1)]">
+            <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#C72026] border-t-transparent"></div>
           </div>
         </div>
       )}

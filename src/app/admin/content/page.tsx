@@ -512,7 +512,7 @@ export default function AdminContent() {
                   href="/admin/content" 
                   className="block px-4 py-2 rounded-md bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] dark:text-[#C72026] font-medium"
                 >
-                  {t('content')}
+                  {t('altamedia Content')}
                 </Link>
               </li>
               {/* <li>
@@ -539,7 +539,7 @@ export default function AdminContent() {
           <div className="max-w-7xl mx-auto">
             <div className="mb-8">
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {t('content')}
+                {t('altamedia Content')}
               </h1>
               <p className="mt-2 text-gray-600 dark:text-gray-400">
                 {t('contentManagementDesc')}

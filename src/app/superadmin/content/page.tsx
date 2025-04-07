@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter, usePathname } from 'next/navigation';
 import { useLanguage, languageLabels, SupportedLanguage } from '@/contexts/LanguageContext';
 import { useDarkMode } from '@/contexts/DarkModeContext';
-import { useAuthProtection, UserRole } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
+import { useAuthProtection, UserRole, useAuth } from '@/contexts/AuthContext';
 import UploadContentForm from '@/components/admin/UploadContentForm';
 
 // Define interface for Content type
@@ -166,11 +166,12 @@ const adminTranslations = {
 
 export default function AdminContent() {
   const { language, setLanguage, translate } = useLanguage();
-  const { isDarkMode } = useDarkMode();
+  const { isDarkMode, toggleDarkMode } = useDarkMode();
   const router = useRouter();
   
   // Protect this page - only allow admin users
   const { isLoading: authLoading, isAuthenticated, user } = useAuthProtection([UserRole.SUPER_ADMIN]);
+  const { signOut } = useAuth();
   
   // State for content data
   const [content, setContent] = useState<Content[]>([]);
@@ -186,6 +187,31 @@ export default function AdminContent() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showUploadForm, setShowUploadForm] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
+
+  // Memoized value for userDisplayName
+  const userDisplayName = useMemo(() => {
+    if (!user) return 'U';
+    if (user?.name) return user.name[0].toUpperCase();
+    if (user?.email) {
+      const emailName = user.email.split('@')[0];
+      return emailName.charAt(0).toUpperCase();
+    }
+    return 'U';
+  }, [user]);
+
+  // Logout handler
+  const handleLogout = async () => {
+    try {
+      setIsUserMenuOpen(false);
+      await signOut();
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      window.location.href = '/login';
+    }
+  };
 
   // Fetch content function
   const fetchContent = async () => {
@@ -310,7 +336,7 @@ export default function AdminContent() {
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
-        <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-12 h-12 border-4 border-[#C72026] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -325,13 +351,108 @@ export default function AdminContent() {
       {/* Header with logo and Admin badge */}
       <header className="bg-white dark:bg-gray-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center h-16">
-            <Link href="/" className="flex items-center">
-              <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">altacoach</span>
-              <span className="ml-2 px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-sm font-medium rounded">
-                Super Admin
-              </span>
-            </Link>
+          <div className="flex justify-between h-16 items-center">
+            {/* Left side - Logo and Title */}
+            <div className="flex items-center">
+              <Link href="/" className="flex items-center">
+                <span className="text-lg font-bold tracking-wider font-['Helvetica'] italic">
+                  <span className="text-gray-900 dark:text-white tracking-[.10em]">alta</span>
+                  <span className="text-[#C72026] tracking-[.10em]">c</span>
+                  <span className="text-gray-900 dark:text-white tracking-[.10em]">oach</span>
+                </span>
+                <span className="ml-2 px-2 py-1 bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] text-sm font-medium rounded">
+                  Super Admin
+                </span>
+              </Link>
+            </div>
+
+            {/* Right side - Controls */}
+            <div className="flex items-center space-x-4">
+              {/* Dark mode toggle */}
+              <button
+                type="button"
+                onClick={toggleDarkMode}
+                className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#C72026]"
+                aria-label="Toggle dark mode"
+              >
+                {isDarkMode ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                  </svg>
+                )}
+              </button>
+
+              {/* Language selector */}
+              <div className="relative">
+                <button
+                  type="button"
+                  className="flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#C72026] rounded-full p-2"
+                  onClick={() => setIsLanguageMenuOpen(!isLanguageMenuOpen)}
+                  aria-expanded={isLanguageMenuOpen}
+                >
+                  <span>{languageLabels[language as SupportedLanguage]}</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="ml-1 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {isLanguageMenuOpen && (
+                  <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 z-50">
+                    {Object.entries(languageLabels).map(([code, label]) => (
+                      <button
+                        key={code}
+                        onClick={() => {
+                          setLanguage(code as SupportedLanguage);
+                          setIsLanguageMenuOpen(false);
+                        }}
+                        className={`${
+                          language === code
+                            ? 'bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white'
+                            : 'text-gray-700 dark:text-gray-200'
+                        } block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Profile dropdown */}
+              <div className="relative">
+                <button
+                  type="button"
+                  className="max-w-xs bg-white dark:bg-gray-800 rounded-full flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-[#C72026]"
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                >
+                  <span className="sr-only">Open user menu</span>
+                  <div className="h-8 w-8 rounded-full bg-[#C72026]/10 dark:bg-[#C72026]/20 flex items-center justify-center text-[#C72026] font-semibold">
+                    {userDisplayName}
+                  </div>
+                </button>
+
+                {isUserMenuOpen && (
+                  <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                    <div className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600">
+                      {user?.email}
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      {t('signOut')}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </header>
@@ -355,8 +476,8 @@ export default function AdminContent() {
                 </Link>
               </li>
               <li>
-                <Link href="/superadmin/content" className="block px-4 py-2 rounded-md bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-200 font-medium">
-                  {t('content')}
+                <Link href="/superadmin/content" className="block px-4 py-2 rounded-md bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] dark:text-[#C72026] font-medium">
+                  {t('altamedia Content')}
                 </Link>
               </li>
               <li>
@@ -388,7 +509,7 @@ export default function AdminContent() {
           <div className="max-w-7xl mx-auto">
             <div className="mb-8">
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {t('content')}
+                {t('altamedia Content')}
               </h1>
               <p className="mt-2 text-gray-600 dark:text-gray-400">
                 {t('contentManagementDesc')}
@@ -404,7 +525,7 @@ export default function AdminContent() {
                 <select
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value)}
-                  className="mt-1 block w-40 pl-3 pr-10 py-2 text-sm text-black border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:outline-none focus:ring-purple-500 focus:border-purple-500 rounded-md"
+                  className="mt-1 block w-40 pl-3 pr-10 py-2 text-sm text-black border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] rounded-md"
                 >
                   <option value="all">{t('allContent')}</option>
                   <option value="course">{t('course')}</option>
@@ -419,7 +540,7 @@ export default function AdminContent() {
                   placeholder={t('searchContent')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-sm"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] text-sm"
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -449,7 +570,7 @@ export default function AdminContent() {
                 </h2>
                 <button 
                   onClick={() => setShowUploadForm(true)}
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#C72026] hover:bg-[#C72026]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026]"
                 >
                   <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -485,7 +606,7 @@ export default function AdminContent() {
                       <tr>
                         <td colSpan={5} className="px-6 py-8 text-center">
                           <div className="flex justify-center">
-                            <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                            <div className="w-8 h-8 border-4 border-[#C72026] border-t-transparent rounded-full animate-spin"></div>
                           </div>
                           <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                             Loading content...
@@ -504,7 +625,7 @@ export default function AdminContent() {
                             {error}
                           </p>
                           <button 
-                            className="mt-2 px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700"
+                            className="mt-2 px-4 py-2 text-sm font-medium text-white bg-[#C72026] hover:bg-[#C72026]/90 rounded-md"
                             onClick={() => fetchContent()}
                           >
                             Retry
@@ -540,8 +661,8 @@ export default function AdminContent() {
                         <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
-                              <div className="h-10 w-10 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
-                                <span className="text-lg font-semibold text-purple-600 dark:text-purple-400">
+                              <div className="h-10 w-10 rounded-full bg-[#C72026]/10 dark:bg-[#C72026]/20 flex items-center justify-center">
+                                <span className="text-lg font-semibold text-[#C72026] dark:text-[#C72026]">
                                   {item.title.charAt(0).toUpperCase()}
                                 </span>
                               </div>
@@ -560,12 +681,12 @@ export default function AdminContent() {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
                               item.type === 'course' 
-                                ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' 
+                                ? 'bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] dark:text-[#C72026]' 
                                 : item.type === 'guide' 
-                                  ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' 
+                                  ? 'bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] dark:text-[#C72026]' 
                                   : item.type === 'exercise'
-                                    ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
-                                    : 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200'
+                                    ? 'bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] dark:text-[#C72026]'
+                                    : 'bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] dark:text-[#C72026]'
                             }`}>
                               {t(item.type)}
                             </span>
@@ -581,7 +702,7 @@ export default function AdminContent() {
                               href={item.filePath} 
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 mr-3"
+                              className="text-[#C72026] dark:text-[#C72026] hover:text-[#C72026]/80 dark:hover:text-[#C72026]/80 mr-3"
                             >
                               {t('view')}
                             </a>
@@ -618,4 +739,4 @@ export default function AdminContent() {
       </div>
     </div>
   );
-} 
+}

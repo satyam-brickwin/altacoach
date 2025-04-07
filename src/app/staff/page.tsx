@@ -329,8 +329,8 @@ const translations = {
   }
 };
 
-// Default response constant
-const DEFAULT_RESPONSE = "Sorry, AltaCoach is designed to coach you about client experience. For any other topic, please contact your manager or send a suggestion to the team.";
+// Add this constant at the top of the file with other constants
+const DEFAULT_RESPONSE = "Sorry, Altacoach is designed to coach you about client experience. For any other topic, please contact your manager or send a suggestion to the team.";
 
 export default function StaffDashboard() {
   // Core hooks and auth logic
@@ -578,17 +578,6 @@ export default function StaffDashboard() {
     }, 50);
   };
 
-  // Add this function near the isBusinessRelatedQuery function
-  const isBusinessRelatedQuery = (query: string): boolean => {
-    const businessKeywords = [
-      'client', 'customer', 'business', 'service', 'product', 
-      'sales', 'marketing', 'strategy', 'support', 'experience'
-    ];
-
-    const lowercaseQuery = query.toLowerCase();
-    return businessKeywords.some(keyword => lowercaseQuery.includes(keyword));
-  };
-
   // Handle AI Assistant chat submission - modified to work with the new UI
   const handleSendMessage = async (content: string) => {
     if (!content.trim()) return;
@@ -604,24 +593,21 @@ export default function StaffDashboard() {
     setIsLoading(true);
 
     try {
-      // Check if it's a non-business query (random text)
-      if (!isBusinessRelatedQuery(content) && !quizMode) {
-        const restrictedMessage = {
-          id: uuidv4(),
-          role: 'assistant' as const,
-          text: DEFAULT_RESPONSE,
-          timestamp: new Date().toISOString(),
-        };
-
-        setMessages(prev => [...prev, restrictedMessage]);
-        setIsLoading(false);
-        return;
-      }
-
-      // Always send default response for canned questions
+      // Check if it's a canned question
       const isCannedQuestion = [
-        ...exampleQuestions,
-        // Add other canned questions arrays here
+        "What are effective strategies for small business growth?",
+        "How can I create a competitive analysis for my industry?",
+        "What metrics should I track for my business performance?",
+        "How can I improve my social media marketing?",
+        "What are the latest digital marketing trends?",
+        "How to create an effective email marketing campaign?",
+        "What content marketing strategies work best for B2B companies?",
+        "How to improve customer satisfaction scores?",
+        "What are best practices for handling customer complaints?",
+        "How can AI enhance our customer service operations?",
+        "Can you summarize this document for me?",
+        "What are the key points in this document?",
+        "How does this document compare to industry standards?"
       ].includes(content);
 
       if (isCannedQuestion) {
@@ -631,7 +617,6 @@ export default function StaffDashboard() {
           text: DEFAULT_RESPONSE,
           timestamp: new Date().toISOString(),
         };
-
         setMessages(prev => [...prev, restrictedMessage]);
         setIsLoading(false);
         return;
@@ -665,50 +650,10 @@ export default function StaffDashboard() {
         return;
       }
 
-      const simpleResponse = await fetch('/api/chat-simple', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: content,
-        }),
-      });
-
-      if (simpleResponse.ok) {
-        const simpleData = await simpleResponse.json();
-        const aiMessage = {
-          id: uuidv4(),
-          role: 'assistant' as const,
-          text: simpleData.message,
-          timestamp: new Date().toISOString(),
-        };
-
-        setMessages(prev => [...prev, aiMessage]);
-        setIsLoading(false);
-        return;
-      }
-
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: content,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(`Failed to get response: ${data.error || response.statusText}`);
-      }
-
       const aiMessage = {
         id: uuidv4(),
         role: 'assistant' as const,
-        text: data.message || "I'm sorry, I couldn't generate a response.",
+        text: DEFAULT_RESPONSE,
         timestamp: new Date().toISOString(),
       };
 
@@ -831,26 +776,20 @@ export default function StaffDashboard() {
       [questionId]: now
     }));
 
-    // Add new messages to existing ones instead of replacing them
-    const userMessage = {
-      id: uuidv4(),
-      role: 'user' as const,
-      text: question,
-      timestamp: new Date().toISOString(),
-    };
-
-    const restrictedMessage = {
-      id: uuidv4(),
-      role: 'assistant' as const,
-      text: DEFAULT_RESPONSE,
-      timestamp: new Date().toISOString(),
-    };
-
-    // Append new messages instead of replacing
-    setMessages(prev => [...prev, userMessage, restrictedMessage]);
-
-    if (window.innerWidth < 1024) {
-      setMenuOpen(false);
+    if (isDoubleClick) {
+      handleSendMessage(question);
+      if (window.innerWidth < 1024) {
+        setMenuOpen(false);
+      }
+    } else {
+      setInputValue(question);
+      setActiveView('chat');
+      if (window.innerWidth < 1024) {
+        setMenuOpen(false);
+      }
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
     }
   };
 
@@ -1192,10 +1131,14 @@ export default function StaffDashboard() {
                   ].map((question, idx) => (
                     <button
                       key={`strategy-${idx}`}
-                      className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
+                      className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1 relative group"
                       onClick={() => handleQuestionClick(question, `strategy-${idx}`)}
+                      title="Single click to copy, double click to send"
                     >
                       {question}
+                      <span className="hidden group-hover:block absolute -top-8 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap">
+                        Click to copy, double click to send
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -1212,10 +1155,14 @@ export default function StaffDashboard() {
                   ].map((question, idx) => (
                     <button
                       key={`marketing-${idx}`}
-                      className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
+                      className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1 relative group"
                       onClick={() => handleQuestionClick(question, `marketing-${idx}`)}
+                      title="Single click to copy, double click to send"
                     >
                       {question}
+                      <span className="hidden group-hover:block absolute -top-8 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap">
+                        Click to copy, double click to send
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -1231,10 +1178,14 @@ export default function StaffDashboard() {
                   ].map((question, idx) => (
                     <button
                       key={`support-${idx}`}
-                      className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
+                      className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1 relative group"
                       onClick={() => handleQuestionClick(question, `support-${idx}`)}
+                      title="Single click to copy, double click to send"
                     >
                       {question}
+                      <span className="hidden group-hover:block absolute -top-8 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap">
+                        Click to copy, double click to send
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -1250,10 +1201,14 @@ export default function StaffDashboard() {
                   ].map((question, idx) => (
                     <button
                       key={`document-${idx}`}
-                      className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
+                      className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1 relative group"
                       onClick={() => handleQuestionClick(question, `document-${idx}`)}
+                      title="Single click to copy, double click to send"
                     >
                       {question}
+                      <span className="hidden group-hover:block absolute -top-8 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap">
+                        Click to copy, double click to send
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -1330,7 +1285,7 @@ export default function StaffDashboard() {
             </button>
 
             {/* Logo moved next to menu button */}
-            <div className="flex-shrink-0">
+            {/* <div className="flex-shrink-0">
               <Link href="/" className="flex items-center">
                 <Image
                   src="/Logo_Altamedia_sans-fond.png"
@@ -1347,7 +1302,7 @@ export default function StaffDashboard() {
                   }}
                 />
               </Link>
-            </div>
+            </div> */}
           </div>
 
           {/* Center - Title */}

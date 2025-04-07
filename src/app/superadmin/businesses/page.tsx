@@ -2,9 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useLanguage, languageLabels, SupportedLanguage } from '@/contexts/LanguageContext';
 import { useDarkMode } from '@/contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
+import { Import } from 'lucide-react';
 
 // Sample business data
 const businessData = [
@@ -793,14 +795,41 @@ export default function AdminBusinesses() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
       <header className="bg-white dark:bg-gray-800 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-1">
           <div className="flex items-center h-16">
-            <Link href="/" className="flex items-center">
-              <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">altacoach</span>
-              <span className="ml-2 px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-sm font-medium rounded">
-                Super Admin
-              </span>
-            </Link>
+            {/* Left side - Logo */}
+            <div className="flex-shrink-0">
+              <Link href="/" className="flex items-center">
+                <Image
+                  src="/Logo_Altamedia_sans-fond.png"
+                  alt="Altamedia Logo"
+                  width={120}  // Increased from 80
+                  height={120} // Increased from 80
+                  className="h-10 w-auto" // Increased from h-10
+                  priority
+                  quality={100}
+                  style={{
+                    objectFit: 'contain',
+                    maxWidth: '100%',
+                    height: 'auto'
+                  }}
+                />
+              </Link>
+            </div>
+
+            {/* Center - Title and Admin badge */}
+            <div className="flex-1 flex justify-center">
+              <div className="flex items-center">
+                <span className="text-lg font-bold tracking-wider font-['Helvetica'] italic">
+                  <span className="text-gray-900 dark:text-white tracking-[.10em]">alta</span>
+                  <span className="text-[#C72026] tracking-[.10em]">c</span>
+                  <span className="text-gray-900 dark:text-white tracking-[.10em]">oach</span>
+                </span>
+                <span className="ml-2 px-2 py-1 bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] text-xs font-medium rounded">
+                  Super Admin
+                </span>
+              </div>
+            </div>
 
             {/* Right side - Controls */}
             <div className="flex items-center space-x-4 ml-auto">
@@ -808,7 +837,7 @@ export default function AdminBusinesses() {
               <button
                 type="button"
                 onClick={toggleDarkMode}
-                className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#C72026] focus:ring-offset-2"
                 aria-label="Toggle dark mode"
               >
                 {isDarkMode ? (
@@ -827,7 +856,7 @@ export default function AdminBusinesses() {
                 <select
                   value={language}
                   onChange={handleLanguageChange}
-                  className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md px-2 py-1 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md px-2 py-1 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#C72026] focus:ring-offset-2"
                 >
                   {Object.entries(languageLabels).map(([code, label]) => (
                     <option key={code} value={code}>
@@ -843,8 +872,8 @@ export default function AdminBusinesses() {
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                   className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium text-purple-700 dark:text-purple-200">
+                  <div className="w-8 h-8 bg-[#C72026]/10 dark:bg-[#C72026]/20 rounded-full flex items-center justify-center">
+                    <span className="text-sm font-medium text-[#C72026] dark:text-[#C72026]">
                       {user?.name?.[0]?.toUpperCase()}
                     </span>
                   </div>
@@ -885,13 +914,13 @@ export default function AdminBusinesses() {
                 </Link>
               </li>
               <li>
-                <Link href="/superadmin/businesses" className="block px-4 py-2 rounded-md bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-200 font-medium">
+                <Link href="/superadmin/businesses" className="block px-4 py-2 rounded-md bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] dark:text-[#C72026] font-medium">
                   {t('businesses')}
                 </Link>
               </li>
               <li>
                 <Link href="/superadmin/content" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
-                  {t('content')}
+                  {t('altamedia Content')}
                 </Link>
               </li>
               <li>
@@ -933,7 +962,7 @@ export default function AdminBusinesses() {
                 </div>
                 <button
                   onClick={openModal}
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#C72026] hover:bg-[#C72026]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026]"
                 >
                   <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -952,7 +981,7 @@ export default function AdminBusinesses() {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="mt-1 block w-40 pl-3 pr-10 py-2 text-sm text-black border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:outline-none focus:ring-purple-500 focus:border-purple-500 rounded-md"
+                  className="mt-1 block w-40 pl-3 pr-10 py-2 text-sm text-black border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] rounded-md"
                 >
                   <option value="all">{t('allBusinesses')}</option>
                   <option value="active">{t('active')}</option>
@@ -966,7 +995,7 @@ export default function AdminBusinesses() {
                   placeholder={t('searchBusinesses')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-sm"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] text-sm"
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -987,7 +1016,7 @@ export default function AdminBusinesses() {
             <div className="overflow-x-auto">
               {isLoading ? (
                 <div className="flex justify-center items-center p-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-700"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72026]"></div>
                   <span className="ml-2">{t('loading')}</span>
                 </div>
               ) : (
@@ -1026,12 +1055,12 @@ export default function AdminBusinesses() {
                       </tr>
                     ) : (
                       filteredBusinesses.map((business: Business) => (
-                        <tr key={business.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                        <tr key={business.id} className="hover:bg-[#C72026]/5 dark:hover:bg-[#C72026]/10">
                           {/* Name cell */}
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
-                              <div className="h-10 w-10 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
-                                <span className="text-lg font-semibold text-purple-600 dark:text-purple-400">
+                              <div className="h-10 w-10 rounded-full bg-[#C72026]/10 dark:bg-[#C72026]/20 flex items-center justify-center">
+                                <span className="text-lg font-semibold text-[#C72026] dark:text-[#C72026]">
                                   {business.name.charAt(0)}
                                 </span>
                               </div>
@@ -1074,7 +1103,7 @@ export default function AdminBusinesses() {
                             <div className="flex space-x-2">
                               <button
                                 onClick={() => openViewModal(business)}
-                                className="text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300"
+                                className="text-[#C72026] hover:text-[#C72026]/80"
                               >
                                 {t('view')}
                               </button>
@@ -1145,7 +1174,7 @@ export default function AdminBusinesses() {
                       value={formData.name}
                       onChange={handleInputChange}
                       required
-                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                     />
                   </div>
 
@@ -1160,7 +1189,7 @@ export default function AdminBusinesses() {
                       value={formData.email}
                       onChange={handleInputChange}
                       required
-                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                     />
                   </div>
 
@@ -1174,7 +1203,7 @@ export default function AdminBusinesses() {
                       id="phoneNumber"
                       value={formData.phoneNumber}
                       onChange={handleInputChange}
-                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                     />
                   </div>
 
@@ -1188,7 +1217,7 @@ export default function AdminBusinesses() {
                       value={formData.address}
                       onChange={handleInputChange}
                       rows={3}
-                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                     ></textarea>
                   </div>
 
@@ -1201,7 +1230,7 @@ export default function AdminBusinesses() {
                       id="plan"
                       value={formData.plan}
                       onChange={handleInputChange}
-                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                     >
                       <option value="Starter">Starter</option>
                       <option value="Business">Business</option>
@@ -1218,7 +1247,7 @@ export default function AdminBusinesses() {
                       id="status"
                       value={formData.status}
                       onChange={handleInputChange}
-                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                     >
                       <option value="pending">{t('pending')}</option>
                       <option value="active">{t('active')}</option>
@@ -1237,7 +1266,7 @@ export default function AdminBusinesses() {
                       value={formData.createdBy}
                       onChange={handleInputChange}
                       required
-                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                     />
                   </div>
 
@@ -1245,14 +1274,14 @@ export default function AdminBusinesses() {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-600 text-base font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:col-start-2 sm:text-sm"
+                      className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#C72026] hover:bg-[#C72026]/90 text-white focus:ring-[#C72026] sm:col-start-2 sm:text-sm"
                     >
                       {isSubmitting ? t('submitting') : t('add')}
                     </button>
                     <button
                       type="button"
                       onClick={closeModal}
-                      className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:mt-0 sm:col-start-1 sm:text-sm"
+                      className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026] sm:mt-0 sm:col-start-1 sm:text-sm"
                     >
                       {t('cancel')}
                     </button>
@@ -1281,7 +1310,7 @@ export default function AdminBusinesses() {
                   <button
                     type="button"
                     onClick={closeViewModal}
-                    className="bg-white dark:bg-gray-800 rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                    className="bg-white dark:bg-gray-800 rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026]"
                   >
                     <span className="sr-only">Close</span>
                     <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -1369,7 +1398,7 @@ export default function AdminBusinesses() {
                       closeViewModal();
                       openEditModal(selectedBusiness);
                     }}
-                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-600 text-base font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:text-sm"
+                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#C72026] hover:bg-[#C72026]/90 text-white focus:ring-[#C72026] sm:text-sm"
                   >
                     {t('edit')}
                   </button>
@@ -1397,7 +1426,7 @@ export default function AdminBusinesses() {
                   <button
                     type="button"
                     onClick={closeEditModal}
-                    className="bg-white dark:bg-gray-800 rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                    className="bg-white dark:bg-gray-800 rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026]"
                   >
                     <span className="sr-only">Close</span>
                     <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -1419,7 +1448,7 @@ export default function AdminBusinesses() {
                       value={editFormData.name}
                       onChange={handleEditInputChange}
                       required
-                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                     />
                   </div>
 
@@ -1457,7 +1486,7 @@ export default function AdminBusinesses() {
                         </div>
                       )}
                       <label htmlFor="logo-upload" className="ml-5 cursor-pointer">
-                        <span className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                        <span className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026]">
                           {t('uploadLogo')}
                         </span>
                         <input
@@ -1491,7 +1520,7 @@ export default function AdminBusinesses() {
                         name="colorTheme"
                         value={editFormData.colorTheme}
                         onChange={handleEditInputChange}
-                        className="ml-2 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                        className="ml-2 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                       />
                     </div>
                   </div>
@@ -1506,7 +1535,7 @@ export default function AdminBusinesses() {
                       id="edit-plan"
                       value={editFormData.plan}
                       onChange={handleEditInputChange}
-                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                     >
                       <option value="Starter">Starter</option>
                       <option value="Business">Business</option>
@@ -1524,7 +1553,7 @@ export default function AdminBusinesses() {
                       id="edit-status"
                       value={editFormData.status}
                       onChange={handleEditInputChange}
-                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                     >
                       <option value="pending">{t('pending')}</option>
                       <option value="active">{t('active')}</option>
@@ -1542,7 +1571,7 @@ export default function AdminBusinesses() {
                       id="edit-createdBy"
                       value={editFormData.createdBy}
                       onChange={handleEditInputChange}
-                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                     />
                   </div>
 
@@ -1554,7 +1583,7 @@ export default function AdminBusinesses() {
                       type="checkbox"
                       checked={editFormData.isActive}
                       onChange={handleCheckboxChange}
-                      className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                      className="h-4 w-4 text-[#C72026] focus:ring-[#C72026] border-gray-300 rounded"
                     />
                     <label htmlFor="isActive" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
                       {t('isActive')}
@@ -1565,14 +1594,14 @@ export default function AdminBusinesses() {
                     <button
                       type="submit"
                       disabled={isEditSubmitting}
-                      className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-600 text-base font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:col-start-2 sm:text-sm"
+                      className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#C72026] hover:bg-[#C72026]/90 text-white focus:ring-[#C72026] sm:col-start-2 sm:text-sm"
                     >
                       {isEditSubmitting ? t('submitting') : t('saveChanges')}
                     </button>
                     <button
                       type="button"
                       onClick={closeEditModal}
-                      className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:mt-0 sm:col-start-1 sm:text-sm"
+                      className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026] sm:mt-0 sm:col-start-1 sm:text-sm"
                     >
                       {t('cancel')}
                     </button>

@@ -1070,7 +1070,7 @@ export default function AdminAnalytics() {
               </li>
               <li>
                 <Link href="/admin/content" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
-                  {t('content')}
+                  {t('altamedia Content')}
                 </Link>
               </li>
               {/* <li>

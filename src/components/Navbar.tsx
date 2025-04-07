@@ -92,9 +92,6 @@ export default function Navbar() {
                   <span className="text-[#C72026] tracking-[.10em]">c</span>
                   <span className="text-gray-900 dark:text-white tracking-[.10em]">oach</span>
                 </span>
-                <span className="ml-2 px-2 py-1 bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] text-sm font-medium rounded">
-                  Admin
-                </span>
               </div>
             </div>
 
@@ -161,7 +158,7 @@ export default function Navbar() {
             ) : (
               <Link
                 href="/login"
-                className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-md"
+                className="bg-[#C72026] hover:bg-[#C72026]/90 text-white py-2 px-4 rounded-md"
               >
                 {translate('signIn')}
               </Link>

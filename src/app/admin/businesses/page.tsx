@@ -114,6 +114,7 @@ interface BusinessDocument {
   status: string;
   created: string;
   source: string;
+  category: string; // Add category field for training materials
   url?: string;
   content?: string;
 }
@@ -130,27 +131,128 @@ interface User {
   joinDate?: string;
 }
 
+// Add this type if not already present
+interface NewUser {
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+}
+
 // Dummy data for documents and users
 const dummyDocuments: BusinessDocument[] = [
+  // Business Documents (Training Materials)
   {
     id: '1',
-    title: 'Business Plan 2024',
-    description: 'Annual business plan document',
+    title: 'AI-Powered Learning Guide',
+    description: 'Complete guide to using altacoach AI-powered learning features',
     type: 'PDF',
     status: 'active',
     created: '2024-01-15',
     source: 'business',
-    url: 'https://your-domain.com/path/to/business-plan.pdf' // Replace with actual URL
+    category: 'training',
+    url: '/docs/ai-powered-learning-guide.pdf'
   },
   {
     id: '2',
-    title: 'Employee Handbook',
-    description: 'Company policies and procedures',
-    type: 'DOCX',
+    title: 'Post-Training Support Framework',
+    description: 'Framework for implementing continuous learning support',
+    type: 'PPTX',
     status: 'active',
     created: '2024-02-01',
+    source: 'business',
+    category: 'training',
+    url: '/docs/post-training-support.pptx'
+  },
+  {
+    id: '3',
+    title: 'Knowledge Retention Strategies',
+    description: 'Best practices for improving training retention rates',
+    type: 'PDF',
+    status: 'active',
+    created: '2024-03-01',
+    source: 'business',
+    category: 'training',
+    url: '/docs/retention-strategies.pdf'
+  },
+  {
+    id: '4',
+    title: 'Real-Time Coaching Manual',
+    description: 'Guide to implementing real-time coaching features',
+    type: 'DOCX',
+    status: 'active',
+    created: '2024-01-20',
+    source: 'business',
+    category: 'training',
+    url: '/docs/coaching-manual.docx'
+  },
+  {
+    id: '5',
+    title: 'Analytics & Reporting Guide',
+    description: 'How to use altacoach analytics for measuring training impact',
+    type: 'PDF',
+    status: 'active',
+    created: '2024-02-15',
+    source: 'business',
+    category: 'analytics',
+    url: '/docs/analytics-guide.pdf'
+  },
+
+  // Admin Documents
+  {
+    id: '6',
+    title: 'Platform Implementation Guide',
+    description: 'Technical guide for implementing altacoach',
+    type: 'PDF',
+    status: 'active',
+    created: '2024-02-15',
     source: 'admin',
-    url: 'https://your-domain.com/path/to/handbook.docx' // Replace with actual URL
+    category: 'technical',
+    url: '/docs/implementation-guide.pdf'
+  },
+  {
+    id: '7',
+    title: 'Content Integration Manual',
+    description: 'Guide for integrating training content with altacoach',
+    type: 'DOCX',
+    status: 'active',
+    created: '2024-02-10',
+    source: 'admin',
+    category: 'technical',
+    url: '/docs/content-integration.docx'
+  },
+  {
+    id: '8',
+    title: 'User Management Policy',
+    description: 'Policies for managing user accounts and permissions',
+    type: 'PDF',
+    status: 'active',
+    created: '2024-01-25',
+    source: 'admin',
+    category: 'policy',
+    url: '/docs/user-management.pdf'
+  },
+  {
+    id: '9',
+    title: 'Performance Metrics Guide',
+    description: 'Guide to tracking and analyzing learning performance',
+    type: 'XLSX',
+    status: 'active',
+    created: '2024-03-01',
+    source: 'admin',
+    category: 'analytics',
+    url: '/docs/performance-metrics.xlsx'
+  },
+  {
+    id: '10',
+    title: 'Training ROI Calculator',
+    description: 'Spreadsheet for calculating training return on investment',
+    type: 'XLSX',
+    status: 'active',
+    created: '2024-02-20',
+    source: 'admin',
+    category: 'analytics',
+    url: '/docs/roi-calculator.xlsx'
   }
 ];
 
@@ -662,7 +764,7 @@ export default function AdminBusinesses() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   // Add this state to track user status changes
-  const [users, setUsers] = useState(dummyUsers);
+  const [users, setUsers] = useState<User[]>([]);
 
   const handleAddUser = () => {
     setIsAddUserModalOpen(true);
@@ -716,6 +818,11 @@ export default function AdminBusinesses() {
   // Fetch businesses when component mounts
   useEffect(() => {
     fetchBusinesses();
+  }, []);
+
+  // Initialize users in useEffect
+  useEffect(() => {
+    setUsers(dummyUsers);
   }, []);
 
   // Handle language change
@@ -1027,6 +1134,68 @@ export default function AdminBusinesses() {
     }
   };
 
+  // Add this to your state declarations
+  const [selectedDocuments, setSelectedDocuments] = useState<{ [key: string]: boolean }>({});
+
+  // Add this function to handle document selection
+  const handleDocumentSelection = (documentId: string, type: 'all' | 'admin' | 'business') => {
+    setSelectedDocuments(prev => ({
+      ...prev,
+      [documentId]: !prev[documentId]
+    }));
+  };
+
+  // Add a function to handle bulk actions
+  const handleBulkAction = (action: string) => {
+    const selectedIds = Object.entries(selectedDocuments)
+      .filter(([_, isSelected]) => isSelected)
+      .map(([id]) => id);
+
+    if (selectedIds.length === 0) {
+      alert('Please select documents first');
+      return;
+    }
+
+    // Perform bulk action based on the action type
+    switch (action) {
+      case 'download':
+        selectedIds.forEach(id => {
+          const doc = dummyDocuments.find(d => d.id === id);
+          if (doc) handleDownload(doc);
+        });
+        break;
+      // Add other bulk actions as needed
+      default:
+        break;
+    }
+  };
+
+  // Add this function to handle new user addition
+  const handleAddUserSuccess = (newUser: NewUser) => {
+    if (!newUser?.name) return; // Add validation
+
+    const userToAdd: User = {
+      id: (users.length + 1).toString(),
+      name: newUser.name,
+      email: newUser.email,
+      role: newUser.role || 'User',
+      status: 'active',
+      lastActive: new Date().toISOString().split('T')[0],
+      joinDate: new Date().toISOString().split('T')[0]
+    };
+
+    setUsers(prevUsers => [...prevUsers, userToAdd]);
+    setIsAddUserModalOpen(false);
+  };
+
+  // Add this computed value before your render
+  const filteredUsers = users.filter(user => 
+    user && (  // Add null check
+      user.name?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+      user.email?.toLowerCase().includes(userSearchTerm.toLowerCase())
+    )
+  );
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header with logo and Admin badge */}
@@ -1193,7 +1362,7 @@ export default function AdminBusinesses() {
               </li>
               <li>
                 <Link href="/admin/content" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
-                  {t('content')}
+                  {t('altamedia Content')}
                 </Link>
               </li>
               {/* <li>
@@ -1519,7 +1688,7 @@ export default function AdminBusinesses() {
                           <tr>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Role</th>
+                            {/* <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Role</th> */}
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created By</th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Last Active</th>
@@ -1527,24 +1696,25 @@ export default function AdminBusinesses() {
                           </tr>
                         </thead>
                         <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                          {users.map((user) => (
+                          {filteredUsers.map((user) => user && (  // Add null check
                             <tr key={user.id}>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-gray-900 dark:text-white">{user.name}</div>
+                                <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                  {user?.name || 'N/A'}  {/* Add fallback */}
+                                </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-500 dark:text-gray-400">{user.email}</div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-500 dark:text-gray-400">{user.role}</div>
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                  {user?.email || 'N/A'}  {/* Add fallback */}
+                                </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                  user.status === 'active' 
+                                  user?.status === 'active' 
                                     ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
                                     : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                                 }`}>
-                                  {user.status}
+                                  {user?.status || 'N/A'}  {/* Add fallback */}
                                 </span>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
@@ -1594,6 +1764,10 @@ export default function AdminBusinesses() {
                       <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead className="bg-gray-50 dark:bg-gray-800">
                           <tr>
+                            {/* Add checkbox column for all document views */}
+                            <th scope="col" className="px-6 py-4 whitespace-nowrap text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                              Select
+                            </th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Title</th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Source</th>
@@ -1606,6 +1780,15 @@ export default function AdminBusinesses() {
                             .filter(doc => activeFilter === 'all' || doc.source === activeFilter)
                             .map((document) => (
                               <tr key={document.id}>
+                                {/* Add checkbox for all rows */}
+                                <td className="px-6 py-4 whitespace-nowrap text-center">
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedDocuments[document.id] || false}
+                                    onChange={() => handleDocumentSelection(document.id, activeFilter as 'all' | 'admin' | 'business')}
+                                    className="h-4 w-4 text-[#C72026] border-gray-300 rounded focus:ring-[#C72026] focus:ring-offset-0"
+                                  />
+                                </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <div className="text-sm font-medium text-gray-900 dark:text-white">{document.title}</div>
                                   <div className="text-sm text-gray-500 dark:text-gray-400">{document.description}</div>
@@ -1657,6 +1840,17 @@ export default function AdminBusinesses() {
                       </table>
                     )}
                   </div>
+                  {Object.values(selectedDocuments).some(Boolean) && (
+                    <div className="mb-4 flex space-x-2">
+                      <button
+                        onClick={() => handleBulkAction('download')}
+                        className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-[#C72026] hover:bg-[#C72026]/90"
+                      >
+                        Download Selected
+                      </button>
+                      {/* Add other bulk action buttons as needed */}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -1692,7 +1886,7 @@ export default function AdminBusinesses() {
                     />
                   </div>
                   
-                  <div>
+                  {/* <div>
                     <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       {t('email')}
                     </label>
@@ -1733,11 +1927,11 @@ export default function AdminBusinesses() {
                       rows={3}
                       className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                     ></textarea>
-                  </div>
+                  </div> */}
 
                   <div>
                     <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {t('startDate')}
+                      {t('Start Date')}
                     </label>
                     <input
                       type="date"
@@ -1751,7 +1945,7 @@ export default function AdminBusinesses() {
 
                   <div>
                     <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {t('endDate')}
+                      {t('End Date')}
                     </label>
                     <input
                       type="date"
@@ -2159,9 +2353,7 @@ export default function AdminBusinesses() {
       <AddUserModal
         isOpen={isAddUserModalOpen}
         onClose={() => setIsAddUserModalOpen(false)}
-        onSuccess={() => {
-          setIsAddUserModalOpen(false);
-        }}
+        onSuccess={handleAddUserSuccess}  // Update this line
         translate={(key: string) => key}
       />
       <UploadDocumentModal

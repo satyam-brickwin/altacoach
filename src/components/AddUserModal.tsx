@@ -1,20 +1,32 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext'; // Assuming you have an AuthContext to get the current user
 
+interface NewUser {
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  language?: string;
+  password?: string;
+  businessId?: string;
+}
+
 interface AddUserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (user: NewUser) => void;
   translate: (key: string) => string;
 }
 
-export default function AddUserModal({ isOpen, onClose, onSuccess, translate }: AddUserModalProps) {
+const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onSuccess, translate }) => {
   const { user } = useAuth(); // Get the current user from the AuthContext
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<NewUser>({
     name: '',
     email: '',
+    role: 'User',
+    status: 'active',
+    language: 'en',
     password: '',
-    language: 'en', // Default language
     businessId: ''
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -35,8 +47,8 @@ export default function AddUserModal({ isOpen, onClose, onSuccess, translate }: 
       ...formData,
       name: formData.name.trim(),
       email: formData.email.trim(),
-      language: formData.language,
-      businessId: formData.businessId.trim(),
+      language: formData.language || 'en',
+      businessId: formData.businessId?.trim() || '', // Handle optional businessId
       role: 'USER' // Set default role
     };
 
@@ -59,7 +71,16 @@ export default function AddUserModal({ isOpen, onClose, onSuccess, translate }: 
       }
 
       // Success - close modal and refresh user list
-      onSuccess();
+      onSuccess(formData);
+      setFormData({
+        name: '',
+        email: '',
+        role: 'User',
+        status: 'active',
+        language: 'en',
+        password: '',
+        businessId: ''
+      });
       onClose();
     } catch (err) {
       console.error('Error in form submission:', err);
@@ -206,3 +227,5 @@ export default function AddUserModal({ isOpen, onClose, onSuccess, translate }: 
     </div>
   );
 }
+
+export default AddUserModal;

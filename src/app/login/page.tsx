@@ -534,7 +534,7 @@ export default function LoginPage() {
           </div>
           
           {/* Developer Section for Business Credentials */}
-          <div className="mt-8 border-t border-gray-300 dark:border-gray-600 pt-6">
+          {/* <div className="mt-8 border-t border-gray-300 dark:border-gray-600 pt-6">
             <button 
               onClick={() => setShowCredentials(!showCredentials)}
               className="text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 mb-2"
@@ -583,7 +583,7 @@ export default function LoginPage() {
                 </div>
               </div>
             )}
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

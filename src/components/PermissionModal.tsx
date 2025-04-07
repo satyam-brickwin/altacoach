@@ -164,12 +164,12 @@ const PermissionModal: React.FC<PermissionModalProps> = ({
       setIsSaving(false);
       
       // Simple toast without try-catch which might be causing issues
-      toast.success(`Permissions for ${user.name} on ${sidebarItems.find(item => item.id === selectedSidebarItem)?.label} updated successfully`, {
+      toast.success(`Permissions updated successfully`, {
         position: "bottom-right", // Position at bottom right
         style: {
-          backgroundColor: "#9333ea", // Purple-600 background to match project
+          backgroundColor: "#C72026", // Purple-600 background to match project
           color: "white",
-          border: "1px solid #7e22ce" // Purple-700 border
+          border: "1px solid rgba(199, 32, 38, 0.2)" // Purple-700 border
         },
         duration: 4000, // Show for 4 seconds
       });
@@ -211,8 +211,8 @@ const PermissionModal: React.FC<PermissionModalProps> = ({
           {user.avatar ? (
             <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full object-cover border border-gray-200" />
           ) : (
-            <div className="h-10 w-10 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
-              <span className="text-lg font-semibold text-purple-600 dark:text-purple-400">
+            <div className="h-10 w-10 rounded-full bg-[#C72026]/10 dark:bg-[#C72026]/20 flex items-center justify-center">
+              <span className="text-lg font-semibold text-[#C72026] dark:text-[#C72026]">
                 {user.name.charAt(0)}
               </span>
             </div>
@@ -220,9 +220,17 @@ const PermissionModal: React.FC<PermissionModalProps> = ({
           <div>
             <h3 className="text-base font-medium">{user.name}</h3>
             <p className="text-xs text-gray-500 dark:text-gray-300">{user.email}</p>
-            <Badge variant="secondary" className="mt-0.5 text-xs dark:bg-gray-700 dark:text-gray-200">
-              {user.role === 'ADMIN' ? 'System Admin' : 
-               user.role === 'BUSINESS' ? 'Business Admin' : user.role}
+            <Badge 
+              variant="secondary" 
+              className="mt-0.5 text-xs bg-[#C72026] text-white dark:bg-[#C72026] dark:text-white hover:bg-[#C72026]/90"
+            >
+              {user.role === 'ADMIN' ? (
+                <span className="text-white">System Admin</span>
+              ) : user.role === 'BUSINESS' ? (
+                <span className="text-white">Business Admin</span>
+              ) : (
+                user.role
+              )}
             </Badge>
           </div>
         </div>
@@ -239,7 +247,7 @@ const PermissionModal: React.FC<PermissionModalProps> = ({
                 }}
                 className={`flex items-center gap-2 p-2 w-full rounded-md text-sm font-medium cursor-pointer ${
                   item.id === selectedSidebarItem
-                    ? "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400" 
+                    ? "bg-[#C72026]/10 text-[#C72026] dark:bg-[#C72026]/20 dark:text-[#C72026]" 
                     : "hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
                 }`}
               >
@@ -292,16 +300,16 @@ const PermissionModal: React.FC<PermissionModalProps> = ({
                     
                     <div className="flex justify-end mb-4">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-purple-700 dark:text-purple-400">All permissions:</span>
+                        <span className="text-sm font-medium text-[#C72026] dark:text-[#C72026]">All permissions:</span>
                         <Switch 
                           checked={permissions.all}
                           onCheckedChange={(checked) => handleToggleAll(checked)}
-                          className="data-[state=checked]:bg-purple-600 data-[state=unchecked]:bg-gray-300 
+                          className="data-[state=checked]:bg-[#C72026] data-[state=unchecked]:bg-gray-300 
                             relative inline-flex h-[24px] w-[44px] shrink-0 cursor-pointer rounded-full 
                             border-2 border-transparent transition-colors duration-200 ease-in-out 
-                            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400
+                            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C72026]
                             focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50
-                            dark:data-[state=checked]:bg-purple-500 dark:data-[state=unchecked]:bg-gray-700 
+                            dark:data-[state=checked]:bg-[#C72026] dark:data-[state=unchecked]:bg-gray-700 
                             before:data-[state=checked]:translate-x-5 before:data-[state=unchecked]:translate-x-0
                             before:absolute before:top-[-1px] before:h-[22px] before:w-[22px] before:rounded-full
                             before:bg-white before:shadow-sm before:transition-transform before:duration-200"
@@ -314,20 +322,20 @@ const PermissionModal: React.FC<PermissionModalProps> = ({
                       {/* View Permission Card */}
                       <div className={`flex flex-col items-start p-3 rounded-lg border text-left w-full transition-all duration-200 ${/* Reduced from p-4 */
                         permissions.view 
-                          ? "bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:border-purple-800 shadow-md" 
+                          ? "bg-[#C72026]/5 border-[#C72026]/20 dark:bg-[#C72026]/10 dark:border-[#C72026]/30 shadow-md" 
                           : "bg-white hover:bg-gray-50 border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-750 hover:shadow-sm"
                       }`}>
                         <div className="flex items-center justify-between w-full">
-                          <span className="font-medium text-purple-700 dark:text-purple-300">View</span>
+                          <span className="font-medium text-[#C72026] dark:text-[#C72026]">View</span>
                           <Switch 
                             checked={permissions.view}
                             onCheckedChange={(checked) => handleTogglePermission('view', checked)}
-                            className="data-[state=checked]:bg-purple-600 data-[state=unchecked]:bg-gray-300 
+                            className="data-[state=checked]:bg-[#C72026] data-[state=unchecked]:bg-gray-300 
                               relative inline-flex h-[24px] w-[44px] shrink-0 cursor-pointer rounded-full 
                               border-2 border-transparent transition-colors duration-200 ease-in-out 
-                              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400
+                              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C72026]
                               focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50
-                              dark:data-[state=checked]:bg-purple-500 dark:data-[state=unchecked]:bg-gray-700 
+                              dark:data-[state=checked]:bg-[#C72026] dark:data-[state=unchecked]:bg-gray-700 
                               before:data-[state=checked]:translate-x-5 before:data-[state=unchecked]:translate-x-0
                               before:absolute before:top-[-1px] before:h-[22px] before:w-[22px] before:rounded-full
                               before:bg-white before:shadow-sm before:transition-transform before:duration-200"
@@ -339,20 +347,20 @@ const PermissionModal: React.FC<PermissionModalProps> = ({
                       {/* Create Permission Card */}
                       <div className={`flex flex-col items-start p-3 rounded-lg border text-left w-full transition-all duration-200 ${/* Reduced from p-4 */
                         permissions.create 
-                          ? "bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:border-purple-800 shadow-md" 
+                          ? "bg-[#C72026]/5 border-[#C72026]/20 dark:bg-[#C72026]/10 dark:border-[#C72026]/30 shadow-md" 
                           : "bg-white hover:bg-gray-50 border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-750 hover:shadow-sm"
                       }`}>
                         <div className="flex items-center justify-between w-full">
-                          <span className="font-medium text-purple-700 dark:text-purple-300">Create</span>
+                          <span className="font-medium text-[#C72026] dark:text-[#C72026]">Create</span>
                           <Switch 
                             checked={permissions.create}
                             onCheckedChange={(checked) => handleTogglePermission('create', checked)}
-                            className="data-[state=checked]:bg-purple-600 data-[state=unchecked]:bg-gray-300 
+                            className="data-[state=checked]:bg-[#C72026] data-[state=unchecked]:bg-gray-300 
                               relative inline-flex h-[24px] w-[44px] shrink-0 cursor-pointer rounded-full 
                               border-2 border-transparent transition-colors duration-200 ease-in-out 
-                              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400
+                              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C72026]
                               focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50
-                              dark:data-[state=checked]:bg-purple-500 dark:data-[state=unchecked]:bg-gray-700 
+                              dark:data-[state=checked]:bg-[#C72026] dark:data-[state=unchecked]:bg-gray-700 
                               before:data-[state=checked]:translate-x-5 before:data-[state=unchecked]:translate-x-0
                               before:absolute before:top-[-1px] before:h-[22px] before:w-[22px] before:rounded-full
                               before:bg-white before:shadow-sm before:transition-transform before:duration-200"
@@ -364,20 +372,20 @@ const PermissionModal: React.FC<PermissionModalProps> = ({
                       {/* Edit Permission Card */}
                       <div className={`flex flex-col items-start p-3 rounded-lg border text-left w-full transition-all duration-200 ${/* Reduced from p-4 */
                         permissions.edit 
-                          ? "bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:border-purple-800 shadow-md" 
+                          ? "bg-[#C72026]/5 border-[#C72026]/20 dark:bg-[#C72026]/10 dark:border-[#C72026]/30 shadow-md" 
                           : "bg-white hover:bg-gray-50 border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-750 hover:shadow-sm"
                       }`}>
                         <div className="flex items-center justify-between w-full">
-                          <span className="font-medium text-purple-700 dark:text-purple-300">Edit</span>
+                          <span className="font-medium text-[#C72026] dark:text-[#C72026]">Edit</span>
                           <Switch 
                             checked={permissions.edit}
                             onCheckedChange={(checked) => handleTogglePermission('edit', checked)}
-                            className="data-[state=checked]:bg-purple-600 data-[state=unchecked]:bg-gray-300 
+                            className="data-[state=checked]:bg-[#C72026] data-[state=unchecked]:bg-gray-300 
                               relative inline-flex h-[24px] w-[44px] shrink-0 cursor-pointer rounded-full 
                               border-2 border-transparent transition-colors duration-200 ease-in-out 
-                              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400
+                              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C72026]
                               focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50
-                              dark:data-[state=checked]:bg-purple-500 dark:data-[state=unchecked]:bg-gray-700 
+                              dark:data-[state=checked]:bg-[#C72026] dark:data-[state=unchecked]:bg-gray-700 
                               before:data-[state=checked]:translate-x-5 before:data-[state=unchecked]:translate-x-0
                               before:absolute before:top-[-1px] before:h-[22px] before:w-[22px] before:rounded-full
                               before:bg-white before:shadow-sm before:transition-transform before:duration-200"
@@ -389,20 +397,20 @@ const PermissionModal: React.FC<PermissionModalProps> = ({
                       {/* Delete Permission Card */}
                       <div className={`flex flex-col items-start p-3 rounded-lg border text-left w-full transition-all duration-200 ${/* Reduced from p-4 */
                         permissions.delete 
-                          ? "bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:border-purple-800 shadow-md" 
+                          ? "bg-[#C72026]/5 border-[#C72026]/20 dark:bg-[#C72026]/10 dark:border-[#C72026]/30 shadow-md" 
                           : "bg-white hover:bg-gray-50 border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-750 hover:shadow-sm"
                       }`}>
                         <div className="flex items-center justify-between w-full">
-                          <span className="font-medium text-purple-700 dark:text-purple-300">Delete</span>
+                          <span className="font-medium text-[#C72026] dark:text-[#C72026]">Delete</span>
                           <Switch 
                             checked={permissions.delete}
                             onCheckedChange={(checked) => handleTogglePermission('delete', checked)}
-                            className="data-[state=checked]:bg-purple-600 data-[state=unchecked]:bg-gray-300 
+                            className="data-[state=checked]:bg-[#C72026] data-[state=unchecked]:bg-gray-300 
                               relative inline-flex h-[24px] w-[44px] shrink-0 cursor-pointer rounded-full 
                               border-2 border-transparent transition-colors duration-200 ease-in-out 
-                              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400
+                              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C72026]
                               focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50
-                              dark:data-[state=checked]:bg-purple-500 dark:data-[state=unchecked]:bg-gray-700 
+                              dark:data-[state=checked]:bg-[#C72026] dark:data-[state=unchecked]:bg-gray-700 
                               before:data-[state=checked]:translate-x-5 before:data-[state=unchecked]:translate-x-0
                               before:absolute before:top-[-1px] before:h-[22px] before:w-[22px] before:rounded-full
                               before:bg-white before:shadow-sm before:transition-transform before:duration-200"
@@ -412,9 +420,9 @@ const PermissionModal: React.FC<PermissionModalProps> = ({
                       </div>
                     </div>
                     
-                    <div className="mt-4 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md flex items-start gap-2 text-xs"> {/* Reduced from mt-6 p-3 text-sm */}
-                      <Info className="h-4 w-4 text-blue-500 dark:text-blue-400 mt-0.5" />
-                      <span className="text-blue-700 dark:text-blue-300">
+                    <div className="mt-4 p-2 bg-[#C72026]/5 dark:bg-[#C72026]/10 rounded-md flex items-start gap-2 text-xs"> {/* Reduced from mt-6 p-3 text-sm */}
+                      <Info className="h-4 w-4 text-[#C72026] dark:text-[#C72026] mt-0.5" />
+                      <span className="text-[#C72026] dark:text-[#C72026]/90">
                         These permissions apply specifically to the {sidebarItems.find(item => item.id === selectedSidebarItem)?.label.toLowerCase()} module. You can also use predefined permission presets from the other tab.
                       </span>
                     </div>
@@ -438,14 +446,14 @@ const PermissionModal: React.FC<PermissionModalProps> = ({
                         onClick={() => handleSelectPreset("full-access")}
                         className={`flex flex-col items-start p-3 rounded-lg border text-left w-full transition-all duration-200 ${/* Reduced from p-4 */
                           selectedPreset === "full-access" 
-                            ? "bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:border-purple-800 shadow-md" 
+                            ? "bg-[#C72026]/5 border-[#C72026]/20 dark:bg-[#C72026]/10 dark:border-[#C72026]/30 shadow-md" 
                             : "bg-white hover:bg-gray-50 border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-750 hover:shadow-sm"
                         }`}
                       >
                         <div className="flex items-center justify-between w-full">
-                          <span className="font-medium text-purple-700 dark:text-purple-300">Full Access</span>
+                          <span className="font-medium text-[#C72026] dark:text-[#C72026]">Full Access</span>
                           {selectedPreset === "full-access" && (
-                            <Check className="h-4 w-4 text-purple-500" />
+                            <Check className="h-4 w-4 text-[#C72026]" />
                           )}
                         </div>
                         <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">All permissions granted</p>
@@ -456,14 +464,14 @@ const PermissionModal: React.FC<PermissionModalProps> = ({
                         onClick={() => handleSelectPreset("standard-admin")}
                         className={`flex flex-col items-start p-3 rounded-lg border text-left w-full transition-all duration-200 ${/* Reduced from p-4 */
                           selectedPreset === "standard-admin" 
-                            ? "bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:border-purple-800 shadow-md" 
+                            ? "bg-[#C72026]/5 border-[#C72026]/20 dark:bg-[#C72026]/10 dark:border-[#C72026]/30 shadow-md" 
                             : "bg-white hover:bg-gray-50 border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-750 hover:shadow-sm"
                         }`}
                       >
                         <div className="flex items-center justify-between w-full">
-                          <span className="font-medium text-purple-700 dark:text-purple-300">Standard Admin</span>
+                          <span className="font-medium text-[#C72026] dark:text-[#C72026]">Standard Admin</span>
                           {selectedPreset === "standard-admin" && (
-                            <Check className="h-4 w-4 text-purple-500" />
+                            <Check className="h-4 w-4 text-[#C72026]" />
                           )}
                         </div>
                         <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">Typical admin permissions</p>
@@ -474,14 +482,14 @@ const PermissionModal: React.FC<PermissionModalProps> = ({
                         onClick={() => handleSelectPreset("business-user")}
                         className={`flex flex-col items-start p-3 rounded-lg border text-left w-full transition-all duration-200 ${/* Reduced from p-4 */
                           selectedPreset === "business-user" 
-                            ? "bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:border-purple-800 shadow-md" 
+                            ? "bg-[#C72026]/5 border-[#C72026]/20 dark:bg-[#C72026]/10 dark:border-[#C72026]/30 shadow-md" 
                             : "bg-white hover:bg-gray-50 border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-750 hover:shadow-sm"
                         }`}
                       >
                         <div className="flex items-center justify-between w-full">
-                          <span className="font-medium text-purple-700 dark:text-purple-300">Business User</span>
+                          <span className="font-medium text-[#C72026] dark:text-[#C72026]">Business User</span>
                           {selectedPreset === "business-user" && (
-                            <Check className="h-4 w-4 text-purple-500" />
+                            <Check className="h-4 w-4 text-[#C72026]" />
                           )}
                         </div>
                         <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">Limited to business functions</p>
@@ -492,14 +500,14 @@ const PermissionModal: React.FC<PermissionModalProps> = ({
                         onClick={() => handleSelectPreset("read-only")}
                         className={`flex flex-col items-start p-3 rounded-lg border text-left w-full transition-all duration-200 ${/* Reduced from p-4 */
                           selectedPreset === "read-only" 
-                            ? "bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:border-purple-800 shadow-md" 
+                            ? "bg-[#C72026]/5 border-[#C72026]/20 dark:bg-[#C72026]/10 dark:border-[#C72026]/30 shadow-md" 
                             : "bg-white hover:bg-gray-50 border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-750 hover:shadow-sm"
                         }`}
                       >
                         <div className="flex items-center justify-between w-full">
-                          <span className="font-medium text-purple-700 dark:text-purple-300">Read Only</span>
+                          <span className="font-medium text-[#C72026] dark:text-[#C72026]">Read Only</span>
                           {selectedPreset === "read-only" && (
-                            <Check className="h-4 w-4 text-purple-500" />
+                            <Check className="h-4 w-4 text-[#C72026]" />
                           )}
                         </div>
                         <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">Only view permissions</p>
@@ -510,14 +518,14 @@ const PermissionModal: React.FC<PermissionModalProps> = ({
                         onClick={() => handleSelectPreset("no-access")}
                         className={`flex flex-col items-start p-3 rounded-lg border text-left w-full transition-all duration-200 ${/* Reduced from p-4 */
                           selectedPreset === "no-access" 
-                            ? "bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:border-purple-800 shadow-md" 
+                            ? "bg-[#C72026]/5 border-[#C72026]/20 dark:bg-[#C72026]/10 dark:border-[#C72026]/30 shadow-md" 
                             : "bg-white hover:bg-gray-50 border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-750 hover:shadow-sm"
                         }`}
                       >
                         <div className="flex items-center justify-between w-full">
-                          <span className="font-medium text-purple-700 dark:text-purple-300">No Access</span>
+                          <span className="font-medium text-[#C72026] dark:text-[#C72026]">No Access</span>
                           {selectedPreset === "no-access" && (
-                            <Check className="h-4 w-4 text-purple-500" />
+                            <Check className="h-4 w-4 text-[#C72026]" />
                           )}
                         </div>
                         <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">All permissions revoked</p>
@@ -528,23 +536,23 @@ const PermissionModal: React.FC<PermissionModalProps> = ({
                         onClick={() => handleSelectPreset("custom")}
                         className={`flex flex-col items-start p-3 rounded-lg border text-left w-full transition-all duration-200 ${/* Reduced from p-4 */
                           selectedPreset === "custom" 
-                            ? "bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:border-purple-800 shadow-md" 
+                            ? "bg-[#C72026]/5 border-[#C72026]/20 dark:bg-[#C72026]/10 dark:border-[#C72026]/30 shadow-md" 
                             : "bg-white hover:bg-gray-50 border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-750 hover:shadow-sm"
                         }`}
                       >
                         <div className="flex items-center justify-between w-full">
-                          <span className="font-medium text-purple-700 dark:text-purple-300">Custom</span>
+                          <span className="font-medium text-[#C72026] dark:text-[#C72026]">Custom</span>
                           {selectedPreset === "custom" && (
-                            <Check className="h-4 w-4 text-purple-500" />
+                            <Check className="h-4 w-4 text-[#C72026]" />
                           )}
                         </div>
                         <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">Manually configured</p>
                       </button>
                     </div>
                     
-                    <div className="mt-4 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md flex items-start gap-2 text-xs"> {/* Reduced from mt-6 p-3 text-sm */}
-                      <Info className="h-4 w-4 text-blue-500 dark:text-blue-400 mt-0.5" />
-                      <span className="text-blue-700 dark:text-blue-300">
+                    <div className="mt-4 p-2 bg-[#C72026]/5 dark:bg-[#C72026]/10 rounded-md flex items-start gap-2 text-xs"> {/* Reduced from mt-6 p-3 text-sm */}
+                      <Info className="h-4 w-4 text-[#C72026] dark:text-[#C72026] mt-0.5" />
+                      <span className="text-[#C72026] dark:text-[#C72026]/90">
                         Selecting a preset will automatically configure the specific permissions for the user. You can switch to the Specific Permissions tab to make further adjustments.
                       </span>
                     </div>
@@ -559,7 +567,7 @@ const PermissionModal: React.FC<PermissionModalProps> = ({
                 <Button 
                   onClick={handleSave} 
                   disabled={isSaving}
-                  className="bg-purple-500 hover:bg-purple-600 text-white"
+                  className="bg-[#C72026] hover:bg-[#C72026]/90 text-white"
                 >
                   {isSaving ? "Saving..." : "Save Changes"}
                 </Button>
