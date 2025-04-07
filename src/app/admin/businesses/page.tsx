@@ -670,7 +670,7 @@ export default function AdminBusinesses() {
   const { language, setLanguage, translate } = useLanguage();
   const { isDarkMode, toggleDarkMode } = useDarkMode();
   const router = useRouter();
-  const { user, signOut } = useAuth(); // Get user and signOut from auth context
+  const { user, logout } = useAuth(); // Get user and signOut from auth context
 
   // State for loading and error handling
   const [isLoading, setIsLoading] = useState(true);
@@ -731,7 +731,7 @@ export default function AdminBusinesses() {
   const handleLogout = async () => {
     try {
       setIsUserMenuOpen(false); // Close the menu first
-      await signOut(); // Call signOut from auth context
+      await logout(); // Call signOut from auth context
       window.location.href = '/login'; // Use direct navigation for full page reload
     } catch (error) {
       console.error('Error signing out:', error);

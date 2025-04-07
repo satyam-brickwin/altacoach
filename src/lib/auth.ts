@@ -109,16 +109,16 @@ export const authOptions: NextAuthOptions = {
         }
 
         // For now, use a mock user for development
-        if (credentials.email === 'admin@example.com' && credentials.password === 'password') {
-          return {
-            id: '1',
-            name: 'Admin User',
-            email: 'admin@example.com',
-            role: 'admin',
-          };
-        }
+        // if (credentials.email === 'admin@example.com' && credentials.password === 'password') {
+        //   return {
+        //     id: '1',
+        //     name: 'Admin User',
+        //     email: 'admin@example.com',
+        //     role: 'admin',
+        //   };
+        // }
 
-        /* 
+        
         // For future implementation with actual database
         const user = await prisma.user.findUnique({
           where: {
@@ -142,7 +142,6 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           role: user.role,
         };
-        */
 
         return null;
       },
