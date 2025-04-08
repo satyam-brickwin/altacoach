@@ -12,6 +12,13 @@ interface User {
   language?: string;
 }
 
+interface NewUser {
+  name: string;
+  email: string;
+  role?: string;
+  language?: string;
+}
+
 interface UserDataActionsProps {
   users: User[];
   onImportUsers: (importedUsers: User[]) => void;
@@ -33,8 +40,13 @@ function downloadCSV(csvString: string, filename: string) {
   URL.revokeObjectURL(url);
 }
 
+function isDuplicateUser(newUser: NewUser, existingUsers: User[]) {
+  return existingUsers.some(user => user.email === newUser.email);
+}
+
 export default function UserDataActions({ users, onImportUsers }: UserDataActionsProps) {
   const [isImporting, setIsImporting] = useState(false);
+  const [usersState, setUsers] = useState(users);
 
   const handleExport = () => {
     // Filter out role field and only keep necessary fields
@@ -64,22 +76,15 @@ export default function UserDataActions({ users, onImportUsers }: UserDataAction
       // Convert to JSON
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
       
-      // Transform data to match User interface
-      const importedUsers = jsonData.map((row: any, index) => ({
-        id: `imported-${Date.now()}-${index}`,
+      // Transform data to match NewUser interface
+      const importedUsers = jsonData.map((row: any) => ({
         name: row.Name || row.name,
         email: row.Email || row.email,
         role: row.Role || row.role || 'User',
-        status: row.Status || row.status || 'active',
-        lastActive: row['Last Active'] || row.lastActive || new Date().toISOString().split('T')[0],
-        joinDate: row['Join Date'] || row.joinDate || new Date().toISOString().split('T')[0],
         language: row.Language || row.language || 'en'
       }));
 
-      onImportUsers(importedUsers);
-      
-      // Show success message
-      alert(`Successfully imported ${importedUsers.length} users`);
+      handleImportUsersLogic(importedUsers);
     } catch (error) {
       console.error('Error importing users:', error);
       alert('Error importing users. Please check the file format.');
@@ -89,6 +94,36 @@ export default function UserDataActions({ users, onImportUsers }: UserDataAction
       if (event.target) {
         event.target.value = '';
       }
+    }
+  };
+
+  const handleImportUsersLogic = (importedUsers: NewUser[]) => {
+    // Filter out duplicates
+    const uniqueUsers = importedUsers.filter(newUser => 
+      !isDuplicateUser(newUser, usersState)
+    );
+
+    // If some users were filtered out, show warning
+    if (uniqueUsers.length < importedUsers.length) {
+      const duplicateCount = importedUsers.length - uniqueUsers.length;
+      alert(`${duplicateCount} duplicate user(s) were found and skipped.`);
+    }
+
+    // Process only unique users
+    const usersToAdd = uniqueUsers.map((user, index) => ({
+      id: (usersState.length + index + 1).toString(),
+      name: user.name,
+      email: user.email,
+      role: user.role || 'User',
+      status: 'active',
+      lastActive: new Date().toISOString().split('T')[0],
+      joinDate: new Date().toISOString().split('T')[0],
+      language: user.language || 'en'
+    }));
+
+    if (usersToAdd.length > 0) {
+      setUsers(prevUsers => [...prevUsers, ...usersToAdd]);
+      alert(`Successfully added ${usersToAdd.length} new user(s).`);
     }
   };
 

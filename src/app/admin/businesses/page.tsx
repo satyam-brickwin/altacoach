@@ -15,6 +15,14 @@ import UserDataActions from '@/components/UserDataActions';
 import ViewDocumentModal from '@/components/ViewDocumentModal';
 import { convertToCSV, downloadCSV } from '@/utils/exportHelpers';
 
+// Add this helper function near the top of the file with other utility functions
+const isDuplicateUser = (newUser: NewUser, existingUsers: User[]): boolean => {
+  return existingUsers.some(existing => 
+    existing.email.toLowerCase() === newUser.email.toLowerCase() ||
+    existing.name.toLowerCase() === newUser.name.toLowerCase()
+  );
+};
+
 // Sample business data
 const businessData = [
   {
@@ -1231,15 +1239,21 @@ export default function AdminBusinesses() {
   const handleAddUserSuccess = (newUser: NewUser) => {
     if (!newUser?.name) return;
 
+    // Check for duplicates
+    if (isDuplicateUser(newUser, users)) {
+      alert('A user with this name or email already exists.');
+      return;
+    }
+
     const userToAdd: User = {
       id: (users.length + 1).toString(),
       name: newUser.name,
       email: newUser.email,
-      role: newUser.role || 'User', // Set default role as 'User' if not provided
+      role: newUser.role || 'User',
       status: 'active',
       lastActive: new Date().toISOString().split('T')[0],
       joinDate: new Date().toISOString().split('T')[0],
-      language: newUser.language || 'en' // Default to English
+      language: newUser.language || 'en'
     };
 
     setUsers(prevUsers => [...prevUsers, userToAdd]);
