@@ -1,30 +1,34 @@
-export function convertToCSV(data: any[]): string {
-  if (data.length === 0) return '';
+export const convertToCSV = (data: any[]) => {
+  // Define headers without role
+  const headers = ['name', 'email', 'language', 'status'];
   
-  const headers = Object.keys(data[0]);
-  const rows = [
-    headers.join(','),
-    ...data.map(row => 
-      headers.map(header => {
-        const value = row[header]?.toString() || '';
-        return value.includes(',') ? `"${value}"` : value;
-      }).join(',')
-    )
-  ];
+  // Convert data to CSV format
+  const csvRows = [];
   
-  return rows.join('\n');
-}
+  // Add header row
+  csvRows.push(headers.join(','));
+  
+  // Add data rows
+  for (const item of data) {
+    const values = headers.map(header => {
+      const value = item[header] || '';
+      // Escape quotes and wrap value in quotes if it contains commas
+      return `"${value.toString().replace(/"/g, '""')}"`;
+    });
+    csvRows.push(values.join(','));
+  }
+  
+  return csvRows.join('\n');
+};
 
-export function downloadCSV(data: any[], filename: string): void {
-  const csvContent = convertToCSV(data);
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = window.URL.createObjectURL(blob);
+export const downloadCSV = (csvString: string, filename: string) => {
+  const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
-  
-  link.setAttribute('href', url);
-  link.setAttribute('download', filename);
+  link.href = url;
+  link.download = filename;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  window.URL.revokeObjectURL(url);
-}
+  URL.revokeObjectURL(url);
+};

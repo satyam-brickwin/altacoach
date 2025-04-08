@@ -129,14 +129,16 @@ interface User {
   createdBy?: string;
   lastActive?: string;
   joinDate?: string;
+  language?: string; // Add this field for user language preference
 }
 
-// Add this type if not already present
+// Update the NewUser interface to include role
 interface NewUser {
   name: string;
   email: string;
-  role: string;
   status: string;
+  language?: string;
+  role?: string;  // Make it optional in the interface
 }
 
 // Dummy data for documents and users
@@ -264,7 +266,8 @@ const dummyUsers: User[] = [
     role: 'Admin',
     status: 'active',
     lastActive: '2024-03-15',
-    joinDate: '2023-06-01'
+    joinDate: '2023-06-01',
+    language: 'en'
   },
   {
     id: '2',
@@ -273,9 +276,63 @@ const dummyUsers: User[] = [
     role: 'User',
     status: 'active',
     lastActive: '2024-03-14',
-    joinDate: '2023-07-15'
+    joinDate: '2023-07-15',
+    language: 'fr'
   }
 ];
+
+// Update the handleDownloadSampleTemplate function
+const handleDownloadSampleTemplate = () => {
+  // Define fields and mark required ones with asterisks
+  const headers = [
+    'name*',          // Required
+    'email*',         // Required
+    'language*',      // Required
+    'status'          // Optional
+  ];
+  
+  // Create a simple HTML table that Excel can open
+  const htmlContent = `
+    <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>User Import Template</title>
+        <style>
+          table {border-collapse: collapse; width: 100%;}
+          th {background-color: #f2f2f2; font-weight: bold; text-align: left; padding: 8px; border: 1px solid #ddd;}
+        </style>
+      </head>
+      <body>
+        <table>
+          <thead>
+            <tr>
+              ${headers.map(header => `<th>${header}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Empty row for users to fill in -->
+            <tr>
+              ${headers.map(() => '<td></td>').join('')}
+            </tr>
+          </tbody>
+        </table>
+      </body>
+    </html>
+  `;
+  
+  // Create a Blob with the HTML content
+  const blob = new Blob([htmlContent], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  
+  // Create a download link and trigger the download
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', 'user_import_template.xls');
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
 
 // Define translations for the admin dashboard
 const adminTranslations = {
@@ -1170,18 +1227,19 @@ export default function AdminBusinesses() {
     }
   };
 
-  // Add this function to handle new user addition
+  // Update the handleAddUserSuccess function
   const handleAddUserSuccess = (newUser: NewUser) => {
-    if (!newUser?.name) return; // Add validation
+    if (!newUser?.name) return;
 
     const userToAdd: User = {
       id: (users.length + 1).toString(),
       name: newUser.name,
       email: newUser.email,
-      role: newUser.role || 'User',
+      role: newUser.role || 'User', // Set default role as 'User' if not provided
       status: 'active',
       lastActive: new Date().toISOString().split('T')[0],
-      joinDate: new Date().toISOString().split('T')[0]
+      joinDate: new Date().toISOString().split('T')[0],
+      language: newUser.language || 'en' // Default to English
     };
 
     setUsers(prevUsers => [...prevUsers, userToAdd]);
@@ -1251,7 +1309,7 @@ export default function AdminBusinesses() {
                   </svg>
                 ) : (
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 9.003 0 008.354-5.646z" />
                   </svg>
                 )}
               </button>
@@ -1643,12 +1701,24 @@ export default function AdminBusinesses() {
                     {/* Add appropriate action button based on active filter */}
                     {activeFilter === 'users' ? (
                       <div className="flex space-x-2">
+                        {/* Sample User Import Template Download Button */}
+                        <button
+                          onClick={handleDownloadSampleTemplate}
+                          className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          User Import Template
+                        </button>
+                        
                         <UserDataActions 
                           users={users}
                           onImportUsers={(importedUsers) => {
                             setUsers(prevUsers => [...prevUsers, ...importedUsers]);
                           }}
                         />
+                        
                         <button 
                           onClick={handleAddUser}
                           className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#C72026] hover:bg-[#C72026]/90"
@@ -1688,7 +1758,7 @@ export default function AdminBusinesses() {
                           <tr>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email</th>
-                            {/* <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Role</th> */}
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Language</th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created By</th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Last Active</th>
@@ -1696,16 +1766,21 @@ export default function AdminBusinesses() {
                           </tr>
                         </thead>
                         <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                          {filteredUsers.map((user) => user && (  // Add null check
+                          {filteredUsers.map((user) => user && (
                             <tr key={user.id}>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                  {user?.name || 'N/A'}  {/* Add fallback */}
+                                  {user?.name || 'N/A'}
                                 </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm text-gray-500 dark:text-gray-400">
-                                  {user?.email || 'N/A'}  {/* Add fallback */}
+                                  {user?.email || 'N/A'}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                  {user?.language ? languageLabels[user.language as SupportedLanguage] || user.language : 'English'}
                                 </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
@@ -1714,7 +1789,7 @@ export default function AdminBusinesses() {
                                     ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
                                     : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                                 }`}>
-                                  {user?.status || 'N/A'}  {/* Add fallback */}
+                                  {user?.status || 'N/A'}
                                 </span>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
@@ -1725,15 +1800,6 @@ export default function AdminBusinesses() {
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="flex space-x-3">
-                                  {/* <button
-                                    onClick={() => {
-                                      setSelectedUser(user);
-                                      setIsViewUserModalOpen(true);
-                                    }}
-                                    className="text-[#C72026] hover:text-[#C72026]/80"
-                                  >
-                                    View
-                                  </button> */}
                                   <button
                                     onClick={() => {
                                       setSelectedUser(user);

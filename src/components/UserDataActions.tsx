@@ -9,6 +9,7 @@ interface User {
   status: string;
   lastActive?: string;
   joinDate?: string;
+  language?: string;
 }
 
 interface UserDataActionsProps {
@@ -16,26 +17,36 @@ interface UserDataActionsProps {
   onImportUsers: (importedUsers: User[]) => void;
 }
 
+function convertToCSV(data: any[]) {
+  const headers = Object.keys(data[0]).join(',');
+  const rows = data.map(row => Object.values(row).join(',')).join('\n');
+  return `${headers}\n${rows}`;
+}
+
+function downloadCSV(csvString: string, filename: string) {
+  const blob = new Blob([csvString], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function UserDataActions({ users, onImportUsers }: UserDataActionsProps) {
   const [isImporting, setIsImporting] = useState(false);
 
-  const handleExportUsers = () => {
-    // Convert users data to worksheet format
-    const worksheet = XLSX.utils.json_to_sheet(users.map(user => ({
-      Name: user.name,
-      Email: user.email,
-      Role: user.role,
-      Status: user.status,
-      'Last Active': user.lastActive,
-      'Join Date': user.joinDate
-    })));
-
-    // Create workbook and add worksheet
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Users');
-
-    // Generate and download file
-    XLSX.writeFile(workbook, `users_export_${new Date().toISOString().split('T')[0]}.xlsx`);
+  const handleExport = () => {
+    // Filter out role field and only keep necessary fields
+    const exportData = users.map(user => ({
+      name: user.name,
+      email: user.email,
+      language: user.language || 'en',
+      status: user.status
+    }));
+    
+    const csvString = convertToCSV(exportData);
+    downloadCSV(csvString, 'users.csv');
   };
 
   const handleImportUsers = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,7 +72,8 @@ export default function UserDataActions({ users, onImportUsers }: UserDataAction
         role: row.Role || row.role || 'User',
         status: row.Status || row.status || 'active',
         lastActive: row['Last Active'] || row.lastActive || new Date().toISOString().split('T')[0],
-        joinDate: row['Join Date'] || row.joinDate || new Date().toISOString().split('T')[0]
+        joinDate: row['Join Date'] || row.joinDate || new Date().toISOString().split('T')[0],
+        language: row.Language || row.language || 'en'
       }));
 
       onImportUsers(importedUsers);
@@ -105,7 +117,7 @@ export default function UserDataActions({ users, onImportUsers }: UserDataAction
       </label>
       
       <button 
-        onClick={handleExportUsers}
+        onClick={handleExport}
         className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
       >
         <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
