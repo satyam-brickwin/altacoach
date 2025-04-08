@@ -571,9 +571,9 @@ const SuperAdminSettings = () => {
         </div>
       </header>
 
-      <div className="flex flex-col md:flex-row">
+      <div className="flex flex-col md:flex-row flex-1">
         {/* Sidebar Navigation */}
-        <div className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 hidden md:block">
+        <div className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 hidden md:block min-h-[calc(100vh-5rem)]">
           <div className="h-full flex flex-col" key={`admin_super-sidebar-${language}`}>
             <nav className="p-4">
               <ul className="space-y-2">
@@ -582,7 +582,7 @@ const SuperAdminSettings = () => {
                     {translate('dashboard')}
                   </Link>
                 </li>
-                <li>
+                {/* <li>
                   <Link href="/superadmin/businesses" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
                     {translate('businesses')}
                   </Link>
@@ -591,17 +591,17 @@ const SuperAdminSettings = () => {
                   <Link href="/superadmin/content" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
                     {translate('altamedia Content')}
                   </Link>
-                </li>
+                </li> */}
                 <li>
                   <Link href="/superadmin/users" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
                     {translate('Admin Accounts')}
                   </Link>
                 </li>
-                <li>
+                {/* <li>
                   <Link href="/superadmin/analytics" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
                     {translate('analytics')}
                   </Link>
-                </li>
+                </li> */}
                 <li>
                   <Link href="/superadmin/settings" className="block px-4 py-2 rounded-md bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] dark:text-[#C72026] font-medium">
                     {translate('settings')}

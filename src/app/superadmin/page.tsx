@@ -470,26 +470,26 @@ const SuperAdminDashboard = () => {
                     {translate('dashboard')}
                   </Link>
                 </li>
-                <li>
+                {/* <li>
                   <Link href="/superadmin/businesses" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
                     {translate('businesses')}
                   </Link>
-                </li>
-                <li>
+                </li> */}
+                {/* <li>
                   <Link href="/superadmin/content" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
                     {translate('altamedia Content')}
                   </Link>
-                </li>
+                </li> */}
                 <li>
                   <Link href="/superadmin/users" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
                     {translate('Admin Accounts')}
                   </Link>
                 </li>
-                <li>
+                {/* <li>
                   <Link href="/superadmin/analytics" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
                     {translate('analytics')}
                   </Link>
-                </li>
+                </li> */}
                 {/* <li>
                   <Link href="/superadmin/chat-analysis" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
                     {translate('chatAnalysis') || 'Chat Analysis'}

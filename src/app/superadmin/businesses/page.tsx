@@ -907,7 +907,7 @@ export default function AdminBusinesses() {
                   {t('dashboard')}
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link href="/superadmin/businesses" className="block px-4 py-2 rounded-md bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] dark:text-[#C72026] font-medium">
                   {t('businesses')}
                 </Link>
@@ -916,17 +916,17 @@ export default function AdminBusinesses() {
                 <Link href="/superadmin/content" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
                   {t('altamedia Content')}
                 </Link>
-              </li>
+              </li> */}
               <li>
                 <Link href="/superadmin/users" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
                   {'Admin Accounts'}
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link href="/superadmin/analytics" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
                   {t('analytics')}
                 </Link>
-              </li>
+              </li> */}
               <li>
                 <Link href="/superadmin/settings" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
                   {t('settings')}
