@@ -164,8 +164,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
     console.log('Login attempt:', { email, role, businessId });
 
     try {
-      // For now, use mock data for development
-      // In a real app, you would call an API endpoint
+      // Get all credentials from mock database
+      const credentials = localStorage.getItem('mockBusinessCredentials');
+      const allCredentials: BusinessCredentials[] = credentials ? JSON.parse(credentials) : [];
+      
+      // Find matching credential
+      const matchingCred = allCredentials.find(cred => 
+        cred.email === email && 
+        cred.password === password &&
+        cred.role === role
+      );
+
+      if (matchingCred) {
+        const mockUser = {
+          id: Date.now().toString(), // Generate unique ID
+          email: matchingCred.email,
+          role: matchingCred.role,
+          businessId: matchingCred.businessId
+        };
+
+        localStorage.setItem('mockUser', JSON.stringify(mockUser));
+        setUser(mockUser);
+        setIsAuthenticated(true);
+        setIsLoading(false);
+        console.log('Login successful:', mockUser);
+        return true;
+      }
+
+      // Fallback for default credentials
       if (email === 'admin@altacoach.com' && password === 'admin123') {
         const mockUser = {
           id: '1',
@@ -180,7 +206,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setIsLoading(false);
         console.log('Admin login successful:', mockUser);
         return true;
-      } else if (email === 'superadmin@altacoach.com' && password === 'superadmin123') { // Handle SUPER_ADMIN login
+      } else if (email === 'superadmin@altacoach.com' && password === 'superadmin123') {
         const mockUser = {
           id: '5',
           name: 'Super Admin User',
@@ -194,96 +220,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setIsLoading(false);
         console.log('Super Admin login successful:', mockUser);
         return true;
-      } else if (email === 'user@example.com' && password === 'password') {
-        const mockUser = {
-          id: '2',
-          name: 'Regular User',
-          email: 'user@example.com',
-          role: UserRole.USER,
-        };
-        
-        localStorage.setItem('mockUser', JSON.stringify(mockUser));
-        setUser(mockUser);
-        setIsAuthenticated(true);
-        setIsLoading(false);
-        console.log('User login successful:', mockUser);
-        return true;
-      } else if ((role === UserRole.BUSINESS || role === UserRole.STAFF) && businessId) {
-        // Get business credentials from mock database
-        const credentials = localStorage.getItem('mockBusinessCredentials');
-        const businessCredentials: BusinessCredentials[] = credentials ? JSON.parse(credentials) : [];
-        
-        console.log('Checking business credentials:', businessCredentials);
-        
-        // Find matching credential
-        const matchingCred = businessCredentials.find(cred => 
-          cred.businessId === businessId && 
-          cred.email === email && 
-          cred.password === password &&
-          cred.role === role
-        );
-        
-        if (matchingCred) {
-          // Find the business by ID
-          const business = sampleBusinesses.find(b => b.id === businessId);
-          if (!business) {
-            setError('Business not found');
-            setIsLoading(false);
-            console.log('Business not found for ID:', businessId);
-            return false;
-          }
-          
-          const mockUser = {
-            id: role === UserRole.BUSINESS ? '3' : '4',
-            name: `${business.name} ${role === UserRole.BUSINESS ? 'Admin' : 'Staff'}`,
-            email,
-            role,
-            businessId
-          };
-          
-          localStorage.setItem('mockUser', JSON.stringify(mockUser));
-          setUser(mockUser);
-          setIsAuthenticated(true);
-          setIsLoading(false);
-          console.log('Business/Staff login successful:', mockUser);
-          return true;
-        } else {
-          // For demo purposes, still allow login with dummy password if no matching credential
-          if (password === 'password') {
-            // Find the business by ID
-            const business = sampleBusinesses.find(b => b.id === businessId);
-            if (!business) {
-              setError('Business not found');
-              setIsLoading(false);
-              console.log('Business not found for ID:', businessId);
-              return false;
-            }
-            
-            const mockUser = {
-              id: role === UserRole.BUSINESS ? '3' : '4',
-              name: `${business.name} ${role === UserRole.BUSINESS ? 'Admin' : 'Staff'}`,
-              email,
-              role,
-              businessId
-            };
-            
-            localStorage.setItem('mockUser', JSON.stringify(mockUser));
-            setUser(mockUser);
-            setIsAuthenticated(true);
-            setIsLoading(false);
-            console.log('Business/Staff login with dummy password successful:', mockUser);
-            return true;
-          }
-          
-          setError('Invalid credentials');
-          setIsLoading(false);
-          console.log('Invalid credentials');
-          return false;
-        }
       } else {
         setError('Invalid email or password');
         setIsLoading(false);
-        console.log('Invalid email or password');
+        console.log('Invalid credentials');
         return false;
       }
     } catch (err) {

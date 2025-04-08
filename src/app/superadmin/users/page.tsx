@@ -363,12 +363,12 @@ export default function AdminUsers() {
       
       const data = await response.json();
       
-      // Format the user data
+      // Format the user data and normalize roles
       const formattedUsers = data.users.map((user: any) => ({
         id: user.id,
         name: user.name || user.email.split('@')[0],
         email: user.email,
-        role: user.role,
+        role: user.role.toUpperCase(), // Normalize role to uppercase
         lastActive: user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never',
         status: user.status.toLowerCase(),
         joinDate: user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown'
@@ -380,7 +380,6 @@ export default function AdminUsers() {
       console.error('Error fetching users:', err);
       setError((err as Error).message);
       setIsLoading(false);
-      // Fall back to sample data if fetch fails
       setUsers(sampleUserData);
     }
   };
@@ -434,18 +433,23 @@ export default function AdminUsers() {
 
   // Filter users based on role and search term
   const filteredUsers = users.filter(user => {
-    // Only include ADMIN and BUSINESS roles
-    const isAdminOrBusinessAdmin = user.role === 'ADMIN' || user.role === 'BUSINESS';
+    // Check for admin or business roles using normalized values
+    const isAdminOrBusinessAdmin = 
+      user.role === 'ADMIN' || 
+      user.role === 'SUPER_ADMIN' || 
+      user.role === 'BUSINESS';
     
-    // Apply additional filtering based on roleFilter
-    const matchesRole = roleFilter === 'all' || 
-                        (roleFilter === 'businessAdmin' && user.role === 'BUSINESS') ||
-                        (roleFilter === 'systemAdmin' && user.role === 'ADMIN');
+    // Apply role filter
+    const matchesRole = 
+      roleFilter === 'all' || 
+      (roleFilter === 'businessAdmin' && user.role === 'BUSINESS') ||
+      (roleFilter === 'systemAdmin' && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN'));
     
-    const matchesSearch = user.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    // Apply search filter
+    const matchesSearch = 
+      user.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
     
-    // Only return true if it's an admin role AND matches the other filters
     return isAdminOrBusinessAdmin && matchesRole && matchesSearch;
   });
 
@@ -771,13 +775,14 @@ export default function AdminUsers() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              user.role === 'ADMIN' 
+                              user.role === 'ADMIN' || user.role === 'SUPER_ADMIN'
                                 ? 'bg-[#C72026]/10 text-[#C72026] dark:bg-[#C72026]/20 dark:text-[#C72026]' 
                                 : user.role === 'BUSINESS'
                                 ? 'bg-[#C72026]/10 text-[#C72026] dark:bg-[#C72026]/20 dark:text-[#C72026]'
                                 : 'bg-[#C72026]/10 text-[#C72026] dark:bg-[#C72026]/20 dark:text-[#C72026]'
                             }`}>
-                              {user.role === 'ADMIN' ? 'System Admin' : 
+                              {user.role === 'SUPER_ADMIN' ? 'System Admin' :
+                               user.role === 'ADMIN' ? 'System Admin' : 
                                user.role === 'BUSINESS' ? 'Business Admin' : 'User'}
                             </span>
                           </td>

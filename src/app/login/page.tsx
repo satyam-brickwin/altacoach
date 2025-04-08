@@ -156,34 +156,25 @@ export default function LoginPage() {
     setLoginError(null);
     setIsSubmitting(true);
 
-    // Validate email and password
-    if (!email) {
-      setLoginError(translate('emailRequired'));
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (!password) {
-      setLoginError(translate('passwordRequired'));
-      setIsSubmitting(false);
-      return;
-    }
-
     try {
-      // If role is business or staff, we need a business ID
-      if ((selectedRole === UserRole.BUSINESS || selectedRole === UserRole.STAFF) && !businessId) {
-        setLoginError(translate('selectBusiness'));
-        setIsSubmitting(false);
+      // Validate inputs
+      if (!email?.trim() || !password?.trim()) {
+        setLoginError(translate('invalidCredentials'));
         return;
       }
 
-      // Call the login function from auth context
-      const success = await login(email, password, selectedRole, businessId);
+      // Attempt login with specific role handling
+      const success = await login(
+        email.trim(),
+        password,
+        selectedRole,
+        selectedRole === UserRole.BUSINESS ? businessId : undefined
+      );
 
       if (success) {
         router.push(redirect);
       } else {
-        setLoginError(authError || translate('invalidCredentials'));
+        setLoginError(translate('invalidCredentials'));
       }
     } catch (err) {
       console.error('Login error:', err);

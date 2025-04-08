@@ -1,10 +1,18 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { UserRole } from '../contexts/AuthContext';
+
+interface BusinessCredentials {
+  businessId: string;
+  email: string;
+  password: string;
+  role: UserRole;
+}
 
 interface NewAdmin {
   name: string;
   email: string;
-  role: string;
+  role: UserRole;
   status: string;
   password: string;
 }
@@ -21,16 +29,46 @@ const AddAdminModal: React.FC<AddAdminModalProps> = ({ isOpen, onClose, onSucces
   const [formData, setFormData] = useState<NewAdmin>({
     name: '',
     email: '',
-    role: 'ADMIN',
+    role: UserRole.ADMIN, // Default to ADMIN
     status: 'active',
     password: ''
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Update handleChange to handle both input and select elements
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const saveNewAdmin = async (adminData: NewAdmin) => {
+    try {
+      // Get existing credentials
+      const credentials = localStorage.getItem('mockBusinessCredentials');
+      const existingCredentials: BusinessCredentials[] = credentials ? JSON.parse(credentials) : [];
+      
+      // Add new admin credentials
+      const newCredential: BusinessCredentials = {
+        businessId: '',
+        email: adminData.email,
+        password: adminData.password,
+        role: UserRole.ADMIN // Use enum instead of string
+      };
+      
+      // Save updated credentials
+      localStorage.setItem('mockBusinessCredentials', 
+        JSON.stringify([...existingCredentials, newCredential])
+      );
+
+      console.log('New admin credentials saved:', newCredential);
+      return true;
+    } catch (error) {
+      console.error('Error saving admin:', error);
+      return false;
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,7 +80,7 @@ const AddAdminModal: React.FC<AddAdminModalProps> = ({ isOpen, onClose, onSucces
       ...formData,
       name: formData.name.trim(),
       email: formData.email.trim(),
-      role: 'ADMIN' // Always set role as ADMIN
+      role: formData.role // Use selected role instead of hardcoding
     };
 
     try {
@@ -62,11 +100,16 @@ const AddAdminModal: React.FC<AddAdminModalProps> = ({ isOpen, onClose, onSucces
         throw new Error(data.error || 'Failed to create admin');
       }
 
+      const saveSuccess = await saveNewAdmin(formData);
+      if (!saveSuccess) {
+        throw new Error('Failed to save admin locally');
+      }
+
       onSuccess(formData);
       setFormData({
         name: '',
         email: '',
-        role: 'ADMIN',
+        role: UserRole.ADMIN,
         status: 'active',
         password: ''
       });
@@ -136,6 +179,23 @@ const AddAdminModal: React.FC<AddAdminModalProps> = ({ isOpen, onClose, onSucces
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] dark:bg-gray-700 dark:text-white"
               placeholder="admin@example.com"
             />
+          </div>
+
+          <div className="mb-4">
+            <label htmlFor="role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              {translate('role')} *
+            </label>
+            <select
+              id="role"
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] dark:bg-gray-700 dark:text-white"
+            >
+              <option value={UserRole.ADMIN}>{translate('systemAdmin')}</option>
+              <option value={UserRole.BUSINESS}>{translate('businessAdmin')}</option>
+            </select>
           </div>
 
           <div className="mb-4">
