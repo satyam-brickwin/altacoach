@@ -1,93 +1,58 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext'; // Assuming you have an AuthContext to get the current user
 
-interface NewUser {
+interface User {
   name: string;
   email: string;
-  role: string;
-  status: string;
+  password: string; // Make sure password is included
+  status?: string;
   language?: string;
-  password?: string;
-  businessId?: string;
+  role?: string;
 }
 
 interface AddUserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (user: NewUser) => void;
+  onSuccess: (user: User) => void;
   translate: (key: string) => string;
 }
 
 const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onSuccess, translate }) => {
   const { user } = useAuth(); // Get the current user from the AuthContext
-  const [formData, setFormData] = useState<NewUser>({
+  const [userData, setUserData] = useState<User>({
     name: '',
     email: '',
-    role: 'User',
+    password: '', // Add password field
     status: 'active',
-    language: 'en',
-    password: '',
-    businessId: ''
+    language: 'en'
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setUserData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-
-    // Prepare form data - trim all string values
-    const processedData = {
-      ...formData,
-      name: formData.name.trim(),
-      email: formData.email.trim(),
-      language: formData.language || 'en',
-      businessId: formData.businessId?.trim() || '', // Handle optional businessId
-      role: 'USER' // Set default role
-    };
-
-    try {
-      console.log('Submitting user data:', processedData);
-      
-      const response = await fetch('/api/admin/users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(processedData),
-      });
-
-      const data = await response.json();
-      console.log('API response:', data);
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create user');
-      }
-
-      // Success - close modal and refresh user list
-      onSuccess(formData);
-      setFormData({
-        name: '',
-        email: '',
-        role: 'User',
-        status: 'active',
-        language: 'en',
-        password: '',
-        businessId: ''
-      });
-      onClose();
-    } catch (err) {
-      console.error('Error in form submission:', err);
-      setError((err as Error).message);
-    } finally {
-      setIsLoading(false);
+    
+    // Validate required fields
+    if (!userData.name || !userData.email || !userData.password) {
+      alert('Name, email and password are required');
+      return;
     }
+    
+    onSuccess(userData); // Pass NewUser object
+    
+    // Reset form
+    setUserData({
+      name: '',
+      email: '',
+      password: '',
+      status: 'active',
+      language: 'en'
+    });
   };
 
   if (!isOpen) return null;
@@ -125,7 +90,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onSuccess,
               type="text"
               id="name"
               name="name"
-              value={formData.name}
+              value={userData.name}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] dark:bg-gray-700 dark:text-white"
               placeholder="John Smith"
@@ -140,7 +105,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onSuccess,
               type="email"
               id="email"
               name="email"
-              value={formData.email}
+              value={userData.email}
               onChange={handleChange}
               required
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] dark:bg-gray-700 dark:text-white"
@@ -156,7 +121,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onSuccess,
               type="password"
               id="password"
               name="password"
-              value={formData.password}
+              value={userData.password}
               onChange={handleChange}
               required
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] dark:bg-gray-700 dark:text-white"
@@ -172,7 +137,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onSuccess,
               <select
                 id="language"
                 name="language"
-                value={formData.language}
+                value={userData.language}
                 onChange={handleChange}
                 className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] dark:bg-gray-700 dark:text-white appearance-none bg-none"
               >
@@ -190,21 +155,6 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onSuccess,
               </div>
             </div>
           </div>
-
-          {/* <div className="mb-6">
-            <label htmlFor="businessId" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Business ID
-            </label>
-            <input
-              type="text"
-              id="businessId"
-              name="businessId"
-              value={formData.businessId}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
-              placeholder="(Optional) Leave empty for system users"
-            />
-          </div> */}
 
           <div className="flex justify-end space-x-3">
             <button

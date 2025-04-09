@@ -2,13 +2,27 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    // For now, we'll skip auth checks to get the system working
-    // Later we can add proper auth checks
+    // Get URL and search params
+    const { searchParams } = new URL(request.url);
+    const businessId = searchParams.get('businessId');
+    const excludeAdmins = searchParams.get('excludeAdmins') === 'true';
     
-    // Fetch all users from the database
+    // Build the query filter
+    const filter: any = {};
+    
+    if (businessId) {
+      filter.businessId = businessId;
+    }
+    
+    if (excludeAdmins) {
+      filter.role = { not: 'ADMIN' };  // Exclude admin users
+    }
+    
+    // Fetch users with the filter applied
     const users = await prisma.user.findMany({
+      where: filter,
       select: {
         id: true,
         name: true,
@@ -125,4 +139,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-} 
+}

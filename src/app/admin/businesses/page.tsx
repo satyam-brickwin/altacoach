@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage, languageLabels, SupportedLanguage } from '@/contexts/LanguageContext';
@@ -23,70 +23,6 @@ const isDuplicateUser = (newUser: NewUser, existingUsers: User[]): boolean => {
   );
 };
 
-// Sample business data
-const businessData = [
-  {
-    id: '1',
-    name: 'Acme Corporation',
-    plan: 'Enterprise',
-    userCount: 45,
-    status: 'active',
-    joinedDate: '2023-05-15',
-    logo: '',
-    colorTheme: '#C72026',
-    isActive: true,
-    createdBy: 'John Smith'
-  },
-  {
-    id: '2',
-    name: 'Globex Industries',
-    plan: 'Business',
-    userCount: 28,
-    status: 'active',
-    joinedDate: '2023-06-22',
-    logo: '',
-    colorTheme: '#10B981',
-    isActive: true,
-    createdBy: 'Sarah Johnson'
-  },
-  {
-    id: '3',
-    name: 'Stark Enterprises',
-    plan: 'Enterprise',
-    userCount: 120,
-    status: 'active',
-    joinedDate: '2023-04-10',
-    logo: '',
-    colorTheme: '#F59E0B',
-    isActive: true,
-    createdBy: 'Michael Chen'
-  },
-  {
-    id: '4',
-    name: 'Wayne Industries',
-    plan: 'Business',
-    userCount: 35,
-    status: 'pending',
-    joinedDate: '2023-08-05',
-    logo: '',
-    colorTheme: '#3B82F6',
-    isActive: false,
-    createdBy: 'Emily Wilson'
-  },
-  {
-    id: '5',
-    name: 'Umbrella Corp',
-    plan: 'Starter',
-    userCount: 12,
-    status: 'suspended',
-    joinedDate: '2023-07-18',
-    logo: '',
-    colorTheme: '#EC4899',
-    isActive: false,
-    createdBy: 'Carlos Rodriguez'
-  }
-];
-
 // Define Business type for better type safety
 interface Business {
   id: string;
@@ -98,7 +34,7 @@ interface Business {
   logo?: string;
   colorTheme?: string;
   isActive: boolean;
-  createdBy: string; // Add this new field
+  createdBy: string;
 }
 
 // Define Document type for better type safety
@@ -134,6 +70,7 @@ interface User {
   email: string;
   role: string;
   status: string;
+  businessId: string; // Add this field
   createdBy?: string;
   lastActive?: string;
   joinDate?: string;
@@ -275,7 +212,8 @@ const dummyUsers: User[] = [
     status: 'active',
     lastActive: '2024-03-15',
     joinDate: '2023-06-01',
-    language: 'en'
+    language: 'en',
+    businessId: '1'
   },
   {
     id: '2',
@@ -285,7 +223,8 @@ const dummyUsers: User[] = [
     status: 'active',
     lastActive: '2024-03-14',
     joinDate: '2023-07-15',
-    language: 'fr'
+    language: 'fr',
+    businessId: '1'
   }
 ];
 
@@ -737,12 +676,76 @@ export default function AdminBusinesses() {
   const router = useRouter();
   const { user, logout } = useAuth(); // Get user and signOut from auth context
 
+  // Move businessData here, after user is available
+  const businessData = [
+    {
+      id: '1',
+      name: 'Acme Corporation',
+      plan: 'Enterprise',
+      userCount: 45,
+      status: 'active',
+      joinedDate: '2023-05-15',
+      logo: '',
+      colorTheme: '#C72026',
+      isActive: true,
+      createdBy: user?.name || 'Admin' // Set current admin's name
+    },
+    {
+      id: '2',
+      name: 'Globex Industries',
+      plan: 'Business',
+      userCount: 28,
+      status: 'active',
+      joinedDate: '2023-06-22',
+      logo: '',
+      colorTheme: '#10B981',
+      isActive: true,
+      createdBy: 'Sarah Johnson'
+    },
+    {
+      id: '3',
+      name: 'Stark Enterprises',
+      plan: 'Enterprise',
+      userCount: 120,
+      status: 'active',
+      joinedDate: '2023-04-10',
+      logo: '',
+      colorTheme: '#F59E0B',
+      isActive: true,
+      createdBy: 'Michael Chen'
+    },
+    {
+      id: '4',
+      name: 'Wayne Industries',
+      plan: 'Business',
+      userCount: 35,
+      status: 'pending',
+      joinedDate: '2023-08-05',
+      logo: '',
+      colorTheme: '#3B82F6',
+      isActive: false,
+      createdBy: 'Emily Wilson'
+    },
+    {
+      id: '5',
+      name: 'Umbrella Corp',
+      plan: 'Starter',
+      userCount: 12,
+      status: 'suspended',
+      joinedDate: '2023-07-18',
+      logo: '',
+      colorTheme: '#EC4899',
+      isActive: false,
+      createdBy: 'Carlos Rodriguez'
+    }
+  ];
+
   // State for loading and error handling
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
   // State for businesses data
-  const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [businesses, setBusinesses] = useState<Business[]>(businessData);
 
   // State for filtering and search
   const [statusFilter, setStatusFilter] = useState('all');
@@ -760,7 +763,7 @@ export default function AdminBusinesses() {
     logo: '',
     colorTheme: '#C72026',
     isActive: true,
-    createdBy: 'Current Admin', // Default value
+    createdBy: user?.name || ' Admin', // Set current admin's name
     startDate: '', // Default value
     endDate: '' // Default value
   });
@@ -812,6 +815,18 @@ export default function AdminBusinesses() {
   const handleBusinessClick = (business: Business) => {
     setSelectedBusinessView(business);
     setViewMode('detail');
+    
+    // Initialize users for this business if not already loaded
+    if (!usersMap[business.id]) {
+      const businessUsers = dummyUsers.filter(user => user.businessId === business.id);
+      setUsersMap(prev => ({
+        ...prev,
+        [business.id]: businessUsers
+      }));
+      setUsers(businessUsers);
+    } else {
+      setUsers(usersMap[business.id]);
+    }
   };
 
   const handleBackToList = () => {
@@ -831,6 +846,9 @@ export default function AdminBusinesses() {
   // Add this state to track user status changes
   const [users, setUsers] = useState<User[]>([]);
 
+  // Add this near your other state declarations
+  const [usersMap, setUsersMap] = useState<Record<string, User[]>>({});
+
   const handleAddUser = () => {
     setIsAddUserModalOpen(true);
   };
@@ -840,21 +858,37 @@ export default function AdminBusinesses() {
   };
 
   // Add this handler function
-  const handleToggleUserStatus = (user: User) => {
+  const handleToggleUserStatus = async (user: User) => {
     const newStatus = user.status === 'active' ? 'suspended' : 'active';
     
-    // In a real app, you would make an API call here
-    // For demo purposes, we'll just update the state
-    setUsers(currentUsers =>
-      currentUsers.map(u =>
-        u.id === user.id
-          ? { ...u, status: newStatus }
-          : u
-      )
-    );
+    try {
+      const response = await fetch(`/api/admin/users/${user.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
 
-    // Show confirmation toast/alert
-    alert(`User ${user.name} has been ${newStatus}`);
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error);
+      }
+
+      setUsers(currentUsers =>
+        currentUsers.map(u =>
+          u.id === user.id
+            ? { ...u, status: newStatus }
+            : u
+        )
+      );
+
+      alert(`User ${user.name} has been ${newStatus}`);
+    } catch (error) {
+      console.error('Error updating user status:', error);
+      alert('Failed to update user status. Please try again.');
+    }
   };
 
   // Fetch businesses from API
@@ -863,19 +897,18 @@ export default function AdminBusinesses() {
     setError('');
 
     try {
-      // In a real app, this would be an API call
-      // const response = await fetch('/api/admin/businesses');
-      // const data = await response.json();
-      // setBusinesses(data.businesses);
+      const response = await fetch('/api/admin/businesses');
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error);
+      }
 
-      // For demo purposes, we'll use the sample data
-      setTimeout(() => {
-        setBusinesses(businessData);
-        setIsLoading(false);
-      }, 1000);
+      setBusinesses(data.businesses);
     } catch (error) {
       console.error('Error fetching businesses:', error);
-      setError(typeof error === 'string' ? error : (error instanceof Error ? error.message : 'An unknown error occurred'));
+      setError(typeof error === 'string' ? error : 'Failed to fetch businesses');
+    } finally {
       setIsLoading(false);
     }
   };
@@ -889,6 +922,42 @@ export default function AdminBusinesses() {
   useEffect(() => {
     setUsers(dummyUsers);
   }, []);
+
+  // Update the fetch users function
+  const fetchUsers = useCallback(async () => {
+    try {
+      const response = await fetch('/api/admin/users');
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error);
+      }
+
+      // Group users by business ID
+      const usersByBusiness = data.users.reduce((acc: Record<string, User[]>, user: User) => {
+        if (!acc[user.businessId]) {
+          acc[user.businessId] = [];
+        }
+        acc[user.businessId].push(user);
+        return acc;
+      }, {});
+
+      setUsersMap(usersByBusiness);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  }, []);
+
+  // Update useEffect to fetch users
+  useEffect(() => {
+    if (selectedBusinessView) {
+      fetchUsers(selectedBusinessView.id);
+    }
+  }, [selectedBusinessView]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, []); // Only fetch once when component mounts
 
   // Handle language change
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -978,7 +1047,7 @@ export default function AdminBusinesses() {
     }
   };
 
-  // Handle form submission for adding a new business
+  // Update the handleSubmit function
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
@@ -986,43 +1055,39 @@ export default function AdminBusinesses() {
     setIsSubmitting(true);
     setError('');
 
+    const currentAdmin = user?.name || 'Admin';
+
+    const newBusiness = {
+      ...formData,
+      id: Date.now().toString(), // Temporary ID until DB assigns one
+      createdBy: currentAdmin,
+      userCount: 0,
+      joinedDate: new Date().toISOString().split('T')[0],
+      isActive: true
+    };
+
     try {
-      // In a real app, this would be an API call
-      // const response = await fetch('/api/admin/businesses', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify(formData),
-      // });
-      // const data = await response.json();
+      const response = await fetch('/api/admin/businesses', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newBusiness),
+      });
 
-      // For demo purposes, we'll simulate a successful response
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const data = await response.json();
 
-      const data = {
-        success: true,
-        business: {
-          id: Date.now().toString(),
-          name: formData.name,
-          plan: formData.plan,
-          userCount: 0,
-          status: formData.status,
-          joinedDate: new Date().toISOString().split('T')[0],
-          logo: formData.logo,
-          colorTheme: formData.colorTheme,
-          isActive: formData.isActive,
-          createdBy: 'admin' // Hardcoded as 'admin' instead of using formData.createdBy
-        }
-      };
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to create business');
+      }
 
-      console.log('Business created successfully:', data);
+      // Immediately update the UI with the new business
+      setBusinesses(prevBusinesses => [...prevBusinesses, {
+        ...newBusiness,
+        id: data.business.id // Use the ID from the server response
+      }]);
 
-      // Add the new business to our state
-      const newBusiness = data.business;
-      setBusinesses(prev => [newBusiness, ...prev]);
-
-      // Close the modal and reset form
+      // Close modal and reset form
       closeModal();
       setFormData({
         name: '',
@@ -1034,18 +1099,14 @@ export default function AdminBusinesses() {
         logo: '',
         colorTheme: '#C72026',
         isActive: true,
-        createdBy: 'Current Admin', // Reset this too
-        startDate: '', // Reset this too
-        endDate: '' // Reset this too
+        createdBy: 'Current Admin',
+        startDate: '',
+        endDate: ''
       });
-
-      // Show success message
-      alert(t('businessAddedSuccessfully'));
 
     } catch (error) {
       console.error('Error creating business:', error);
-      setError(typeof error === 'string' ? error : (error instanceof Error ? error.message : 'An unknown error occurred'));
-      alert(t('errorAddingBusiness') + (error instanceof Error ? `: ${error.message}` : ''));
+      setError(typeof error === 'string' ? error : 'Failed to create business');
     } finally {
       setIsSubmitting(false);
     }
@@ -1219,6 +1280,7 @@ export default function AdminBusinesses() {
     if (selectedIds.length === 0) {
       alert('Please select documents first');
       return;
+
     }
 
     // Perform bulk action based on the action type
@@ -1236,37 +1298,123 @@ export default function AdminBusinesses() {
   };
 
   // Update the handleAddUserSuccess function
-  const handleAddUserSuccess = (newUser: NewUser) => {
-    if (!newUser?.name) return;
+  const handleAddUserSuccess = async (newUser: NewUser) => {
+    if (!newUser?.name || !selectedBusinessView) return;
 
-    // Check for duplicates
-    if (isDuplicateUser(newUser, users)) {
-      alert('A user with this name or email already exists.');
-      return;
+    try {
+      const response = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...newUser,
+          id: Date.now().toString(),
+          businessId: selectedBusinessView.id,
+          joinDate: new Date().toISOString().split('T')[0],
+          lastActive: new Date().toISOString().split('T')[0],
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error);
+      }
+
+      // Create the complete user object
+      const newUserWithDetails = {
+        ...data.user,
+        businessId: selectedBusinessView.id,
+        joinDate: new Date().toISOString().split('T')[0],
+        lastActive: new Date().toISOString().split('T')[0],
+        status: 'active',
+        createdBy: user?.name || 'Admin',
+      };
+
+      // Update local users state
+      setUsers(prevUsers => [...prevUsers, newUserWithDetails]);
+
+      // Update usersMap state
+      setUsersMap(prev => ({
+        ...prev,
+        [selectedBusinessView.id]: [
+          ...(prev[selectedBusinessView.id] || []),
+          newUserWithDetails,
+        ],
+      }));
+
+      // Update business user count
+      setBusinesses(prevBusinesses =>
+        prevBusinesses.map(business =>
+          business.id === selectedBusinessView.id
+            ? { ...business, userCount: (business.userCount || 0) + 1 }
+            : business
+        )
+      );
+
+      // Update the selected business view to reflect new user count
+      if (selectedBusinessView) {
+        setSelectedBusinessView({
+          ...selectedBusinessView,
+          userCount: (selectedBusinessView.userCount || 0) + 1,
+        });
+      }
+
+      setIsAddUserModalOpen(false);
+
+      // Force a re-render of filtered users
+      const updatedFilteredUsers = users.filter(user => {
+        const matchesBusiness = user.businessId === selectedBusinessView?.id;
+        const matchesSearch = userSearchTerm === '' || 
+          user.name?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+          user.email?.toLowerCase().includes(userSearchTerm.toLowerCase());
+        return matchesBusiness && matchesSearch;
+      });
+      
+      // Trigger a re-render by updating the search term slightly
+      setUserSearchTerm(prev => prev + '');
+
+    } catch (error) {
+      console.error('Error creating user:', error);
+      alert('Failed to create user. Please try again.');
     }
-
-    const userToAdd: User = {
-      id: (users.length + 1).toString(),
-      name: newUser.name,
-      email: newUser.email,
-      role: newUser.role || 'User',
-      status: 'active',
-      lastActive: new Date().toISOString().split('T')[0],
-      joinDate: new Date().toISOString().split('T')[0],
-      language: newUser.language || 'en'
-    };
-
-    setUsers(prevUsers => [...prevUsers, userToAdd]);
-    setIsAddUserModalOpen(false);
   };
 
   // Add this computed value before your render
-  const filteredUsers = users.filter(user => 
-    user && (  // Add null check
-      user.name?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
-      user.email?.toLowerCase().includes(userSearchTerm.toLowerCase())
-    )
-  );
+  const filteredUsers = useCallback(() => {
+    return users.filter(user => {
+      const matchesBusiness = user.businessId === selectedBusinessView?.id;
+      const matchesSearch = userSearchTerm === '' || 
+        user.name?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+        user.email?.toLowerCase().includes(userSearchTerm.toLowerCase());
+      return matchesBusiness && matchesSearch;
+    });
+  }, [users, selectedBusinessView, userSearchTerm]);
+
+  const calculateUserCount = useCallback((businessId: string): number => {
+    return usersMap[businessId]?.length || 0;
+  }, [usersMap]);
+
+  const refreshUserCounts = useCallback(async () => {
+    await fetchUsers();
+    setBusinesses(prevBusinesses => 
+      prevBusinesses.map(business => ({
+        ...business,
+        userCount: usersMap[business.id]?.length || 0
+      }))
+    );
+  }, [fetchUsers, usersMap]);
+
+  useEffect(() => {
+    // Calculate counts for all businesses at once
+    const updatedBusinesses = businesses.map(business => ({
+      ...business,
+      userCount: users.filter(user => user.businessId === business.id).length
+    }));
+    
+    setBusinesses(updatedBusinesses);
+  }, [users]); // Only depend on users array changes
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -1510,7 +1658,7 @@ export default function AdminBusinesses() {
                     />
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                        <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4-4a1 1 010-1.414l4-4a1 1 011.414 0z" clipRule="evenodd" />
                       </svg>
                     </div>
                   </div>
@@ -1538,16 +1686,13 @@ export default function AdminBusinesses() {
                             {t('name')}
                           </th>
                           <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            {t('plan')}
-                          </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             {t('userCount')}
                           </th>
                           <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             {t('status')}
                           </th>
                           <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            {t('Start Date')}
+                            {t('Start Date')} {/* Changed from t('joined') to t('Start Date') */}
                           </th>
                           <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             {t('createdBy')}
@@ -1585,13 +1730,11 @@ export default function AdminBusinesses() {
                                   </div>
                                 </div>
                               </td>
-                              {/* Plan cell */}
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-500 dark:text-gray-400">{business.plan}</div>
-                              </td>
                               {/* User count cell */}
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-500 dark:text-gray-400">{business.userCount}</div>
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                  {usersMap[business.id]?.length || 0}
+                                </div>
                               </td>
                               {/* Status cell */}
                               <td className="px-6 py-4 whitespace-nowrap">
@@ -1607,11 +1750,13 @@ export default function AdminBusinesses() {
                               </td>
                               {/* Joined date cell */}
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                {business.joinedDate}
+                                {business.joinedDate.split('T')[0]}
                               </td>
-                              {/* Created By cell - new */}
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                {business.createdBy}
+                              {/* Created By cell */}
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                  {business.createdBy || user?.name || 'Admin'}
+                                </div>
                               </td>
                               {/* Actions cell */}
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
@@ -1672,7 +1817,7 @@ export default function AdminBusinesses() {
                       className="flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                     >
                       <svg className="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                        <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 01-1.414 1.414l-4-4a1 1 010-1.414l4-4a1 1 011.414 0z" clipRule="evenodd" />
                       </svg>
                       Back to Businesses
                     </button>
@@ -1715,27 +1860,26 @@ export default function AdminBusinesses() {
                     {/* Add appropriate action button based on active filter */}
                     {activeFilter === 'users' ? (
                       <div className="flex space-x-2">
-                        {/* Sample User Import Template Download Button */}
-                        <button
-                          onClick={handleDownloadSampleTemplate}
-                          className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                          User Import Template
-                        </button>
-                        
-                        <UserDataActions 
-                          users={users}
-                          onImportUsers={(importedUsers) => {
-                            setUsers(prevUsers => [...prevUsers, ...importedUsers]);
-                          }}
-                        />
+                        <div className="flex flex-col">
+                          <div className="mb-1">
+                            <UserDataActions 
+                              users={users}
+                              onImportUsers={(importedUsers) => {
+                                setUsers(prevUsers => [...prevUsers, ...importedUsers]);
+                              }}
+                            />
+                          </div>
+                          <button
+                            onClick={handleDownloadSampleTemplate}
+                            className="text-[10px] text-[#C72026] hover:text-[#C72026]/80 font-medium transition-colors duration-200 hover:underline self-start"
+                          >
+                            Download sample template
+                          </button>
+                        </div>
                         
                         <button 
                           onClick={handleAddUser}
-                          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#C72026] hover:bg-[#C72026]/90"
+                          className="h-[36px] inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#C72026] hover:bg-[#C72026]/90"
                         >
                           Add User
                         </button>
@@ -1780,7 +1924,7 @@ export default function AdminBusinesses() {
                           </tr>
                         </thead>
                         <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                          {filteredUsers.map((user) => user && (
+                          {filteredUsers().map((user) => user && (
                             <tr key={user.id}>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm font-medium text-gray-900 dark:text-white">
