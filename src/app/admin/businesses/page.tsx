@@ -670,6 +670,25 @@ interface BusinessFormData {
   endDate: string; // Add this field
 }
 
+const validateImportedUser = (user: NewUser): boolean => {
+  if (!user.name || !user.email) {
+    return false;
+  }
+  // Add additional validation as needed
+  return true;
+};
+
+const processImportedUsers = (users: NewUser[]): NewUser[] => {
+  return users
+    .filter(validateImportedUser)
+    .map(user => ({
+      ...user,
+      status: user.status || 'active',
+      language: user.language || 'en',
+      role: user.role || 'User'
+    }));
+};
+
 export default function AdminBusinesses() {
   const { language, setLanguage, translate } = useLanguage();
   const { isDarkMode, toggleDarkMode } = useDarkMode();
@@ -949,11 +968,11 @@ export default function AdminBusinesses() {
   }, []);
 
   // Update useEffect to fetch users
-  useEffect(() => {
-    if (selectedBusinessView) {
-      fetchUsers(selectedBusinessView.id);
-    }
-  }, [selectedBusinessView]);
+  // useEffect(() => {
+  //   if (selectedBusinessView) {
+  //     fetchUsers(selectedBusinessView.id);
+  //   }
+  // }, [selectedBusinessView]);
 
   useEffect(() => {
     fetchUsers();
@@ -1864,9 +1883,89 @@ export default function AdminBusinesses() {
                           <div className="mb-1">
                             <UserDataActions 
                               users={users}
-                              onImportUsers={(importedUsers) => {
-                                setUsers(prevUsers => [...prevUsers, ...importedUsers]);
+                              onImportUsers={async (importedUsers) => {
+                                try {
+                                  // First, validate for duplicates
+                                  const duplicates = importedUsers.filter(newUser => 
+                                    isDuplicateUser(newUser, users)
+                                  );
+                            
+                                  if (duplicates.length > 0) {
+                                    alert(`Duplicate users found: ${duplicates.map(d => d.email).join(', ')}`);
+                                    return;
+                                  }
+                            
+                                  // Add business ID and other required fields to each imported user
+                                  const enrichedUsers = importedUsers.map(user => ({
+                                    ...user,
+                                    id: Date.now().toString(), // Temporary ID until DB assigns one
+                                    businessId: selectedBusinessView.id,
+                                    joinDate: new Date().toISOString().split('T')[0],
+                                    lastActive: new Date().toISOString().split('T')[0],
+                                    status: 'active',
+                                    createdBy: user?.name || 'Admin',
+                                  }));
+                            
+                                  // Make API call to bulk create users
+                                  const response = await fetch('/api/admin/users/bulk', {
+                                    method: 'POST',
+                                    headers: {
+                                      'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                      users: enrichedUsers,
+                                      businessId: selectedBusinessView.id
+                                    }),
+                                  });
+                            
+                                  const data = await response.json();
+                            
+                                  if (!data.success) {
+                                    throw new Error(data.error || 'Failed to import users');
+                                  }
+                            
+                                  // Update local state with the newly created users
+                                  const newUsers = data.users || enrichedUsers;
+                                  setUsers(prevUsers => [...prevUsers, ...newUsers]);
+                            
+                                  // Update usersMap
+                                  setUsersMap(prev => ({
+                                    ...prev,
+                                    [selectedBusinessView.id]: [
+                                      ...(prev[selectedBusinessView.id] || []),
+                                      ...newUsers,
+                                    ],
+                                  }));
+                            
+                                  // Update business user count
+                                  setBusinesses(prevBusinesses =>
+                                    prevBusinesses.map(business =>
+                                      business.id === selectedBusinessView.id
+                                        ? { ...business, userCount: (business.userCount || 0) + newUsers.length }
+                                        : business
+                                    )
+                                  );
+                            
+                                  // Update selected business view
+                                  if (selectedBusinessView) {
+                                    setSelectedBusinessView({
+                                      ...selectedBusinessView,
+                                      userCount: (selectedBusinessView.userCount || 0) + newUsers.length,
+                                    });
+                                  }
+                            
+                                  // Show success message
+                                  alert(`Successfully imported ${newUsers.length} users`);
+                            
+                                  // Force a re-render of filtered users
+                                  setUserSearchTerm(prev => prev + '');
+                            
+                                } catch (error) {
+                                  console.error('Error importing users:', error);
+                                  alert('Failed to import users. Please try again.');
+                                }
                               }}
+                              businessId={selectedBusinessView.id}
                             />
                           </div>
                           <button

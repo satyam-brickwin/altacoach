@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext'; // Assuming you have an AuthContext to get the current user
+import { useAuth } from '../contexts/AuthContext';
 
+// Update the User interface to match the expected types
 interface User {
+  id?: string;          // Optional for new users
   name: string;
   email: string;
-  password: string; // Make sure password is included
-  status?: string;
-  language?: string;
-  role?: string;
+  password: string;
+  status: string;       // Make status required
+  language: string;     // Make language required
+  role: string;        // Make role required
+  businessId?: string;  // Optional for new users
+  lastActive?: string;
+  joinDate?: string;
 }
 
 interface AddUserModalProps {
@@ -15,16 +20,24 @@ interface AddUserModalProps {
   onClose: () => void;
   onSuccess: (user: User) => void;
   translate: (key: string) => string;
+  defaultValues?: Partial<User>;
 }
 
-const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onSuccess, translate }) => {
-  const { user } = useAuth(); // Get the current user from the AuthContext
+const AddUserModal: React.FC<AddUserModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  onSuccess, 
+  translate,
+  defaultValues
+}) => {
+  const { user } = useAuth();
   const [userData, setUserData] = useState<User>({
     name: '',
     email: '',
-    password: '', // Add password field
-    status: 'active',
-    language: 'en'
+    password: '',
+    status: defaultValues?.status || 'active',
+    language: defaultValues?.language || 'en',
+    role: defaultValues?.role || 'User'
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,25 +47,49 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onSuccess,
     setUserData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validate required fields
-    if (!userData.name || !userData.email || !userData.password) {
-      alert('Name, email and password are required');
-      return;
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      // Validate required fields
+      if (!userData.name || !userData.email || !userData.password) {
+        throw new Error('Name, email and password are required');
+      }
+
+      // Email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(userData.email)) {
+        throw new Error('Please enter a valid email address');
+      }
+
+      // Create the complete user object with all required fields
+      const completeUser: User = {
+        ...userData,
+        status: userData.status || 'active',
+        language: userData.language || 'en',
+        role: userData.role || 'User'
+      };
+
+      await onSuccess(completeUser);
+      
+      // Reset form on success
+      setUserData({
+        name: '',
+        email: '',
+        password: '',
+        status: defaultValues?.status || 'active',
+        language: defaultValues?.language || 'en',
+        role: defaultValues?.role || 'User'
+      });
+      
+      onClose();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to create user');
+    } finally {
+      setIsLoading(false);
     }
-    
-    onSuccess(userData); // Pass NewUser object
-    
-    // Reset form
-    setUserData({
-      name: '',
-      email: '',
-      password: '',
-      status: 'active',
-      language: 'en'
-    });
   };
 
   if (!isOpen) return null;

@@ -7,6 +7,7 @@ interface User {
   email: string;
   role: string;
   status: string;
+  businessId: string;  // Added businessId
   lastActive?: string;
   joinDate?: string;
   language?: string;
@@ -19,9 +20,17 @@ interface NewUser {
   language?: string;
 }
 
+interface ImportedUser {
+  name: string;
+  email: string;
+  language?: string;
+  status?: string;
+}
+
 interface UserDataActionsProps {
   users: User[];
   onImportUsers: (importedUsers: User[]) => void;
+  businessId: string;  // Added businessId prop
 }
 
 function convertToCSV(data: any[]) {
@@ -40,11 +49,11 @@ function downloadCSV(csvString: string, filename: string) {
   URL.revokeObjectURL(url);
 }
 
-function isDuplicateUser(newUser: NewUser, existingUsers: User[]) {
+function isDuplicateUser(newUser: ImportedUser, existingUsers: User[]) {
   return existingUsers.some(user => user.email === newUser.email);
 }
 
-export default function UserDataActions({ users, onImportUsers }: UserDataActionsProps) {
+export default function UserDataActions({ users, onImportUsers, businessId }: UserDataActionsProps) {
   const [isImporting, setIsImporting] = useState(false);
   const [usersState, setUsers] = useState(users);
 
@@ -97,7 +106,7 @@ export default function UserDataActions({ users, onImportUsers }: UserDataAction
     }
   };
 
-  const handleImportUsersLogic = (importedUsers: NewUser[]) => {
+  const handleImportUsersLogic = (importedUsers: ImportedUser[]) => {
     // Filter out duplicates
     const uniqueUsers = importedUsers.filter(newUser => 
       !isDuplicateUser(newUser, usersState)
@@ -111,11 +120,12 @@ export default function UserDataActions({ users, onImportUsers }: UserDataAction
 
     // Process only unique users
     const usersToAdd = uniqueUsers.map((user, index) => ({
-      id: (usersState.length + index + 1).toString(),
+      id: Date.now().toString() + index,
       name: user.name,
       email: user.email,
-      role: user.role || 'User',
-      status: 'active',
+      role: 'user',
+      status: user.status || 'active',
+      businessId: businessId,
       lastActive: new Date().toISOString().split('T')[0],
       joinDate: new Date().toISOString().split('T')[0],
       language: user.language || 'en'
