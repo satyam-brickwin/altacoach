@@ -1898,12 +1898,13 @@ export default function AdminBusinesses() {
                                   // Add business ID and other required fields to each imported user
                                   const enrichedUsers = importedUsers.map(user => ({
                                     ...user,
-                                    id: Date.now().toString(), // Temporary ID until DB assigns one
+                                    id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // More unique temporary ID
                                     businessId: selectedBusinessView.id,
                                     joinDate: new Date().toISOString().split('T')[0],
                                     lastActive: new Date().toISOString().split('T')[0],
-                                    status: 'active',
+                                    status: user.status || 'active',
                                     createdBy: user?.name || 'Admin',
+                                    role: user.role || 'User', // Default role if not provided,
                                   }));
                             
                                   // Make API call to bulk create users
@@ -1924,18 +1925,27 @@ export default function AdminBusinesses() {
                                     throw new Error(data.error || 'Failed to import users');
                                   }
                             
-                                  // Update local state with the newly created users
-                                  const newUsers = data.users || enrichedUsers;
+                                  // Process the response to ensure users have all required fields
+                                  const newUsers = data.users.map((user: any) => ({
+                                    ...user,
+                                    // Ensure these fields exist for UI rendering purposes
+                                    joinDate: user.joinDate || new Date().toISOString().split('T')[0],
+                                    lastActive: user.lastActive || new Date().toISOString().split('T')[0],
+                                    status: user.status || 'active',
+                                    createdBy: user.createdBy || user?.name || 'Admin',
+                                  }));
+                            
+                                  // Update users state with proper typing
                                   setUsers(prevUsers => [...prevUsers, ...newUsers]);
                             
-                                  // Update usersMap
-                                  setUsersMap(prev => ({
-                                    ...prev,
-                                    [selectedBusinessView.id]: [
-                                      ...(prev[selectedBusinessView.id] || []),
-                                      ...newUsers,
-                                    ],
-                                  }));
+                                  // Update usersMap properly
+                                  setUsersMap(prev => {
+                                    const existingUsers = prev[selectedBusinessView.id] || [];
+                                    return {
+                                      ...prev,
+                                      [selectedBusinessView.id]: [...existingUsers, ...newUsers]
+                                    };
+                                  });
                             
                                   // Update business user count
                                   setBusinesses(prevBusinesses =>

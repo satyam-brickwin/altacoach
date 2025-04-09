@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 
 interface User {
@@ -23,6 +23,7 @@ interface NewUser {
 interface ImportedUser {
   name: string;
   email: string;
+  role?: string;  // Add this property
   language?: string;
   status?: string;
 }
@@ -57,6 +58,11 @@ export default function UserDataActions({ users, onImportUsers, businessId }: Us
   const [isImporting, setIsImporting] = useState(false);
   const [usersState, setUsers] = useState(users);
 
+  // Add useEffect to keep local state in sync with props
+  useEffect(() => {
+    setUsers(users);
+  }, [users]);
+
   const handleExport = () => {
     // Filter out role field and only keep necessary fields
     const exportData = users.map(user => ({
@@ -83,14 +89,31 @@ export default function UserDataActions({ users, onImportUsers, businessId }: Us
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
       
       // Convert to JSON
-      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      const jsonData = XLSX.utils.sheet_to_json(worksheet) as Record<string, any>[];
       
-      // Transform data to match NewUser interface
-      const importedUsers = jsonData.map((row: any) => ({
-        name: row.Name || row.name,
-        email: row.Email || row.email,
+      // Add before the mapping
+      if (jsonData.length === 0) {
+        alert('No data found in the imported file.');
+        return;
+      }
+
+      // Validate required fields
+      const missingFields = jsonData.some((row: Record<string, any>) => 
+        !(row.Name || row.name) || !(row.Email || row.email)
+      );
+
+      if (missingFields) {
+        alert('Some rows are missing required fields (Name or Email). Please check your file.');
+        return;
+      }
+
+      // Transform data to match user interface more accurately
+      const importedUsers = jsonData.map((row: Record<string, any>) => ({
+        name: row.Name || row.name || '',
+        email: row.Email || row.email || '',
         role: row.Role || row.role || 'User',
-        language: row.Language || row.language || 'en'
+        language: row.Language || row.language || 'en',
+        status: row.Status || row.status || 'active'
       }));
 
       handleImportUsersLogic(importedUsers);
@@ -123,7 +146,7 @@ export default function UserDataActions({ users, onImportUsers, businessId }: Us
       id: Date.now().toString() + index,
       name: user.name,
       email: user.email,
-      role: 'user',
+      role: user.role || 'User', // Preserve the role if provided
       status: user.status || 'active',
       businessId: businessId,
       lastActive: new Date().toISOString().split('T')[0],
@@ -132,8 +155,14 @@ export default function UserDataActions({ users, onImportUsers, businessId }: Us
     }));
 
     if (usersToAdd.length > 0) {
+      // Update local state
       setUsers(prevUsers => [...prevUsers, ...usersToAdd]);
-      alert(`Successfully added ${usersToAdd.length} new user(s).`);
+      
+      // IMPORTANT: Call the parent component's handler
+      onImportUsers(usersToAdd);
+      
+      // Don't show this alert since the parent component will handle success messages
+      // alert(`Successfully added ${usersToAdd.length} new user(s).`);
     }
   };
 
