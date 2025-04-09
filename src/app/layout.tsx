@@ -7,6 +7,7 @@ import { LanguageProvider } from '@/contexts/LanguageContext';
 import { DarkModeProvider } from '@/contexts/DarkModeContext';
 import NavbarWrapper from '@/components/NavbarWrapper';
 import { Toaster } from "sonner";
+import { ToastProvider } from '@/contexts/ToastContext';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -26,8 +27,10 @@ export default function RootLayout({
         <LanguageProvider>
           <DarkModeProvider>
             <AuthProvider>
-              <NavbarWrapper />
-              <main>{children}</main>
+              <ToastProvider>
+                <NavbarWrapper />
+                <main>{children}</main>
+              </ToastProvider>
             </AuthProvider>
           </DarkModeProvider>
         </LanguageProvider>

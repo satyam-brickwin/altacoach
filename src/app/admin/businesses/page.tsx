@@ -14,13 +14,16 @@ import UploadDocumentModal from '@/components/UploadDocumentModal';
 import UserDataActions from '@/components/UserDataActions';
 import ViewDocumentModal from '@/components/ViewDocumentModal';
 import { convertToCSV, downloadCSV } from '@/utils/exportHelpers';
+import { useToast } from '@/contexts/ToastContext'; // Add this import
 
 // Add this helper function near the top of the file with other utility functions
-const isDuplicateUser = (newUser: NewUser, existingUsers: User[]): boolean => {
-  return existingUsers.some(existing => 
-    existing.email.toLowerCase() === newUser.email.toLowerCase() ||
-    existing.name.toLowerCase() === newUser.name.toLowerCase()
-  );
+const isDuplicateUser = (newUser: NewUser, existingUsers: User[], currentBusinessId: string): boolean => {
+  return existingUsers
+    .filter(user => user.businessId === currentBusinessId) // Only check users in the current business
+    .some(existing => 
+      existing.email.toLowerCase() === newUser.email.toLowerCase() ||
+      existing.name.toLowerCase() === newUser.name.toLowerCase()
+    );
 };
 
 // Define Business type for better type safety
@@ -694,6 +697,7 @@ export default function AdminBusinesses() {
   const { isDarkMode, toggleDarkMode } = useDarkMode();
   const router = useRouter();
   const { user, logout } = useAuth(); // Get user and signOut from auth context
+  const { showToast } = useToast(); // Add this hook
 
   // Move businessData here, after user is available
   const businessData = [
@@ -903,10 +907,12 @@ export default function AdminBusinesses() {
         )
       );
 
-      alert(`User ${user.name} has been ${newStatus}`);
+      // Replace alert with toast notification
+      showToast(`User ${user.name} has been ${newStatus}`, newStatus === 'active' ? 'success' : 'warning');
     } catch (error) {
       console.error('Error updating user status:', error);
-      alert('Failed to update user status. Please try again.');
+      // Replace alert with toast notification
+      showToast('Failed to update user status. Please try again.', 'error');
     }
   };
 
@@ -1101,10 +1107,10 @@ export default function AdminBusinesses() {
       }
 
       // Immediately update the UI with the new business
-      setBusinesses(prevBusinesses => [...prevBusinesses, {
+      setBusinesses(prevBusinesses => [{
         ...newBusiness,
         id: data.business.id // Use the ID from the server response
-      }]);
+      }, ...prevBusinesses]);
 
       // Close modal and reset form
       closeModal();
@@ -1247,6 +1253,9 @@ export default function AdminBusinesses() {
         downloadLink.click();
         document.body.removeChild(downloadLink);
         window.URL.revokeObjectURL(fileUrl);
+        
+        // Show success toast notification
+        showToast(`Downloaded: ${doc.title}`, 'success');
       } else {
         // For non-URL documents, export as CSV
         const exportData = [{
@@ -1272,23 +1281,19 @@ export default function AdminBusinesses() {
         a.click();
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
+        
+        // Show success toast notification
+        showToast(`Exported: ${doc.title}`, 'success');
       }
     } catch (error) {
       console.error('Error downloading document:', error);
-      alert('Error downloading document. Please try again.');
+      // Replace alert with toast notification 
+      showToast('Error downloading document. Please try again.', 'error');
     }
   };
 
   // Add this to your state declarations
   const [selectedDocuments, setSelectedDocuments] = useState<{ [key: string]: boolean }>({});
-
-  // Add this function to handle document selection
-  const handleDocumentSelection = (documentId: string, type: 'all' | 'admin' | 'business') => {
-    setSelectedDocuments(prev => ({
-      ...prev,
-      [documentId]: !prev[documentId]
-    }));
-  };
 
   // Add a function to handle bulk actions
   const handleBulkAction = (action: string) => {
@@ -1297,9 +1302,9 @@ export default function AdminBusinesses() {
       .map(([id]) => id);
 
     if (selectedIds.length === 0) {
-      alert('Please select documents first');
+      // Replace alert with toast notification
+      showToast('Please select documents first', 'warning');
       return;
-
     }
 
     // Perform bulk action based on the action type
@@ -1309,6 +1314,7 @@ export default function AdminBusinesses() {
           const doc = dummyDocuments.find(d => d.id === id);
           if (doc) handleDownload(doc);
         });
+        showToast(`Downloading ${selectedIds.length} documents`, 'success');
         break;
       // Add other bulk actions as needed
       default:
@@ -1346,23 +1352,24 @@ export default function AdminBusinesses() {
         ...data.user,
         businessId: selectedBusinessView.id,
         joinDate: new Date().toISOString().split('T')[0],
-        lastActive: new Date().toISOString().split('T')[0],
+        lastActive: new Date().toISOString().split('T')[0], // Ensure it's always set
         status: 'active',
         createdBy: user?.name || 'Admin',
       };
 
-      // Update local users state
-      setUsers(prevUsers => [...prevUsers, newUserWithDetails]);
+      // Update local users state - Add new user to beginning of array
+      setUsers(prevUsers => [newUserWithDetails, ...prevUsers]);
 
-      // Update usersMap state
+      // Update usersMap state - Add new user to beginning of array
       setUsersMap(prev => ({
         ...prev,
         [selectedBusinessView.id]: [
-          ...(prev[selectedBusinessView.id] || []),
           newUserWithDetails,
+          ...(prev[selectedBusinessView.id] || []),
         ],
       }));
 
+      // Rest of the function remains unchanged
       // Update business user count
       setBusinesses(prevBusinesses =>
         prevBusinesses.map(business =>
@@ -1372,7 +1379,7 @@ export default function AdminBusinesses() {
         )
       );
 
-      // Update the selected business view to reflect new user count
+      // Update the selected business view
       if (selectedBusinessView) {
         setSelectedBusinessView({
           ...selectedBusinessView,
@@ -1381,17 +1388,8 @@ export default function AdminBusinesses() {
       }
 
       setIsAddUserModalOpen(false);
-
-      // Force a re-render of filtered users
-      const updatedFilteredUsers = users.filter(user => {
-        const matchesBusiness = user.businessId === selectedBusinessView?.id;
-        const matchesSearch = userSearchTerm === '' || 
-          user.name?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
-          user.email?.toLowerCase().includes(userSearchTerm.toLowerCase());
-        return matchesBusiness && matchesSearch;
-      });
       
-      // Trigger a re-render by updating the search term slightly
+      // Force a re-render of filtered users
       setUserSearchTerm(prev => prev + '');
 
     } catch (error) {
@@ -1434,6 +1432,14 @@ export default function AdminBusinesses() {
     
     setBusinesses(updatedBusinesses);
   }, [users]); // Only depend on users array changes
+
+  // Add this function where you have other handler functions
+  const handleDocumentSelection = (documentId: string, filter: 'all' | 'admin' | 'business') => {
+    setSelectedDocuments(prevSelected => ({
+      ...prevSelected,
+      [documentId]: !prevSelected[documentId]
+    }));
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -1677,7 +1683,7 @@ export default function AdminBusinesses() {
                     />
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4-4a1 1 010-1.414l4-4a1 1 011.414 0z" clipRule="evenodd" />
+                        <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 01-1.414 1.414l-4-4a1 1 010-1.414l4-4a1 1 011.414 0z" clipRule="evenodd" />
                       </svg>
                     </div>
                   </div>
@@ -1887,11 +1893,12 @@ export default function AdminBusinesses() {
                                 try {
                                   // First, validate for duplicates
                                   const duplicates = importedUsers.filter(newUser => 
-                                    isDuplicateUser(newUser, users)
+                                    isDuplicateUser(newUser, users, selectedBusinessView.id)
                                   );
                             
                                   if (duplicates.length > 0) {
-                                    alert(`Duplicate users found: ${duplicates.map(d => d.email).join(', ')}`);
+                                    // Replace alert with toast notification
+                                    showToast(`Duplicate users found: ${duplicates.map(d => d.email).join(', ')}`, 'warning');
                                     return;
                                   }
                             
@@ -1936,14 +1943,14 @@ export default function AdminBusinesses() {
                                   }));
                             
                                   // Update users state with proper typing
-                                  setUsers(prevUsers => [...prevUsers, ...newUsers]);
+                                  setUsers(prevUsers => [...newUsers, ...prevUsers]); // Changed order to put new users first
                             
                                   // Update usersMap properly
                                   setUsersMap(prev => {
                                     const existingUsers = prev[selectedBusinessView.id] || [];
                                     return {
                                       ...prev,
-                                      [selectedBusinessView.id]: [...existingUsers, ...newUsers]
+                                      [selectedBusinessView.id]: [...newUsers, ...existingUsers] // Changed order to put new users first
                                     };
                                   });
                             
@@ -1964,15 +1971,16 @@ export default function AdminBusinesses() {
                                     });
                                   }
                             
-                                  // Show success message
-                                  alert(`Successfully imported ${newUsers.length} users`);
+                                  // Replace alert with toast notification
+                                  showToast(`Successfully imported ${newUsers.length} users`, 'success');
                             
                                   // Force a re-render of filtered users
                                   setUserSearchTerm(prev => prev + '');
                             
                                 } catch (error) {
                                   console.error('Error importing users:', error);
-                                  alert('Failed to import users. Please try again.');
+                                  // Replace alert with toast notification
+                                  showToast('Failed to import users. Please try again.', 'error');
                                 }
                               }}
                               businessId={selectedBusinessView.id}
@@ -2028,7 +2036,7 @@ export default function AdminBusinesses() {
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Language</th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created By</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Last Active</th>
+                            {/* <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Last Active</th> */}
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                           </tr>
                         </thead>
@@ -2062,9 +2070,11 @@ export default function AdminBusinesses() {
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm text-gray-500 dark:text-gray-400">{user.createdBy || 'Admin'}</div>
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-500 dark:text-gray-400">{user.lastActive || 'N/A'}</div>
-                              </td>
+                              {/* <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                  {user.lastActive ? new Date(user.lastActive).toLocaleDateString() : 'N/A'}
+                                </div>
+                              </td> */}
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="flex space-x-3">
                                   <button
