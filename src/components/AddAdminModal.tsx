@@ -86,7 +86,7 @@ const AddAdminModal: React.FC<AddAdminModalProps> = ({ isOpen, onClose, onSucces
     try {
       console.log('Submitting admin data:', processedData);
       
-      const response = await fetch('/api/admin/users', {
+      const response = await fetch('/apisuper/user', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

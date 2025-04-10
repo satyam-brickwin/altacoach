@@ -7,7 +7,7 @@ import { useAuthProtection, UserRole } from '@/contexts/AuthContext';
 
 export default function StaffLayout({ children }: { children: React.ReactNode }) {
   const { language } = useLanguage();
-  const allowedRoles = useMemo(() => [UserRole.STAFF], []);
+  const allowedRoles = useMemo(() => [UserRole.STAFF, UserRole.USER], []); // Added UserRole.USER
   const { isLoading, user } = useAuthProtection(allowedRoles);
   
   if (isLoading) {
@@ -26,4 +26,4 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
       </main>
     </div>
   );
-} 
+}

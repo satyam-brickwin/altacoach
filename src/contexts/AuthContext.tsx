@@ -32,21 +32,21 @@ interface BusinessCredentials {
 export const initMockDatabase = () => {
   // Check if database is already initialized
   const dbInitialized = localStorage.getItem('mockDatabaseInitialized');
-  
+
   if (!dbInitialized) {
     console.log('Initializing mock business credentials database...');
-    
+
     // Create sample business credentials
     const businessCredentials: BusinessCredentials[] = [];
-    
+
     // Add super admin credentials - this is new
     businessCredentials.push({
       businessId: '', // Super admin doesn't belong to a specific business
-      email: 'superadmin@altacoach.com',
-      password: 'superadmin123',
+      email: 'anupam.rai@brickwin.net',
+      password: 'brickwin@123',
       role: UserRole.SUPER_ADMIN
     });
-    
+
     // Add admin credentials - this is new
     businessCredentials.push({
       businessId: '', // Regular admin doesn't belong to a specific business
@@ -54,7 +54,7 @@ export const initMockDatabase = () => {
       password: 'admin123',
       role: UserRole.ADMIN
     });
-    
+
     // Add sample business admin credentials
     sampleBusinesses.forEach(business => {
       businessCredentials.push({
@@ -63,7 +63,7 @@ export const initMockDatabase = () => {
         password: 'password',
         role: UserRole.BUSINESS
       });
-      
+
       // Add sample staff credentials for each business
       businessCredentials.push({
         businessId: business.id,
@@ -72,18 +72,16 @@ export const initMockDatabase = () => {
         role: UserRole.STAFF
       });
     });
-    
+
     // Store in localStorage
     localStorage.setItem('mockBusinessCredentials', JSON.stringify(businessCredentials));
     localStorage.setItem('mockDatabaseInitialized', 'true');
-    
+
     console.log('Mock database initialized with credentials:', businessCredentials);
     return businessCredentials;
   }
-  
+
   // Return existing credentials
-  const credentials = localStorage.getItem('mockBusinessCredentials');
-  return credentials ? JSON.parse(credentials) : [];
 };
 
 // Define user type
@@ -111,7 +109,7 @@ const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   isLoading: true,
   login: async () => false,
-  logout: async () => {},
+  logout: async () => { },
   error: null,
 });
 
@@ -140,12 +138,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // For now, use mock data for development
         // In a real app, you would fetch the user from an API
         const mockUser = localStorage.getItem('mockUser');
-        
+
         if (mockUser) {
           setUser(JSON.parse(mockUser));
           setIsAuthenticated(true);
         }
-        
+
         setIsLoading(false);
       } catch (err) {
         console.error('Auth check error:', err);
@@ -161,77 +159,62 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setError(null);
     setIsLoading(true);
 
-    console.log('Login attempt:', { email, role, businessId });
-
     try {
-      // Get all credentials from mock database
-      const credentials = localStorage.getItem('mockBusinessCredentials');
-      const allCredentials: BusinessCredentials[] = credentials ? JSON.parse(credentials) : [];
-      
-      // Find matching credential
-      const matchingCred = allCredentials.find(cred => 
-        cred.email === email && 
-        cred.password === password &&
-        cred.role === role
-      );
-
-      if (matchingCred) {
+      // Mock login for local testing
+      if (
+        (email === 'admin@altacoach.com' && password === 'admin123' && role === UserRole.ADMIN) ||
+        (email === 'staff@acmecorporation.com' && password === 'password' && role === UserRole.STAFF)
+      ) {
         const mockUser = {
-          id: Date.now().toString(), // Generate unique ID
-          email: matchingCred.email,
-          role: matchingCred.role,
-          businessId: matchingCred.businessId
+          id: Date.now().toString(),
+          name: role === UserRole.ADMIN ? 'Admin User' : 'Staff User',
+          email,
+          role,
+          businessId: role === UserRole.STAFF ? businessId : undefined,
         };
 
         localStorage.setItem('mockUser', JSON.stringify(mockUser));
         setUser(mockUser);
         setIsAuthenticated(true);
         setIsLoading(false);
-        console.log('Login successful:', mockUser);
         return true;
       }
 
-      // Fallback for default credentials
-      if (email === 'admin@altacoach.com' && password === 'admin123') {
-        const mockUser = {
-          id: '1',
-          name: 'Admin User',
-          email: 'admin@altacoach.com',
-          role: UserRole.ADMIN,
+      // Fallback to API call for other cases
+      console.log('Logging in with', email, password);
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      console.log('Response status:', res.status);
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        const loggedInUser = {
+          id: data.user.id,
+          name: data.user.name,
+          email: data.user.email,
+          role: data.user.role,
+          businessId: data.user.businessId,
         };
-        
-        localStorage.setItem('mockUser', JSON.stringify(mockUser));
-        setUser(mockUser);
+
+        localStorage.setItem('mockUser', JSON.stringify(loggedInUser));
+        setUser(loggedInUser);
         setIsAuthenticated(true);
         setIsLoading(false);
-        console.log('Admin login successful:', mockUser);
-        return true;
-      } else if (email === 'superadmin@altacoach.com' && password === 'superadmin123') {
-        const mockUser = {
-          id: '5',
-          name: 'Super Admin User',
-          email: 'superadmin@altacoach.com',
-          role: UserRole.SUPER_ADMIN,
-        };
-        
-        localStorage.setItem('mockUser', JSON.stringify(mockUser));
-        setUser(mockUser);
-        setIsAuthenticated(true);
-        setIsLoading(false);
-        console.log('Super Admin login successful:', mockUser);
         return true;
       } else {
-        setError('Invalid email or password');
-        setIsLoading(false);
-        console.log('Invalid credentials');
-        return false;
+        setError(data.message || 'Invalid email or password');
       }
     } catch (err) {
       console.error('Login error:', err);
-      setError('An error occurred during login');
-      setIsLoading(false);
-      return false;
+      setError('Server error');
     }
+
+    setIsLoading(false);
+    return false;
   };
 
   // Logout function
@@ -239,11 +222,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       // Clear localStorage first
       localStorage.removeItem('mockUser');
-      
+
       // Update state
       setUser(null);
       setIsAuthenticated(false);
-      
+
       // Use window.location for more reliable navigation
       window.location.href = '/login';
     } catch (err) {
@@ -289,7 +272,7 @@ export function useAuthProtection(allowedRoles: UserRole[] = []) {
 
   useEffect(() => {
     console.log(`[useAuthProtection] Effect running for path: ${pathname}, isLoading: ${isLoading}, isAuthenticated: ${isAuthenticated}`);
-    
+
     // Skip if still loading
     if (isLoading) return;
 
@@ -309,17 +292,17 @@ export function useAuthProtection(allowedRoles: UserRole[] = []) {
 
     // Check if user has an allowed role
     if (user && allowedRoles.includes(user.role)) {
-      console.log('[useAuthProtection] User authorized:', { 
-        role: user.role, 
-        allowedRoles, 
-        path: pathname 
+      console.log('[useAuthProtection] User authorized:', {
+        role: user.role,
+        allowedRoles,
+        path: pathname
       });
       setIsAuthorized(true);
     } else {
-      console.log('[useAuthProtection] User unauthorized:', { 
-        userRole: user?.role, 
+      console.log('[useAuthProtection] User unauthorized:', {
+        userRole: user?.role,
         allowedRoles,
-        path: pathname 
+        path: pathname
       });
       // Redirect to unauthorized page
       router.push('/unauthorized');

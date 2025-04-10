@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth, UserRole } from '../contexts/AuthContext';
 
 // Update the User interface to match the expected types
 interface User {
@@ -9,7 +9,7 @@ interface User {
   password: string;
   status: string;       // Make status required
   language: string;     // Make language required
-  role: string;        // Make role required
+  role: UserRole;       // Changed from string to UserRole
   businessId?: string;  // Optional for new users
   lastActive?: string;
   joinDate?: string;
@@ -37,7 +37,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
     password: '',
     status: defaultValues?.status || 'active',
     language: defaultValues?.language || 'en',
-    role: defaultValues?.role || 'User'
+    role: defaultValues?.role || UserRole.USER // Use enum instead of string
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +69,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
         ...userData,
         status: userData.status || 'active',
         language: userData.language || 'en',
-        role: userData.role || 'User'
+        role: userData.role || UserRole.USER
       };
 
       await onSuccess(completeUser);
@@ -81,7 +81,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
         password: '',
         status: defaultValues?.status || 'active',
         language: defaultValues?.language || 'en',
-        role: defaultValues?.role || 'User'
+        role: defaultValues?.role || UserRole.USER
       });
       
       onClose();
@@ -192,7 +192,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
               </div>
             </div>
           </div>
-
+          
           <div className="flex justify-end space-x-3">
             <button
               type="button"

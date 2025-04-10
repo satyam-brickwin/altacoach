@@ -337,8 +337,8 @@ export default function StaffDashboard() {
   const router = useRouter();
   const { language, setLanguage } = useLanguage();
   const { isDarkMode, toggleDarkMode } = useDarkMode();
-  const { user, logout } = useAuth();
-  const allowedRoles = useMemo(() => [UserRole.STAFF], []);
+  const { user, logout, isAuthenticated } = useAuth();
+  const allowedRoles = useMemo(() => [UserRole.STAFF, UserRole.USER], []);
   const { isLoading: authLoading } = useAuthProtection(allowedRoles);
   
   // State
@@ -498,6 +498,22 @@ export default function StaffDashboard() {
     };
   }, []);
 
+  // Update useEffect for navigation after authentication
+  useEffect(() => {
+    if (isAuthenticated && !isLoading) {
+      if (user?.role === UserRole.SUPER_ADMIN) {
+        router.push('/superadmin');
+      } else if (user?.role === UserRole.ADMIN) {
+        router.push('/admin');
+      } else if (user?.role === UserRole.STAFF || user?.role === UserRole.USER) {
+        // Both Staff and User roles should stay on this page
+        return;
+      } else {
+        router.push('/');
+      }
+    }
+  }, [isAuthenticated, isLoading, user, router]);
+
   // Early return for loading
   if (authLoading) {
     return (
@@ -508,7 +524,7 @@ export default function StaffDashboard() {
   }
 
   // If user isn't a staff member, don't render anything (useAuthProtection will redirect)
-  if (!user || user.role !== UserRole.STAFF) {
+  if (!user || ![UserRole.STAFF, UserRole.USER].includes(user.role)) {
     return null;
   }
 
