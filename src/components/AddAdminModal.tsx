@@ -36,6 +36,11 @@ const AddAdminModal: React.FC<AddAdminModalProps> = ({ isOpen, onClose, onSucces
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Add this function to check if current user is super admin
+  const isSuperAdmin = () => {
+    return user?.role === UserRole.SUPER_ADMIN;
+  };
+
   // Update handleChange to handle both input and select elements
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -46,19 +51,16 @@ const AddAdminModal: React.FC<AddAdminModalProps> = ({ isOpen, onClose, onSucces
 
   const saveNewAdmin = async (adminData: NewAdmin) => {
     try {
-      // Get existing credentials
       const credentials = localStorage.getItem('mockBusinessCredentials');
       const existingCredentials: BusinessCredentials[] = credentials ? JSON.parse(credentials) : [];
       
-      // Add new admin credentials
       const newCredential: BusinessCredentials = {
         businessId: '',
         email: adminData.email,
         password: adminData.password,
-        role: UserRole.ADMIN // Use enum instead of string
+        role: adminData.role // Use the selected role instead of hardcoding to ADMIN
       };
       
-      // Save updated credentials
       localStorage.setItem('mockBusinessCredentials', 
         JSON.stringify([...existingCredentials, newCredential])
       );
@@ -76,11 +78,18 @@ const AddAdminModal: React.FC<AddAdminModalProps> = ({ isOpen, onClose, onSucces
     setIsLoading(true);
     setError(null);
 
+    // Add validation for super admin creation
+    if (formData.role === UserRole.SUPER_ADMIN && !isSuperAdmin()) {
+      setError('Only super admins can create other super admin accounts');
+      setIsLoading(false);
+      return;
+    }
+
     const processedData = {
       ...formData,
       name: formData.name.trim(),
       email: formData.email.trim(),
-      role: formData.role // Use selected role instead of hardcoding
+      role: formData.role
     };
 
     try {
@@ -194,7 +203,9 @@ const AddAdminModal: React.FC<AddAdminModalProps> = ({ isOpen, onClose, onSucces
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] dark:bg-gray-700 dark:text-white"
             >
               <option value={UserRole.ADMIN}>{translate('systemAdmin')}</option>
-              <option value={UserRole.BUSINESS}>{translate('businessAdmin')}</option>
+              {isSuperAdmin() && (
+                <option value={UserRole.SUPER_ADMIN}>{translate('superAdmin')}</option>
+              )}
             </select>
           </div>
 

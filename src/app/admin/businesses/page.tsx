@@ -89,6 +89,15 @@ interface NewUser {
   role?: string;  // Make it optional in the interface
 }
 
+// Update this line to accept the updated user as parameter
+interface EditUserModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  user: User | null;
+  onSuccess: (updatedUser: User) => void;
+  translate: (key: string) => string;
+}
+
 // Dummy data for documents and users
 const dummyDocuments: BusinessDocument[] = [
   // Business Documents (Training Materials)
@@ -772,12 +781,32 @@ export default function AdminBusinesses() {
     setIsUploadDocumentModalOpen(true);
   };
 
-  // Add this handler function
+  // Update the handleToggleUserStatus function
   const handleToggleUserStatus = async (user: User) => {
-    const newStatus = user.status === 'active' ? 'suspended' : 'active';
+    const newStatus = user.status === 'active' ? 'inactive' : 'active';
     
     try {
-      const response = await fetch(`/api/admin/users/${user.id}`, {
+      // Optimistically update UI
+      setUsers(currentUsers =>
+        currentUsers.map(u =>
+          u.id === user.id
+            ? { ...u, status: newStatus }
+            : u
+        )
+      );
+
+      // Update usersMap
+      setUsersMap(prev => ({
+        ...prev,
+        [selectedBusinessView?.id || '']: prev[selectedBusinessView?.id || ''].map(u =>
+          u.id === user.id
+            ? { ...u, status: newStatus }
+            : u
+        )
+      }));
+
+      // Make API call to update status
+      const response = await fetch(`/api/admin/users/${user.id}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -788,22 +817,37 @@ export default function AdminBusinesses() {
       const data = await response.json();
 
       if (!data.success) {
-        throw new Error(data.error);
+        throw new Error(data.error || 'Failed to update user status');
       }
 
+      // Show success toast
+      showToast(
+        `User ${user.name} has been ${newStatus === 'active' ? 'activated' : 'deactivated'}`,
+        'success'
+      );
+
+    } catch (error) {
+      console.error('Error updating user status:', error);
+      
+      // Revert the state changes on error
       setUsers(currentUsers =>
         currentUsers.map(u =>
           u.id === user.id
-            ? { ...u, status: newStatus }
+            ? { ...u, status: user.status }
             : u
         )
       );
 
-      // Replace alert with toast notification
-      showToast(`User ${user.name} has been ${newStatus}`, newStatus === 'active' ? 'success' : 'warning');
-    } catch (error) {
-      console.error('Error updating user status:', error);
-      // Replace alert with toast notification
+      setUsersMap(prev => ({
+        ...prev,
+        [selectedBusinessView?.id || '']: prev[selectedBusinessView?.id || ''].map(u =>
+          u.id === user.id
+            ? { ...u, status: user.status }
+            : u
+        )
+      }));
+
+      // Show error toast
       showToast('Failed to update user status. Please try again.', 'error');
     }
   };
@@ -875,6 +919,41 @@ export default function AdminBusinesses() {
   useEffect(() => {
     fetchUsers();
   }, []); // Only fetch once when component mounts
+
+  // Add near other state declarations
+  const refreshUsers = useCallback(async () => {
+    try {
+      // Fetch latest users data
+      const response = await fetch('/api/admin/users');
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error);
+      }
+
+      // Update users state
+      setUsers(data.users);
+      
+      // Update usersMap
+      const updatedUsersMap = data.users.reduce((acc: Record<string, User[]>, user: User) => {
+        if (!acc[user.businessId]) {
+          acc[user.businessId] = [];
+        }
+        acc[user.businessId].push(user);
+        return acc;
+      }, {});
+      
+      setUsersMap(updatedUsersMap);
+      
+      // Force re-render by updating search term
+      setUserSearchTerm(prev => prev);
+      
+      showToast('User list updated successfully', 'success');
+    } catch (error) {
+      console.error('Error refreshing users:', error);
+      showToast('Failed to refresh user list', 'error');
+    }
+  }, [showToast]);
 
   // Handle language change
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -1395,7 +1474,7 @@ export default function AdminBusinesses() {
                   </svg>
                 ) : (
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 9.003 0 008.354-5.646z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 9.003 0 008.354-5.646z" />
                   </svg>
                 )}
               </button>
@@ -1477,7 +1556,7 @@ export default function AdminBusinesses() {
                       role="menuitem"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 3 0 01-3 3H6a3 3 3 0 01-3-3V7a3 3 3 0 013-3h4a3 3 3 0 013 3v1" />
                       </svg>
                       Sign out
                     </button>
@@ -1582,19 +1661,12 @@ export default function AdminBusinesses() {
                     />
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 01-1.414 1.414l-4-4a1 1 010-1.414l4-4a1 1 011.414 0z" clipRule="evenodd" />
+                        <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
                       </svg>
                     </div>
                   </div>
                 </div>
 
-                {/* Error message */}
-                {error && (
-                  <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                    {error}
-                  </div>
-                )}
-                
                 {/* Businesses Table */}
                 <div className="overflow-x-auto">
                   {isLoading ? (
@@ -2073,7 +2145,7 @@ export default function AdminBusinesses() {
                                           strokeLinecap="round" 
                                           strokeLinejoin="round" 
                                           strokeWidth={2} 
-                                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                                          d="M4 16v1a3 3 0 003 3h10a3 3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                                         />
                                       </svg>
                                       Download
@@ -2108,7 +2180,7 @@ export default function AdminBusinesses() {
                 <form onSubmit={handleSubmit} className="mt-4 space-y-4">
                   <div>
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {t('businessName')}
+                      {t('Business Name')}
                     </label>
                     <input
                       type="text"
@@ -2564,8 +2636,15 @@ export default function AdminBusinesses() {
         isOpen={isEditUserModalOpen}
         onClose={() => setIsEditUserModalOpen(false)}
         user={selectedUser}
-        onSuccess={() => {
-          setIsEditUserModalOpen(false);
+        onSuccess={async (updatedUser: { name: any; }) => {
+          try {
+            await refreshUsers();
+            setIsEditUserModalOpen(false);
+            showToast(`User ${updatedUser.name} updated successfully`, 'success');
+          } catch (error) {
+            console.error('Error after updating user:', error);
+            showToast('Failed to refresh user list', 'error');
+          }
         }}
         translate={(key: string) => key}
       />

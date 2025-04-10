@@ -91,8 +91,9 @@ const adminTranslations = {
     pendingUsers: 'Pending Users',
     userStatistics: 'User Statistics',
     totalUsers: 'Total Users',
-    businessAdmins: 'Business Admins',
     systemAdmins: 'System Admins',
+    superAdmin: 'Super Admin',
+    allAdmins: 'All Admins',
     regularUsers: 'Regular Users',
     recentRegistrations: 'Recent Registrations',
     selectLanguage: 'Select Language',
@@ -115,13 +116,10 @@ const adminTranslations = {
     addNewUser: 'Add New Admin',
     filterByRole: 'Filter by Role:',
     allUsers: 'All Users',
-    businessAdmin: 'Business Admin',
-    systemAdmin: 'System Admin',
     user: 'User',
     search: 'Search',
     searchUsers: 'Search users...',
     searchAdmins: 'Search admins...',
-    allAdmins: 'All Admins',
     userDetails: 'User Details',
     close: 'Close',
   },
@@ -142,8 +140,9 @@ const adminTranslations = {
     pendingUsers: 'Utilisateurs en Attente',
     userStatistics: 'Statistiques Utilisateurs',
     totalUsers: 'Total Utilisateurs',
-    businessAdmins: 'Admins Entreprise',
     systemAdmins: 'Admins Système',
+    superAdmin: 'Super Admin',
+    allAdmins: 'Tous les Administrateurs',
     regularUsers: 'Utilisateurs Réguliers',
     recentRegistrations: 'Inscriptions Récentes',
     selectLanguage: 'Sélectionner la Langue',
@@ -166,13 +165,10 @@ const adminTranslations = {
     addNewUser: 'Ajouter Nouvel Utilisateur',
     filterByRole: 'Filtrer par Rôle:',
     allUsers: 'Tous les Utilisateurs',
-    businessAdmin: 'Admin Entreprise',
-    systemAdmin: 'Admin Système',
     user: 'Utilisateur',
     search: 'Rechercher',
     searchUsers: 'Rechercher des utilisateurs...',
     searchAdmins: 'Rechercher des administrateurs...',
-    allAdmins: 'Tous les Administrateurs',
     userDetails: 'Détails de l\'utilisateur',
     close: 'Fermer',
   },
@@ -193,8 +189,9 @@ const adminTranslations = {
     pendingUsers: 'Ausstehende Benutzer',
     userStatistics: 'Benutzerstatistiken',
     totalUsers: 'Gesamtbenutzer',
-    businessAdmins: 'Unternehmensadministratoren',
     systemAdmins: 'Systemadministratoren',
+    superAdmin: 'Super Admin',
+    allAdmins: 'Alle Administratoren',
     regularUsers: 'Reguläre Benutzer',
     recentRegistrations: 'Neueste Registrierungen',
     selectLanguage: 'Sprache auswählen',
@@ -217,13 +214,10 @@ const adminTranslations = {
     addNewUser: 'Neuen Benutzer hinzufügen',
     filterByRole: 'Nach Rolle filtern:',
     allUsers: 'Alle Benutzer',
-    businessAdmin: 'Unternehmensadministrator',
-    systemAdmin: 'Systemadministrator',
     user: 'Benutzer',
     search: 'Suchen',
     searchUsers: 'Benutzer suchen...',
     searchAdmins: 'Administratoren suchen...',
-    allAdmins: 'Alle Administratoren',
     userDetails: 'Benutzerdetails',
     close: 'Schließen',
   },
@@ -244,8 +238,9 @@ const adminTranslations = {
     pendingUsers: 'Utenti in Attesa',
     userStatistics: 'Statistiche Utenti',
     totalUsers: 'Totale Utenti',
-    businessAdmins: 'Admin Aziendali',
     systemAdmins: 'Admin di Sistema',
+    superAdmin: 'Super Admin',
+    allAdmins: 'Tutti gli Amministratori',
     regularUsers: 'Utenti Regolari',
     recentRegistrations: 'Registrazioni Recenti',
     selectLanguage: 'Seleziona Lingua',
@@ -268,13 +263,10 @@ const adminTranslations = {
     addNewUser: 'Aggiungi Nuovo Utente',
     filterByRole: 'Filtra per Ruolo:',
     allUsers: 'Tutti gli Utenti',
-    businessAdmin: 'Admin Aziendale',
-    systemAdmin: 'Admin di Sistema',
     user: 'Utente',
     search: 'Cerca',
     searchUsers: 'Cerca utenti...',
     searchAdmins: 'Cerca amministratori...',
-    allAdmins: 'Tutti gli Amministratori',
     userDetails: 'Dettagli Utente',
     close: 'Chiudi',
   },
@@ -295,8 +287,9 @@ const adminTranslations = {
     pendingUsers: 'Usuarios Pendientes',
     userStatistics: 'Estadísticas de Usuarios',
     totalUsers: 'Total de Usuarios',
-    businessAdmins: 'Administradores de Empresa',
     systemAdmins: 'Administradores de Sistema',
+    superAdmin: 'Super Admin',
+    allAdmins: 'Todos los Administradores',
     regularUsers: 'Usuarios Regulares',
     recentRegistrations: 'Registros Recientes',
     selectLanguage: 'Seleccionar Idioma',
@@ -319,13 +312,10 @@ const adminTranslations = {
     addNewUser: 'Añadir Nuevo Usuario',
     filterByRole: 'Filtrar por Rol:',
     allUsers: 'Todos los Usuarios',
-    businessAdmin: 'Administrador de Empresa',
-    systemAdmin: 'Administrador de Sistema',
     user: 'Usuario',
     search: 'Buscar',
     searchUsers: 'Buscar usuarios...',
     searchAdmins: 'Buscar administradores...',
-    allAdmins: 'Todos los Administradores',
     userDetails: 'Detalles del Usuario',
     close: 'Cerrar',
   }
@@ -433,24 +423,21 @@ export default function AdminUsers() {
 
   // Filter users based on role and search term
   const filteredUsers = users.filter(user => {
-    // Check for admin or business roles using normalized values
-    const isAdminOrBusinessAdmin = 
-      user.role === 'ADMIN' || 
-      user.role === 'SUPER_ADMIN' || 
-      user.role === 'BUSINESS';
+    // Only include ADMIN and SUPER_ADMIN roles
+    const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
     
     // Apply role filter
     const matchesRole = 
       roleFilter === 'all' || 
-      (roleFilter === 'businessAdmin' && user.role === 'BUSINESS') ||
-      (roleFilter === 'systemAdmin' && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN'));
+      (roleFilter === 'superAdmin' && user.role === 'SUPER_ADMIN') ||
+      (roleFilter === 'systemAdmin' && user.role === 'ADMIN');
     
     // Apply search filter
     const matchesSearch = 
       user.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
       user.email.toLowerCase().includes(searchTerm.toLowerCase());
     
-    return isAdminOrBusinessAdmin && matchesRole && matchesSearch;
+    return isAdmin && matchesRole && matchesSearch;
   });
 
   const handleViewUser = (user: User) => {
@@ -544,7 +531,7 @@ export default function AdminUsers() {
                   </svg>
                 ) : (
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 9.003 0 008.354-5.646z" />
                   </svg>
                 )}
               </button>
@@ -673,9 +660,8 @@ export default function AdminUsers() {
                   className="mt-1 block w-40 pl-3 pr-10 py-2 text-sm text-black border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] rounded-md"
                 >
                   <option value="all">{t('allAdmins')}</option>
-                  <option value="businessAdmin">{t('businessAdmin')}</option>
                   <option value="systemAdmin">{t('systemAdmin')}</option>
-                  {/* <option value="user">{t('user')}</option> */}
+                  <option value="superAdmin">{t('superAdmin')}</option>
                 </select>
               </div>
               <div className="relative">
@@ -775,15 +761,11 @@ export default function AdminUsers() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              user.role === 'ADMIN' || user.role === 'SUPER_ADMIN'
-                                ? 'bg-[#C72026]/10 text-[#C72026] dark:bg-[#C72026]/20 dark:text-[#C72026]' 
-                                : user.role === 'BUSINESS'
-                                ? 'bg-[#C72026]/10 text-[#C72026] dark:bg-[#C72026]/20 dark:text-[#C72026]'
+                              user.role === 'SUPER_ADMIN'
+                                ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
                                 : 'bg-[#C72026]/10 text-[#C72026] dark:bg-[#C72026]/20 dark:text-[#C72026]'
                             }`}>
-                              {user.role === 'SUPER_ADMIN' ? 'System Admin' :
-                               user.role === 'ADMIN' ? 'System Admin' : 
-                               user.role === 'BUSINESS' ? 'Business Admin' : 'User'}
+                              {user.role === 'SUPER_ADMIN' ? 'Super Admin' : 'System Admin'}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
