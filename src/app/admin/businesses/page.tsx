@@ -26,18 +26,23 @@ const isDuplicateUser = (newUser: NewUser, existingUsers: User[], currentBusines
     );
 };
 
-// Define Business type for better type safety
+// Update the Business interface
 interface Business {
   id: string;
   name: string;
   plan: string;
-  userCount: number;
   status: string;
   joinedDate: string;
+  // Other fields...
+  
+  // Update the type of createdBy to match what the API returns
+  createdBy?: { id: string; name: string; email: string } | string;
+  
+  // UI-only fields
+  userCount?: number;
   logo?: string;
   colorTheme?: string;
-  isActive: boolean;
-  createdBy: string;
+  isActive?: boolean;
 }
 
 // Define Document type for better type safety
@@ -1000,7 +1005,7 @@ export default function AdminBusinesses() {
       logo: business.logo || '',
       colorTheme: business.colorTheme || '#C72026',
       isActive: business.isActive,
-      createdBy: business.createdBy, // Preserve the original creator
+      // createdBy: business.createdBy, // Preserve the original creator
       startDate: '', // Default value
       endDate: '' // Default value
     });
@@ -1051,24 +1056,21 @@ export default function AdminBusinesses() {
     setIsSubmitting(true);
     setError('');
 
-    const currentAdmin = user?.name || 'Admin';
-
-    const newBusiness = {
-      ...formData,
-      id: Date.now().toString(), // Temporary ID until DB assigns one
-      createdBy: currentAdmin,
-      userCount: 0,
-      joinedDate: new Date().toISOString().split('T')[0],
-      isActive: true
-    };
-
     try {
+      // Include the required fields that match the schema
+      const businessData = {
+        name: formData.name,
+        plan: formData.plan || 'BUSINESS', // Default to BUSINESS if not specified
+        status: formData.status || 'PENDING', // Default to PENDING if not specified
+        createdBy: user?.name || 'Admin', // Include the createdBy field
+      };
+
       const response = await fetch('/api/admin/businesses', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newBusiness),
+        body: JSON.stringify(businessData),
       });
 
       const data = await response.json();
@@ -1077,11 +1079,17 @@ export default function AdminBusinesses() {
         throw new Error(data.error || 'Failed to create business');
       }
 
-      // Immediately update the UI with the new business
-      setBusinesses(prevBusinesses => [{
-        ...newBusiness,
-        id: data.business.id // Use the ID from the server response
-      }, ...prevBusinesses]);
+      // Enhance the returned business with UI-only properties
+      const newBusiness = {
+        ...data.business,
+        userCount: 0,
+        logo: '',
+        colorTheme: '#C72026',
+        isActive: data.business.status === 'ACTIVE',
+      };
+
+      // Update the UI with the new business
+      setBusinesses(prevBusinesses => [newBusiness, ...prevBusinesses]);
 
       // Close modal and reset form
       closeModal();
@@ -1095,14 +1103,18 @@ export default function AdminBusinesses() {
         logo: '',
         colorTheme: '#C72026',
         isActive: true,
-        createdBy: 'Current Admin',
+        createdBy: user?.name || 'Admin',
         startDate: '',
         endDate: ''
       });
 
+      // Show success message
+      showToast('Business created successfully', 'success');
+
     } catch (error) {
       console.error('Error creating business:', error);
       setError(typeof error === 'string' ? error : 'Failed to create business');
+      showToast('Failed to create business', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -1149,7 +1161,7 @@ export default function AdminBusinesses() {
       closeEditModal();
 
       // Show success message
-      alert(t('businessUpdatedSuccessfully'));
+      // alert(t('businessUpdatedSuccessfully'));
 
     } catch (error) {
       console.error('Error updating business:', error);
@@ -1330,9 +1342,9 @@ export default function AdminBusinesses() {
         ...data.user,
         businessId: selectedBusinessView.id,
         joinDate: new Date().toISOString().split('T')[0],
-        lastActive: new Date().toISOString().split('T')[0], // Ensure it's always set
+        lastActive: new Date().toISOString().split('T')[0],
         status: 'active',
-        createdBy: user?.name || 'Admin',
+        createdBy: selectedBusinessView.name || user?.name || 'Admin', // Use business name first
       };
 
       // Update local users state - Add new user to beginning of array
@@ -1470,11 +1482,11 @@ export default function AdminBusinesses() {
               >
                 {isDarkMode ? (
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 4 0 11-8 0 4 4 0 018 0z" />
                   </svg>
                 ) : (
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 9.003 0 008.354-5.646z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 9.003 0 008.354-5.646z" />
                   </svg>
                 )}
               </button>
@@ -1661,7 +1673,6 @@ export default function AdminBusinesses() {
                     />
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
                       </svg>
                     </div>
                   </div>
@@ -1735,13 +1746,13 @@ export default function AdminBusinesses() {
                               {/* Status cell */}
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                  business.status === 'active' 
+                                  business.status?.toUpperCase() === 'ACTIVE' 
                                     ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200' 
-                                    : business.status === 'pending'
+                                    : business.status?.toUpperCase() === 'PENDING'
                                     ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
                                     : 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200'
                                 }`}>
-                                  {t(business.status)}
+                                  {t(business.status?.toLowerCase())}
                                 </span>
                               </td>
                               {/* Joined date cell */}
@@ -1751,7 +1762,7 @@ export default function AdminBusinesses() {
                               {/* Created By cell */}
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm text-gray-500 dark:text-gray-400">
-                                  {business.createdBy || user?.name || 'Admin'}
+                                  {typeof business.createdBy === 'string' ? business.createdBy : business.createdBy?.name || user?.name || 'Admin'}
                                 </div>
                               </td>
                               {/* Actions cell */}
@@ -2039,7 +2050,9 @@ export default function AdminBusinesses() {
                                 </span>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-500 dark:text-gray-400">{user.createdBy || 'Admin'}</div>
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                  {selectedBusinessView?.name || user.createdBy || 'Admin'}
+                                </div>
                               </td>
                               {/* <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -2145,7 +2158,7 @@ export default function AdminBusinesses() {
                                           strokeLinecap="round" 
                                           strokeLinejoin="round" 
                                           strokeWidth={2} 
-                                          d="M4 16v1a3 3 0 003 3h10a3 3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                                          d="M4 16v1a3 3 3 0 003 3h10a3 3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                                         />
                                       </svg>
                                       Download
@@ -2467,7 +2480,7 @@ export default function AdminBusinesses() {
                   {/* Business Name */}
                   <div>
                     <label htmlFor="edit-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {t('businessName')}
+                      {t('Business Name')}
                     </label>
                     <input
                       type="text"
@@ -2515,7 +2528,7 @@ export default function AdminBusinesses() {
                       )}
                       <label htmlFor="logo-upload" className="ml-5 cursor-pointer">
                         <span className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026]">
-                          {t('uploadLogo')}
+                          {t('Upload Logo')}
                         </span>
                         <input
                           id="logo-upload"
@@ -2532,7 +2545,7 @@ export default function AdminBusinesses() {
                   {/* Color Theme */}
                   <div>
                     <label htmlFor="colorTheme" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {t('colorTheme')}
+                      {t('Color Theme')}
                     </label>
                     <div className="mt-1 flex items-center">
                       <input
@@ -2558,7 +2571,7 @@ export default function AdminBusinesses() {
                   {/* Status */}
                   <div>
                     <label htmlFor="edit-status" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {t('status')}
+                      {t('Status')}
                     </label>
                     <select
                       name="status"
@@ -2608,7 +2621,7 @@ export default function AdminBusinesses() {
                       disabled={isEditSubmitting}
                       className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#C72026] text-white hover:bg-[#C72026]/90 sm:col-start-2 sm:text-sm"
                     >
-                      {isEditSubmitting ? t('submitting') : t('saveChanges')}
+                      {isEditSubmitting ? t('submitting') : t('Save Changes')}
                     </button>
                     <button
                       type="button"

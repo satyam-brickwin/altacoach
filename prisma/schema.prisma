@@ -24,6 +24,7 @@ model User {
   business  Business? @relation(fields: [businessId], references: [id])
   businessId String?
   content   Content[] // New relation
+  createdBusinesses Business[] @relation("BusinessCreator")
 }
 
 // Business model
@@ -35,6 +36,8 @@ model Business {
   joinedDate DateTime @default(now())
   users      User[]
   content    Content[] // New relation
+  createdBy  User     @relation("BusinessCreator", fields: [createdById], references: [id])
+  createdById String
 }
 
 // Content model

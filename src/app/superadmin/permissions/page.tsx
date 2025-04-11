@@ -314,6 +314,12 @@ const adminTranslations = {
   }
 };
 
+function getRoleDisplay(role: string): string {
+  if (role.toUpperCase() === 'ADMIN') return 'Admin';
+  if (role.toUpperCase() === 'BUSINESS') return 'Business Admin';
+  return role; // Default fallback
+}
+
 export default function AdminUsers() {
   const { language, setLanguage, translate } = useLanguage();
   const { isDarkMode, toggleDarkMode } = useDarkMode();
@@ -415,17 +421,22 @@ export default function AdminUsers() {
 
   // Filter users based on role and search term
   const filteredUsers = users.filter(user => {
-    // Only include ADMIN and BUSINESS roles
-    const isAdminUser = user.role === 'ADMIN' || user.role === 'BUSINESS';
+    // Check if user has a role that should be included (case insensitive)
+    const isAdminUser = 
+      user.role.toUpperCase() === 'ADMIN' || 
+      user.role.toUpperCase() === 'BUSINESS' ||
+      user.role.includes('Admin'); // This will match "Business Admin", "System Admin", etc.
     
     // Additional role filter if specific admin type is selected
-    const matchesRoleFilter = roleFilter === 'all' || 
-                       (roleFilter === 'businessAdmin' && user.role === 'BUSINESS') ||
-                       (roleFilter === 'systemAdmin' && user.role === 'ADMIN');
+    const matchesRoleFilter = 
+      roleFilter === 'all' || 
+      (roleFilter === 'businessAdmin' && (user.role.toUpperCase() === 'BUSINESS' || user.role.includes('Business Admin'))) ||
+      (roleFilter === 'systemAdmin' && (user.role.toUpperCase() === 'ADMIN' || user.role.includes('System Admin')));
     
     // Search term filter
-    const matchesSearch = user.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = 
+      user.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
     
     // User must be admin AND match the role filter AND match search term
     return isAdminUser && matchesRoleFilter && matchesSearch;
@@ -705,9 +716,9 @@ export default function AdminUsers() {
                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           {t('status')}
                         </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        {/* <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           {t('lastActive')}
-                        </th>
+                        </th> */}
                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           {t('actions')}
                         </th>
@@ -744,8 +755,7 @@ export default function AdminUsers() {
                                 ? 'bg-[#C72026]/10 text-[#C72026] dark:bg-[#C72026]/20 dark:text-[#C72026]'
                                 : 'bg-[#C72026]/10 text-[#C72026] dark:bg-[#C72026]/20 dark:text-[#C72026]'
                             }`}>
-                              {user.role === 'ADMIN' ? 'System Admin' : 
-                               user.role === 'BUSINESS' ? 'Business Admin' : 'User'}
+                              {getRoleDisplay(user.role)}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
@@ -759,9 +769,9 @@ export default function AdminUsers() {
                               {t(user.status)}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                          {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                             {user.lastActive}
-                          </td>
+                          </td> */}
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                             <div className="flex space-x-2">
                               {/* <button className="text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300">

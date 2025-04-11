@@ -340,7 +340,7 @@ export default function AdminUsers() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   
   // Protect this page - only allow admin users
-  const { isLoading: authLoading, isAuthenticated, user } = useAuthProtection([UserRole.SUPER_ADMIN]);
+  const { isLoading: authLoading, isAuthenticated, user, logout } = useAuthProtection([UserRole.SUPER_ADMIN]);
 
   // Fetch users from the database
   const fetchUsers = async () => {
@@ -430,7 +430,7 @@ export default function AdminUsers() {
     const matchesRole = 
       roleFilter === 'all' || 
       (roleFilter === 'superAdmin' && user.role === 'SUPER_ADMIN') ||
-      (roleFilter === 'systemAdmin' && user.role === 'ADMIN');
+      (roleFilter === 'Admin' && user.role === 'ADMIN');
     
     // Apply search filter
     const matchesSearch = 
@@ -450,30 +450,39 @@ export default function AdminUsers() {
     setIsEditUserModalOpen(true);
   };
 
-  // Add this function before the return statement, alongside other handlers
   const handleLogout = async () => {
     try {
+      setIsProfileOpen(false); // Close dropdown first
+      
+      // First call the auth context logout
+      if (logout) {
+        await logout();
+      }
+      
+      // Clear all storage
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // Perform the API logout
       const response = await fetch('/api/auth/logout', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
       });
 
-      if (response.ok) {
-        // Clear any local storage/state if needed
-        localStorage.removeItem('token'); // Adjust based on your auth storage
-        // Redirect to login page
-        router.push('/login');
-      } else {
-        console.error('Logout failed');
+      if (!response.ok) {
+        throw new Error('Logout failed');
       }
+
+      // Force navigation to login page
+      window.location.href = '/login';
     } catch (error) {
       console.error('Error during logout:', error);
+      // Force navigation even on error
+      window.location.href = '/login';
     }
-    
-    // Close the profile dropdown
-    setIsProfileOpen(false);
   };
 
   return (
@@ -575,10 +584,21 @@ export default function AdminUsers() {
                       className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
                       role="menuitem"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        className="h-5 w-5 mr-2" 
+                        fill="none" 
+                        viewBox="0 0 24 24" 
+                        stroke="currentColor"
+                      >
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth={2} 
+                          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" 
+                        />
                       </svg>
-                      {t('signOut')}
+                      Sign Out
                     </button>
                   </div>
                 )}
@@ -660,7 +680,7 @@ export default function AdminUsers() {
                   className="mt-1 block w-40 pl-3 pr-10 py-2 text-sm text-black border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] rounded-md"
                 >
                   <option value="all">{t('allAdmins')}</option>
-                  <option value="systemAdmin">{t('systemAdmin')}</option>
+                  <option value="Admin">{t('Admin')}</option>
                   <option value="superAdmin">{t('superAdmin')}</option>
                 </select>
               </div>
@@ -728,9 +748,9 @@ export default function AdminUsers() {
                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           {t('status')}
                         </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        {/* <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           {t('lastActive')}
-                        </th>
+                        </th> */}
                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           {t('actions')}
                         </th>
@@ -765,7 +785,7 @@ export default function AdminUsers() {
                                 ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
                                 : 'bg-[#C72026]/10 text-[#C72026] dark:bg-[#C72026]/20 dark:text-[#C72026]'
                             }`}>
-                              {user.role === 'SUPER_ADMIN' ? 'Super Admin' : 'System Admin'}
+                              {user.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Admin'}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
@@ -779,9 +799,9 @@ export default function AdminUsers() {
                               {t(user.status)}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                          {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                             {user.lastActive}
-                          </td>
+                          </td> */}
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                             <div className="flex space-x-2">
                               <button 

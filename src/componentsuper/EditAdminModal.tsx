@@ -57,10 +57,11 @@ export default function EditAdminModal({ isOpen, onClose, admin, translate, onSu
 
     try {
       // Create the update data object with only the fields that can be updated
+      // Ensure role is always lowercase when sent to database
       const updateData = {
         name: formData.name,
         email: formData.email,
-        role: formData.role,
+        role: formData.role?.toLowerCase(), // Convert role to lowercase
         status: formData.status
       };
 
@@ -119,7 +120,7 @@ export default function EditAdminModal({ isOpen, onClose, admin, translate, onSu
                     id="name"
                     value={formData.name}
                     onChange={handleChange}
-                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white text-sm"
+                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] dark:bg-gray-700 dark:text-white text-sm"
                     required
                   />
                 </div>
@@ -133,7 +134,7 @@ export default function EditAdminModal({ isOpen, onClose, admin, translate, onSu
                     id="email"
                     value={formData.email}
                     onChange={handleChange}
-                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white text-sm"
+                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] dark:bg-gray-700 dark:text-white text-sm"
                     required
                   />
                 </div>
@@ -146,11 +147,11 @@ export default function EditAdminModal({ isOpen, onClose, admin, translate, onSu
                     id="role"
                     value={formData.role}
                     onChange={handleChange}
-                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white text-sm"
+                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] dark:bg-gray-700 dark:text-white text-sm"
                     required
                   >
-                    <option value="ADMIN">System Admin</option>
-                    <option value="BUSINESS">Business Admin</option>
+                    <option value="admin">Admin</option>
+                    <option value="super_admin">Super Admin</option>
                   </select>
                 </div>
                 <div>
@@ -162,7 +163,7 @@ export default function EditAdminModal({ isOpen, onClose, admin, translate, onSu
                     id="status"
                     value={formData.status}
                     onChange={handleChange}
-                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white text-sm"
+                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] dark:bg-gray-700 dark:text-white text-sm"
                     required
                   >
                     <option value="active">{translate('active')}</option>
@@ -174,14 +175,14 @@ export default function EditAdminModal({ isOpen, onClose, admin, translate, onSu
                   <button
                     type="button"
                     onClick={onClose}
-                    className="w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:text-sm"
+                    className="w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026] sm:text-sm"
                   >
                     {translate('cancel')}
                   </button>
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-600 text-base font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:text-sm"
+                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#C72026] text-base font-medium text-white hover:bg-[#A61B20] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026] sm:text-sm"
                   >
                     {isLoading ? (
                       <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

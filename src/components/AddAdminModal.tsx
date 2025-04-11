@@ -6,7 +6,7 @@ interface BusinessCredentials {
   businessId: string;
   email: string;
   password: string;
-  role: UserRole;
+  role: string; // Changed to string to allow custom format
 }
 
 interface NewAdmin {
@@ -23,6 +23,15 @@ interface AddAdminModalProps {
   onSuccess: (admin: NewAdmin) => void;
   translate: (key: string) => string;
 }
+
+// Helper function to convert UserRole enum to database format
+const roleToDbFormat = (role: UserRole): string => {
+  if (role === UserRole.SUPER_ADMIN) {
+    return 'super_admin';
+  }
+  // For other roles, you can add more conversions as needed
+  return role.toString().toLowerCase();
+};
 
 const AddAdminModal: React.FC<AddAdminModalProps> = ({ isOpen, onClose, onSuccess, translate }) => {
   const { user } = useAuth();
@@ -58,7 +67,7 @@ const AddAdminModal: React.FC<AddAdminModalProps> = ({ isOpen, onClose, onSucces
         businessId: '',
         email: adminData.email,
         password: adminData.password,
-        role: adminData.role // Use the selected role instead of hardcoding to ADMIN
+        role: roleToDbFormat(adminData.role) // Convert to db format here
       };
       
       localStorage.setItem('mockBusinessCredentials', 
@@ -89,7 +98,7 @@ const AddAdminModal: React.FC<AddAdminModalProps> = ({ isOpen, onClose, onSucces
       ...formData,
       name: formData.name.trim(),
       email: formData.email.trim(),
-      role: formData.role
+      role: roleToDbFormat(formData.role) // Convert to db format for API
     };
 
     try {
@@ -202,7 +211,7 @@ const AddAdminModal: React.FC<AddAdminModalProps> = ({ isOpen, onClose, onSucces
               required
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] dark:bg-gray-700 dark:text-white"
             >
-              <option value={UserRole.ADMIN}>{translate('systemAdmin')}</option>
+              <option value={UserRole.ADMIN}>{translate('Admin')}</option>
               {isSuperAdmin() && (
                 <option value={UserRole.SUPER_ADMIN}>{translate('superAdmin')}</option>
               )}
