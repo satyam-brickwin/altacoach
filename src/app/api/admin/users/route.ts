@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
-import bcrypt from 'bcryptjs'; // if your passwords are hashed
-import { hashPassword } from '@/lib/auth';
+import bcrypt from 'bcryptjs';
+import { authOptions } from '@/lib/auth';
 
 export async function GET(request: Request) {
   try {
@@ -12,33 +12,106 @@ export async function GET(request: Request) {
     const excludeAdmins = searchParams.get('excludeAdmins') === 'true';
     
     // Build the query filter
-    const filter: any = {};
-    
-    if (businessId) {
-      filter.businessId = businessId;
-    }
+    const userFilter: any = {};
     
     if (excludeAdmins) {
-      filter.role = { not: 'ADMIN' };  // Exclude admin users
+      userFilter.role = { not: 'ADMIN' };  // Exclude admin users
     }
     
-    // Fetch users with the filter applied
-    const users = await prisma.user.findMany({
-      where: filter,
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        status: true,
-        createdAt: true,
-        lastLogin: true,
-        businessId: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+    // Different query based on whether businessId is provided
+    let users;
+    
+    if (businessId) {
+      // When businessId is provided, filter users through the BusinessUser relation
+      users = await prisma.user.findMany({
+        where: {
+          ...userFilter,
+          businesses: {
+            some: {
+              businessId: businessId
+            }
+          }
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          status: true,
+          createdAt: true,
+          lastLogin: true,
+          businesses: {
+            where: { businessId: businessId },
+            select: {
+              business: {
+                select: {
+                  id: true,
+                  name: true
+                }
+              }
+            },
+            take: 1
+          }
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+      
+      // Transform result to match expected format
+      users = users.map(user => ({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        status: user.status,
+        createdAt: user.createdAt,
+        lastLogin: user.lastLogin,
+        businessId: businessId,
+        businessName: user.businesses[0]?.business.name
+      }));
+    } else {
+      // When no businessId provided, get all users
+      users = await prisma.user.findMany({
+        where: userFilter,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          status: true,
+          createdAt: true,
+          lastLogin: true,
+          businesses: {
+            select: {
+              business: {
+                select: {
+                  id: true,
+                  name: true
+                }
+              }
+            },
+            take: 1
+          }
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+      
+      // Transform result to match expected format
+      users = users.map(user => ({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        status: user.status,
+        createdAt: user.createdAt,
+        lastLogin: user.lastLogin,
+        businessId: user.businesses[0]?.business.id || null,
+        businessName: user.businesses[0]?.business.name || null
+      }));
+    }
     
     return NextResponse.json({
       users,
@@ -56,89 +129,69 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { name, email, password, role, businessId } = body;
+    const data = await request.json();
+    const { email, name, password, role = "user", language = "English", status = "ACTIVE", businessId } = data;
 
-    console.log('Creating user with data:', { name, email, role, businessId });
-
-    // Basic validation
-    if (!email || !password) {
-      return NextResponse.json(
-        { success: false, error: 'Email and password are required' },
-        { status: 400 }
-      );
+    if (!email || !name || !password) {
+      return Response.json({ success: false, error: "Email, name, and password are required" }, { status: 400 });
     }
 
-    // Check if user with this email already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
+    // Ensure role is always lowercase before storing
+    const normalizedRole = role.toLowerCase();
 
-    if (existingUser) {
-      return NextResponse.json(
-        { success: false, error: 'A user with this email already exists' },
-        { status: 400 }
-      );
-    }
+    console.log(`Creating user with data:`, { name, email, role: normalizedRole, businessId });
 
-    // Check if businessId is valid if provided
-    if (businessId && businessId.trim() !== '') {
-      // Check if the business exists
-      const business = await prisma.business.findUnique({
-        where: { id: businessId },
-      });
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-      if (!business) {
-        return NextResponse.json(
-          { success: false, error: 'Invalid business ID provided' },
-          { status: 400 }
-        );
-      }
-    }
-    const hashedPassword = await bcrypt.hash(password, 10); 
-    
-    // Prepare user data with proper defaults
-    const userData = {
-      name: name || email.split('@')[0],
-      email,
-      password:hashedPassword,// In a real app, you would hash this password
-      role: role || 'USER',
-      status: 'ACTIVE',
-      // Only include businessId if it's a non-empty string
-      ...(businessId && businessId.trim() !== '' ? { businessId } : {})
-    };
-
-    console.log('Prepared user data:', userData);
-
-    // Create the new user
+    // Create the user with lowercase role
     const newUser = await prisma.user.create({
-      data: userData
+      data: {
+        email,
+        name,
+        password: hashedPassword,
+        role: normalizedRole, // This will ensure the role is always lowercase
+        language,
+        status,
+        isVerified: false,
+      },
     });
 
-    return NextResponse.json({
+    console.log("Created new user:", newUser);
+
+    // If a business ID is provided, create the association
+    if (businessId) {
+      console.log(`Creating business association: userId=${newUser.id}, businessId=${businessId}, createdById=${newUser.id}`);
+      
+      await prisma.$transaction(async (tx) => {
+        await tx.businessUser.create({
+          data: {
+            userId: newUser.id,
+            businessId: businessId,
+            createdById: newUser.id,
+          },
+        });
+      });
+    }
+
+    return Response.json({
       success: true,
       user: {
         id: newUser.id,
-        name: newUser.name,
         email: newUser.email,
-        role: newUser.role,
+        name: newUser.name,
+        role: newUser.role, // Will now be lowercase
         status: newUser.status,
-        createdAt: newUser.createdAt,
+        language: newUser.language,
+        isVerified: newUser.isVerified,
+        businessId: businessId,
       },
     });
-  } catch (error) {
-    console.error('Error creating user:', error);
     
-    // More detailed error message
-    let errorMessage = 'Failed to create user';
-    
-    if (error instanceof Error) {
-      errorMessage += `: ${error.message}`;
-      console.error('Error details:', error);
-    }
-    
-    return NextResponse.json(
-      { success: false, error: errorMessage },
+  } catch (error: any) {
+    console.error("Error creating user:", error);
+    return Response.json(
+      { success: false, error: error.message || "Failed to create user" },
       { status: 500 }
     );
   }

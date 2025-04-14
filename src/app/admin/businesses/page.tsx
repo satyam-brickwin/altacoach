@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage, languageLabels, SupportedLanguage } from '@/contexts/LanguageContext';
@@ -30,10 +30,18 @@ const isDuplicateUser = (newUser: NewUser, existingUsers: User[], currentBusines
 interface Business {
   id: string;
   name: string;
-  plan: string;
   status: string;
-  joinedDate: string;
-  // Other fields...
+  startDate?: string; // Changed from joinedDate
+  endDate?: string;   // New field
+  createdAt?: Date;   // Added
+  modifiedAt?: Date;  // Added
+  color?: string;     // New field
+  
+  // Optional plan field for backward compatibility
+  plan?: string;
+  
+  // Keep joinedDate temporarily for backward compatibility
+  joinedDate?: string;
   
   // Update the type of createdBy to match what the API returns
   createdBy?: { id: string; name: string; email: string } | string;
@@ -564,19 +572,21 @@ const adminTranslations = {
   }
 };
 
+// Update BusinessFormData interface
 interface BusinessFormData {
   name: string;
-  plan: string;
   status: string;
-  email: string;
-  phoneNumber: string;
-  address: string;
+  email?: string;
+  phoneNumber?: string;
+  address?: string;
   logo?: string;
-  colorTheme: string;
+  colorTheme?: string;
   isActive: boolean;
-  createdBy: string; // Add this field
-  startDate: string; // Add this field
-  endDate: string; // Add this field
+  createdBy?: string;
+  startDate: string; // Changed from joinedDate
+  endDate: string;
+  color?: string;
+  plan?: string; // Made optional
 }
 
 const validateImportedUser = (user: NewUser): boolean => {
@@ -604,6 +614,10 @@ export default function AdminBusinesses() {
   const router = useRouter();
   const { user, logout } = useAuth(); // Get user and signOut from auth context
   const { showToast } = useToast(); // Add this hook
+
+  // Move the state declarations inside the component
+  const [selectedBusinessView, setSelectedBusinessView] = useState<Business | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'detail'>('list');
 
   // Move businessData here, after user is available
   const businessData = [
@@ -737,25 +751,145 @@ export default function AdminBusinesses() {
     }
   };
 
-  // State for selected business view and view mode
-  const [selectedBusinessView, setSelectedBusinessView] = useState<Business | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'detail'>('list');
+  const loadUsersForBusiness = useCallback(async (businessId: string) => {
+    try {
+      console.log(`Fetching users for business: ${businessId}`);
+      const response = await fetch(`/api/admin/users?businessId=${businessId}`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch users: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        console.log(`Found ${data.users.length} users for business ${businessId}`);
+        
+        // Update users array
+        setUsers(data.users);
+        
+        // Update usersMap
+        setUsersMap(prev => ({
+          ...prev,
+          [businessId]: data.users
+        }));
+        
+        return data.users;
+      } else {
+        throw new Error(data.error || 'Failed to fetch users');
+      }
+    } catch (error) {
+      console.error(`Error loading users for business ${businessId}:`, error);
+      return [];
+    }
+  }, []);
 
-  const handleBusinessClick = (business: Business) => {
-    setSelectedBusinessView(business);
-    setViewMode('detail');
-    
-    // Initialize users for this business if not already loaded
-    if (!usersMap[business.id]) {
-      const businessUsers = dummyUsers.filter(user => user.businessId === business.id);
+  const handleAddUserSuccess = async (newUser: User) => {
+    if (!newUser?.name || !selectedBusinessView) return;
+
+    try {
+      // Ensure business ID is included in the payload
+      const userPayload = {
+        ...newUser,
+        businessId: selectedBusinessView.id,
+        language: newUser.language || 'en',
+        status: newUser.status || 'ACTIVE',
+        role: newUser.role || 'USER'
+      };
+
+      console.log('Submitting user to API:', userPayload);
+
+      // Make API call to create user
+      const response = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userPayload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error response from API:', errorData);
+        throw new Error(errorData.error || 'Failed to create user');
+      }
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to create user');
+      }
+
+      console.log('User created successfully:', data.user);
+
+      // Update local users state immediately
+      const newUserWithAllFields = {
+        ...data.user,
+        joinDate: data.user.joinDate || new Date().toISOString().split('T')[0],
+        lastActive: data.user.lastActive || new Date().toISOString().split('T')[0],
+      };
+      
+      // Update the users state
+      setUsers(prevUsers => [newUserWithAllFields, ...prevUsers]);
+      
+      // Update the usersMap
       setUsersMap(prev => ({
         ...prev,
-        [business.id]: businessUsers
+        [selectedBusinessView.id]: [newUserWithAllFields, ...(prev[selectedBusinessView.id] || [])]
       }));
-      setUsers(businessUsers);
-    } else {
-      setUsers(usersMap[business.id]);
+      
+      // Update the business user count
+      setBusinesses(prevBusinesses =>
+        prevBusinesses.map(business =>
+          business.id === selectedBusinessView.id
+            ? { ...business, userCount: (business.userCount || 0) + 1 }
+            : business
+        )
+      );
+      
+      // Update the selected business view
+      setSelectedBusinessView(prev => 
+        prev ? { ...prev, userCount: (prev.userCount || 0) + 1 } : null
+      );
+
+      // Close modal and show success message
+      setIsAddUserModalOpen(false);
+      showToast(`User ${data.user.name} created successfully`, 'success');
+      
+    } catch (error) {
+      console.error('Error creating user:', error);
+      showToast(`Failed to create user: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
     }
+  };
+
+  const handleAddUser = () => {
+    if (!selectedBusinessView) {
+      showToast('Please select a business first', 'warning');
+      return;
+    }
+    setIsAddUserModalOpen(true);
+  };
+
+  const handleBusinessClick = async (business: Business) => {
+    setSelectedBusinessView(business); // Use the correct state setter
+    setViewMode('detail');
+    
+    // Load users for this business
+    const users = await loadUsersForBusiness(business.id);
+    
+    // Update the userCount on the selected business
+    setSelectedBusinessView(prev => 
+      prev ? { ...prev, userCount: users.length } : null
+    );
+    
+    // Update the userCount in the businesses list
+    setBusinesses(prevBusinesses => 
+      prevBusinesses.map(b => 
+        b.id === business.id 
+          ? { ...b, userCount: users.length } 
+          : b
+      )
+    );
   };
 
   const handleBackToList = () => {
@@ -778,13 +912,9 @@ export default function AdminBusinesses() {
   // Add this near your other state declarations
   const [usersMap, setUsersMap] = useState<Record<string, User[]>>({});
 
-  const handleAddUser = () => {
-    setIsAddUserModalOpen(true);
-  };
-
   const handleUploadDocument = () => {
     setIsUploadDocumentModalOpen(true);
-  };
+  }; // Add the closing semicolon here
 
   // Update the handleToggleUserStatus function
   const handleToggleUserStatus = async (user: User) => {
@@ -857,12 +987,14 @@ export default function AdminBusinesses() {
     }
   };
 
-  // Fetch businesses from API
+  // Update the fetchBusinesses function:
+
   const fetchBusinesses = async () => {
     setIsLoading(true);
     setError('');
 
     try {
+      // First fetch businesses
       const response = await fetch('/api/admin/businesses');
       const data = await response.json();
       
@@ -870,7 +1002,36 @@ export default function AdminBusinesses() {
         throw new Error(data.error);
       }
 
-      setBusinesses(data.businesses);
+      // Get user counts for each business
+      const userCountPromises = data.businesses.map(async (business: Business) => {
+        try {
+          // Fetch users for this specific business
+          const usersResponse = await fetch(`/api/admin/users?businessId=${business.id}`);
+          const usersData = await usersResponse.json();
+          
+          if (usersData.success) {
+            // Update the business with the correct user count
+            business.userCount = usersData.users.length;
+            
+            // Also update the usersMap
+            setUsersMap(prev => ({
+              ...prev,
+              [business.id]: usersData.users
+            }));
+          }
+          
+          return business;
+        } catch (error) {
+          console.error(`Failed to fetch users for business ${business.id}:`, error);
+          return business; // Return the business without updated userCount
+        }
+      });
+
+      // Wait for all user count queries to complete
+      const businessesWithCounts = await Promise.all(userCountPromises);
+      
+      setBusinesses(businessesWithCounts);
+      
     } catch (error) {
       console.error('Error fetching businesses:', error);
       setError(typeof error === 'string' ? error : 'Failed to fetch businesses');
@@ -997,17 +1158,16 @@ export default function AdminBusinesses() {
     setSelectedBusiness(business);
     setEditFormData({
       name: business.name,
-      plan: business.plan,
       status: business.status,
       email: '', // In a real app, you would fetch these from the API
       phoneNumber: '',
       address: '',
       logo: business.logo || '',
-      colorTheme: business.colorTheme || '#C72026',
-      isActive: business.isActive,
-      // createdBy: business.createdBy, // Preserve the original creator
-      startDate: '', // Default value
-      endDate: '' // Default value
+      colorTheme: business.colorTheme || business.color || '#C72026',
+      isActive: business.isActive || business.status?.toLowerCase() === 'active',
+      startDate: business.startDate ? new Date(business.startDate).toISOString().split('T')[0] : 
+                (business.joinedDate ? business.joinedDate.split('T')[0] : ''),
+      endDate: business.endDate ? new Date(business.endDate).toISOString().split('T')[0] : ''
     });
     setIsEditModalOpen(true);
   };
@@ -1120,7 +1280,8 @@ export default function AdminBusinesses() {
     }
   };
 
-  // Handle form submission for editing a business
+  // Replace the handleEditSubmit function with this updated version:
+
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isEditSubmitting || !selectedBusiness) return;
@@ -1129,18 +1290,30 @@ export default function AdminBusinesses() {
     setError('');
 
     try {
-      // In a real app, this would be an API call
-      // const response = await fetch(`/api/admin/businesses/${selectedBusiness.id}`, {
-      //   method: 'PUT',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify(editFormData),
-      // });
-      // const data = await response.json();
+      // Prepare the data to send to the API
+      const businessData = {
+        name: editFormData.name,
+        status: editFormData.status,
+        color: editFormData.color || editFormData.colorTheme,
+        startDate: editFormData.startDate ? new Date(editFormData.startDate).toISOString() : null,
+        endDate: editFormData.endDate ? new Date(editFormData.endDate).toISOString() : null,
+        isActive: editFormData.isActive,
+      };
 
-      // For demo purposes, we'll simulate a successful response
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Make the API call to update the business
+      const response = await fetch(`/api/admin/businesses/${selectedBusiness.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(businessData),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to update business');
+      }
 
       // Update the business in our state
       setBusinesses(prev => prev.map(business =>
@@ -1148,11 +1321,13 @@ export default function AdminBusinesses() {
           ? {
               ...business,
               name: editFormData.name,
-              plan: editFormData.plan,
               status: editFormData.status,
               logo: editFormData.logo,
+              color: editFormData.color || editFormData.colorTheme,
               colorTheme: editFormData.colorTheme,
-              isActive: editFormData.isActive
+              isActive: editFormData.isActive,
+              startDate: editFormData.startDate,
+              endDate: editFormData.endDate
             }
           : business
       ));
@@ -1161,12 +1336,12 @@ export default function AdminBusinesses() {
       closeEditModal();
 
       // Show success message
-      // alert(t('businessUpdatedSuccessfully'));
+      showToast('Business updated successfully', 'success');
 
     } catch (error) {
       console.error('Error updating business:', error);
       setError(typeof error === 'string' ? error : (error instanceof Error ? error.message : 'An unknown error occurred'));
-      alert(t('errorUpdatingBusiness') + (error instanceof Error ? `: ${error.message}` : ''));
+      showToast('Error updating business: ' + (error instanceof Error ? error.message : 'Unknown error'), 'error');
     } finally {
       setIsEditSubmitting(false);
     }
@@ -1305,96 +1480,30 @@ export default function AdminBusinesses() {
     }
   };
 
-  // Update the handleAddUserSuccess function
-  const handleAddUserSuccess = async (newUser: NewUser) => {
-    if (!newUser?.name || !selectedBusinessView) return;
-
-    try {
-
-      if (isDuplicateUser(newUser, users , selectedBusinessView.id)) {
-        showToast(`Duplicate user found : ${newUser.email} already exists in this business.`, 'warning');
-        return;
-      }
-
-
-      const response = await fetch('/api/admin/users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...newUser,
-          id: Date.now().toString(),
-          businessId: selectedBusinessView.id,
-          joinDate: new Date().toISOString().split('T')[0],
-          lastActive: new Date().toISOString().split('T')[0],
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.error);
-      }
-
-      // Create the complete user object
-      const newUserWithDetails = {
-        ...data.user,
-        businessId: selectedBusinessView.id,
-        joinDate: new Date().toISOString().split('T')[0],
-        lastActive: new Date().toISOString().split('T')[0],
-        status: 'active',
-        createdBy: selectedBusinessView.name || user?.name || 'Admin', // Use business name first
-      };
-
-      // Update local users state - Add new user to beginning of array
-      setUsers(prevUsers => [newUserWithDetails, ...prevUsers]);
-
-      // Update usersMap state - Add new user to beginning of array
-      setUsersMap(prev => ({
-        ...prev,
-        [selectedBusinessView.id]: [
-          newUserWithDetails,
-          ...(prev[selectedBusinessView.id] || []),
-        ],
-      }));
-
-      // Rest of the function remains unchanged
-      // Update business user count
-      setBusinesses(prevBusinesses =>
-        prevBusinesses.map(business =>
-          business.id === selectedBusinessView.id
-            ? { ...business, userCount: (business.userCount || 0) + 1 }
-            : business
-        )
-      );
-
-      // Update the selected business view
-      if (selectedBusinessView) {
-        setSelectedBusinessView({
-          ...selectedBusinessView,
-          userCount: (selectedBusinessView.userCount || 0) + 1,
-        });
-      }
-
-      setIsAddUserModalOpen(false);
-      
-      // Force a re-render of filtered users
-      setUserSearchTerm(prev => prev + '');
-
-    } catch (error) {
-      console.error('Error creating user:', error);
-      showToast('Failed to create user. Please try again.','error');
+  // Update the filteredUsers memoized value to correctly check businessId
+  const filteredUsers = useMemo(() => {
+    // First, check if we have users data at all
+    if (!users || users.length === 0) {
+      console.log("No users data available");
+      return [];
     }
-  };
 
-  // Add this computed value before your render
-  const filteredUsers = useCallback(() => {
+    // Log the selected business and available users for debugging
+    console.log("Selected business:", selectedBusinessView?.id);
+    console.log("Available users:", users);
+    
     return users.filter(user => {
-      const matchesBusiness = user.businessId === selectedBusinessView?.id;
-      const matchesSearch = userSearchTerm === '' || 
-        user.name?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
-        user.email?.toLowerCase().includes(userSearchTerm.toLowerCase());
+      // Make sure user is a valid object with required properties
+      if (!user) return false;
+      
+      // Check if the user's businessId matches the selected business
+      const matchesBusiness = selectedBusinessView && user.businessId === selectedBusinessView.id;
+      
+      // Check if the user matches the search term (case insensitive)
+      const matchesSearch = !userSearchTerm || 
+        (user.name && user.name.toLowerCase().includes(userSearchTerm.toLowerCase())) ||
+        (user.email && user.email.toLowerCase().includes(userSearchTerm.toLowerCase()));
+      
       return matchesBusiness && matchesSearch;
     });
   }, [users, selectedBusinessView, userSearchTerm]);
@@ -1430,6 +1539,87 @@ export default function AdminBusinesses() {
       [documentId]: !prevSelected[documentId]
     }));
   };
+
+  useEffect(() => {
+    // Initialize usersMap for all businesses
+    const loadUserMap = async () => {
+      const promises = businesses.map(async (business) => {
+        try {
+          const response = await fetch(`/api/admin/users?businessId=${business.id}`);
+          const data = await response.json();
+          
+          if (data.success) {
+            return { businessId: business.id, users: data.users };
+          }
+          return { businessId: business.id, users: [] };
+        } catch (error) {
+          console.error(`Error loading users for business ${business.id}:`, error);
+          return { businessId: business.id, users: [] };
+        }
+      });
+      
+      const results = await Promise.all(promises);
+      
+      const newUsersMap: Record<string, User[]> = {};
+      results.forEach(({ businessId, users }) => {
+        newUsersMap[businessId] = users;
+      });
+      
+      setUsersMap(newUsersMap);
+    };
+    
+    loadUserMap();
+  }, [businesses]);
+
+  // Update the useEffect that fetches users for a business:
+
+  useEffect(() => {
+    if (selectedBusinessView) {
+      const fetchBusinessUsers = async () => {
+        try {
+          console.log(`Fetching users for business ID: ${selectedBusinessView.id}`);
+          
+          // For testing, try using the dummy data directly
+          if (process.env.NODE_ENV === 'development' && dummyUsers.length > 0) {
+            console.log("Using dummy users data for development");
+            // Filter dummy users for this business
+            const businessUsers = dummyUsers.filter(user => 
+              user.businessId === selectedBusinessView.id
+            );
+            console.log("Filtered users:", businessUsers);
+            setUsers(businessUsers);
+          } else {
+            const response = await fetch(`/api/admin/users?businessId=${selectedBusinessView.id}`);
+            
+            if (!response.ok) {
+              throw new Error(`Failed to fetch users: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.success) {
+              console.log(`Found ${data.users.length} users for business ${selectedBusinessView.id}`);
+              setUsers(data.users);
+              
+              // Update the usersMap
+              setUsersMap(prev => ({
+                ...prev,
+                [selectedBusinessView.id]: data.users
+              }));
+            } else {
+              throw new Error(data.error || 'Failed to fetch users');
+            }
+          }
+          
+        } catch (error) {
+          console.error('Error fetching users for business:', error);
+          showToast('Failed to load user data', 'error');
+        }
+      };
+
+      fetchBusinessUsers();
+    }
+  }, [selectedBusinessView?.id]); // Depend only on the business ID
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -1486,7 +1676,7 @@ export default function AdminBusinesses() {
                   </svg>
                 ) : (
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 9.003 0 008.354-5.646z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 9 9 0 018.646 3.646 9.003 9.003 9.003 0 0012 21a9.003 9.003 9.003 0 008.354-5.646z" />
                   </svg>
                 )}
               </button>
@@ -1757,7 +1947,7 @@ export default function AdminBusinesses() {
                               </td>
                               {/* Joined date cell */}
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                {business.joinedDate.split('T')[0]}
+                                {business.joinedDate?.split('T')[0] || business.startDate?.split('T')[0] || 'N/A'}
                               </td>
                               {/* Created By cell */}
                               <td className="px-6 py-4 whitespace-nowrap">
@@ -2023,67 +2213,75 @@ export default function AdminBusinesses() {
                           </tr>
                         </thead>
                         <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                          {filteredUsers().map((user) => user && (
-                            <tr key={user.id}>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                  {user?.name || 'N/A'}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-500 dark:text-gray-400">
-                                  {user?.email || 'N/A'}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-500 dark:text-gray-400">
-                                  {user?.language ? languageLabels[user.language as SupportedLanguage] || user.language : 'English'}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                  user?.status === 'active' 
-                                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
-                                    : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                                }`}>
-                                  {user?.status || 'N/A'}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-500 dark:text-gray-400">
-                                  {selectedBusinessView?.name || user.createdBy || 'Admin'}
-                                </div>
-                              </td>
-                              {/* <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-500 dark:text-gray-400">
-                                  {user.lastActive ? new Date(user.lastActive).toLocaleDateString() : 'N/A'}
-                                </div>
-                              </td> */}
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex space-x-3">
-                                  <button
-                                    onClick={() => {
-                                      setSelectedUser(user);
-                                      setIsEditUserModalOpen(true);
-                                    }}
-                                    className="text-blue-600 hover:text-blue-900"
-                                  >
-                                    Edit
-                                  </button>
-                                  <button
-                                    onClick={() => handleToggleUserStatus(user)}
-                                    className={`${
-                                      user.status === 'active'
-                                        ? 'text-red-600 hover:text-red-900'
-                                        : 'text-green-600 hover:text-green-900'
-                                    }`}
-                                  >
-                                    {user.status === 'active' ? 'Deactivate' : 'Activate'}
-                                  </button>
-                                </div>
+                          {filteredUsers.length === 0 ? (
+                            <tr>
+                              <td colSpan={6} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                                No users found for this business
                               </td>
                             </tr>
-                          ))}
+                          ) : (
+                            filteredUsers.map((user) => (
+                              <tr key={user.id}>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                    {user.name || 'N/A'}
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                                    {user?.email || 'N/A'}
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                                    {user?.language ? languageLabels[user.language as SupportedLanguage] || user.language : 'English'}
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                    user?.status === 'active' 
+                                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                                      : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                  }`}>
+                                    {user?.status || 'N/A'}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                                    {selectedBusinessView?.name || user.createdBy || 'Admin'}
+                                  </div>
+                                </td>
+                                {/* <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                                    {user.lastActive ? new Date(user.lastActive).toLocaleDateString() : 'N/A'}
+                                  </div>
+                                </td> */}
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="flex space-x-3">
+                                    <button
+                                      onClick={() => {
+                                        setSelectedUser(user);
+                                        setIsEditUserModalOpen(true);
+                                      }}
+                                      className="text-blue-600 hover:text-blue-900"
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      onClick={() => handleToggleUserStatus(user)}
+                                      className={`${
+                                        user.status === 'active'
+                                          ? 'text-red-600 hover:text-red-900'
+                                          : 'text-green-600 hover:text-green-900'
+                                      }`}
+                                    >
+                                      {user.status === 'active' ? 'Deactivate' : 'Activate'}
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          )}
                         </tbody>
                       </table>
                     ) : (
@@ -2370,7 +2568,7 @@ export default function AdminBusinesses() {
                     ) : (
                       <div 
                         className="h-24 w-24 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center"
-                        style={{ backgroundColor: selectedBusiness.colorTheme || '#C72026' }}
+                        style={{ backgroundColor: selectedBusiness.color || selectedBusiness.colorTheme || '#C72026' }}
                       >
                         <span className="text-3xl font-bold text-white">
                           {selectedBusiness.name.charAt(0)}
@@ -2381,59 +2579,62 @@ export default function AdminBusinesses() {
                   
                   {/* Business Details */}
                   <div className="grid grid-cols-2 gap-4 mt-4">
-                    {/* <div>
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('plan')}</p>
-                      <p className="mt-1 text-sm text-gray-900 dark:text-white">{selectedBusiness.plan}</p>
-                    </div> */}
                     <div>
                       <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('status')}</p>
                       <p className="mt-1">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          selectedBusiness.status === 'active' 
+                          selectedBusiness.status === 'active' || selectedBusiness.status === 'ACTIVE'
                             ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200' 
-                            : selectedBusiness.status === 'pending'
+                            : selectedBusiness.status === 'pending' || selectedBusiness.status === 'PENDING'
                             ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
                             : 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200'
                         }`}>
-                          {t(selectedBusiness.status)}
+                          {t(selectedBusiness.status.toLowerCase())}
                         </span>
                       </p>
                     </div>
-                    {/* <div>
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('userCount')}</p>
-                      <p className="mt-1 text-sm text-gray-900 dark:text-white">{selectedBusiness.userCount}</p>
-                    </div> */}
                     <div>
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('Start Date')}</p>
-                      <p className="mt-1 text-sm text-gray-900 dark:text-white">{selectedBusiness.joinedDate}</p>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('userCount')}</p>
+                      <p className="mt-1 text-sm text-gray-900 dark:text-white">{selectedBusiness.userCount || 0}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('colorTheme')}</p>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('StartDate')}</p>
+                      <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                        {selectedBusiness.startDate ? new Date(selectedBusiness.startDate).toLocaleDateString() : 
+                         selectedBusiness.joinedDate ? selectedBusiness.joinedDate : 'Not set'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('EndDate')}</p>
+                      <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                        {selectedBusiness.endDate ? new Date(selectedBusiness.endDate).toLocaleDateString() : 'Not set'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('Color')}</p>
                       <div className="mt-1 flex items-center">
                         <div 
                           className="h-6 w-6 rounded-full mr-2" 
-                          style={{ backgroundColor: selectedBusiness.colorTheme || '#C72026' }}
+                          style={{ backgroundColor: selectedBusiness.color || selectedBusiness.colorTheme || '#C72026' }}
                         ></div>
-                        <p className="text-sm text-gray-900 dark:text-white">{selectedBusiness.colorTheme || '#C72026'}</p>
+                        <p className="text-sm text-gray-900 dark:text-white">
+                          {selectedBusiness.color || selectedBusiness.colorTheme || '#C72026'}
+                        </p>
                       </div>
                     </div>
                     <div>
-                      {/* <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('isActive')}</p> */}
-                      <p className="mt-1">
-                        {/* <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          selectedBusiness.isActive 
-                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200' 
-                            : 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200'
-                        }`}>
-                          {selectedBusiness.isActive ? t('active') : t('deactivate')}
-                        </span> */}
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('createdBy')}</p>
+                      <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                        {typeof selectedBusiness.createdBy === 'string' 
+                          ? selectedBusiness.createdBy 
+                          : selectedBusiness.createdBy?.name || 'Admin'}
                       </p>
                     </div>
                   </div>
                 </div>
                 
                 <div className="mt-6">
-                  {/* <button
+                  <button
                     type="button"
                     onClick={() => {
                       closeViewModal();
@@ -2442,7 +2643,7 @@ export default function AdminBusinesses() {
                     className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#C72026] text-base font-medium text-white hover:bg-[#C72026]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026] sm:text-sm"
                   >
                     {t('edit')}
-                  </button> */}
+                  </button>
                 </div>
               </div>
             </div>
@@ -2480,7 +2681,7 @@ export default function AdminBusinesses() {
                   {/* Business Name */}
                   <div>
                     <label htmlFor="edit-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {t('Business Name')}
+                      {t('name')}
                     </label>
                     <input
                       type="text"
@@ -2519,7 +2720,7 @@ export default function AdminBusinesses() {
                       ) : (
                         <div 
                           className="h-16 w-16 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center"
-                          style={{ backgroundColor: editFormData.colorTheme }}
+                          style={{ backgroundColor: editFormData.colorTheme || editFormData.color || '#C72026' }}
                         >
                           <span className="text-2xl font-bold text-white">
                             {editFormData.name.charAt(0)}
@@ -2528,7 +2729,7 @@ export default function AdminBusinesses() {
                       )}
                       <label htmlFor="logo-upload" className="ml-5 cursor-pointer">
                         <span className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026]">
-                          {t('Upload Logo')}
+                          {t('uploadLogo')}
                         </span>
                         <input
                           id="logo-upload"
@@ -2544,30 +2745,58 @@ export default function AdminBusinesses() {
                   
                   {/* Color Theme */}
                   <div>
-                    <label htmlFor="colorTheme" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {t('Color Theme')}
+                    <label htmlFor="color" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {t('Color')}
                     </label>
                     <div className="mt-1 flex items-center">
                       <input
                         type="color"
-                        name="colorTheme"
-                        id="colorTheme"
-                        value={editFormData.colorTheme}
+                        name="color"
+                        id="color"
+                        value={editFormData.color || editFormData.colorTheme || '#C72026'}
                         onChange={handleEditInputChange}
                         className="h-8 w-8 rounded-md border-0 cursor-pointer"
                       />
                       <input
                         type="text"
-                        name="colorTheme"
-                        value={editFormData.colorTheme}
+                        name="color"
+                        value={editFormData.color || editFormData.colorTheme || '#C72026'}
                         onChange={handleEditInputChange}
                         className="ml-2 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                       />
                     </div>
                   </div>
                   
-                  {/* Plan */}
-    
+                  {/* Start Date */}
+                  <div>
+                    <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {t('StartDate')}
+                    </label>
+                    <input
+                      type="date"
+                      name="startDate"
+                      id="startDate"
+                      value={editFormData.startDate || ''}
+                      onChange={handleEditInputChange}
+                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
+                    />
+                  </div>
+
+                  {/* End Date */}
+                  <div>
+                    <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {t('EndDate')}
+                    </label>
+                    <input
+                      type="date"
+                      name="endDate"
+                      id="endDate"
+                      value={editFormData.endDate || ''}
+                      onChange={handleEditInputChange}
+                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
+                    />
+                  </div>
+                  
                   {/* Status */}
                   <div>
                     <label htmlFor="edit-status" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -2585,23 +2814,9 @@ export default function AdminBusinesses() {
                       <option value="suspended">{t('suspended')}</option>
                     </select>
                   </div>
-
-                  {/* <div>
-                    <label htmlFor="edit-createdBy" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {t('createdBy')}
-                    </label>
-                    <input
-                      type="text"
-                      name="createdBy"
-                      id="edit-createdBy"
-                      value={editFormData.createdBy}
-                      onChange={handleEditInputChange}
-                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
-                    />
-                  </div> */}
                   
-                  {/* Active Status */}
-                  {/* <div className="flex items-center">
+                  {/* Active Status Switch */}
+                  <div className="flex items-center">
                     <input
                       id="isActive"
                       name="isActive"
@@ -2613,7 +2828,7 @@ export default function AdminBusinesses() {
                     <label htmlFor="isActive" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
                       {t('isActive')}
                     </label>
-                  </div> */}
+                  </div>
                   
                   <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
                     <button
@@ -2621,7 +2836,7 @@ export default function AdminBusinesses() {
                       disabled={isEditSubmitting}
                       className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#C72026] text-white hover:bg-[#C72026]/90 sm:col-start-2 sm:text-sm"
                     >
-                      {isEditSubmitting ? t('submitting') : t('Save Changes')}
+                      {isEditSubmitting ? t('submitting') : t('saveChanges')}
                     </button>
                     <button
                       type="button"
@@ -2664,8 +2879,9 @@ export default function AdminBusinesses() {
       <AddUserModal
         isOpen={isAddUserModalOpen}
         onClose={() => setIsAddUserModalOpen(false)}
-        onSuccess={handleAddUserSuccess}  // Update this line
+        onSuccess={handleAddUserSuccess}
         translate={(key: string) => key}
+        businessId={selectedBusinessView?.id} // Make sure selectedBusinessView exists before accessing id
       />
       <UploadDocumentModal
         isOpen={isUploadDocumentModalOpen}

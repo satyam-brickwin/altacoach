@@ -25,24 +25,36 @@ async function main() {
     const business1 = await prisma.business.create({
       data: {
         name: 'Acme Corporation',
-        plan: 'ENTERPRISE',
-        status: 'ACTIVE'
+        status: 'ACTIVE',
+        createdBy: {
+          connect: {
+            id: admin.id
+          }
+        }
       }
     });
 
     const business2 = await prisma.business.create({
       data: {
         name: 'Globex Corporation',
-        plan: 'PROFESSIONAL',
-        status: 'ACTIVE'
+        status: 'ACTIVE',
+        createdBy: {
+          connect: {
+            id: admin.id
+          }
+        }
       }
     });
 
     const business3 = await prisma.business.create({
       data: {
         name: 'Wayne Enterprises',
-        plan: 'BASIC',
-        status: 'ACTIVE'
+        status: 'ACTIVE',
+        createdBy: {
+          connect: {
+            id: admin.id
+          }
+        }
       }
     });
     
@@ -50,8 +62,12 @@ async function main() {
     const pendingBusiness = await prisma.business.create({
       data: {
         name: 'Stark Industries',
-        plan: 'PROFESSIONAL',
-        status: 'PENDING'
+        status: 'PENDING',
+        createdBy: {
+          connect: {
+            id: admin.id
+          }
+        }
       }
     });
     
@@ -59,8 +75,12 @@ async function main() {
     const suspendedBusiness = await prisma.business.create({
       data: {
         name: 'Umbrella Corporation',
-        plan: 'ENTERPRISE',
-        status: 'SUSPENDED'
+        status: 'SUSPENDED',
+        createdBy: {
+          connect: {
+            id: admin.id
+          }
+        }
       }
     });
 
@@ -73,60 +93,124 @@ async function main() {
     });
 
     // Create business users
-    const businessUser1 = await prisma.user.create({
+    const user1 = await prisma.user.create({
       data: {
         name: 'John Doe',
         email: 'john@acme.com',
         password: await bcrypt.hash('password123', 10),
-        role: 'BUSINESS',
-        status: 'ACTIVE',
-        businessId: business1.id
+        role: 'USER',
+        status: 'ACTIVE'
       }
     });
 
-    const businessUser2 = await prisma.user.create({
+    const user2 = await prisma.user.create({
       data: {
         name: 'Jane Smith',
         email: 'jane@globex.com',
         password: await bcrypt.hash('password123', 10),
-        role: 'BUSINESS',
-        status: 'ACTIVE',
-        businessId: business2.id
+        role: 'USER',
+        status: 'ACTIVE'
       }
     });
 
-    const businessUser3 = await prisma.user.create({
+    const user3 = await prisma.user.create({
       data: {
         name: 'Bruce Wayne',
         email: 'bruce@wayne.com',
         password: await bcrypt.hash('password123', 10),
-        role: 'BUSINESS',
-        status: 'ACTIVE',
-        businessId: business3.id
+        role: 'USER',
+        status: 'ACTIVE'
       }
     });
     
-    // Create a user for the pending business
-    const pendingBusinessUser = await prisma.user.create({
+    const pendingUser = await prisma.user.create({
       data: {
         name: 'Tony Stark',
         email: 'tony@stark.com',
         password: await bcrypt.hash('password123', 10),
-        role: 'BUSINESS',
-        status: 'ACTIVE',
-        businessId: pendingBusiness.id
+        role: 'USER',
+        status: 'ACTIVE'
       }
     });
     
-    // Create a user for the suspended business
-    const suspendedBusinessUser = await prisma.user.create({
+    const suspendedUser = await prisma.user.create({
       data: {
         name: 'Albert Wesker',
         email: 'wesker@umbrella.com',
         password: await bcrypt.hash('password123', 10),
-        role: 'BUSINESS',
-        status: 'SUSPENDED',
-        businessId: suspendedBusiness.id
+        role: 'USER',
+        status: 'SUSPENDED'
+      }
+    });
+
+    // Create business user associations
+    const businessUser1 = await prisma.businessUser.create({
+      data: {
+        user: {
+          connect: { id: user1.id }
+        },
+        business: {
+          connect: { id: business1.id }
+        },
+        createdBy: {
+          connect: { id: admin.id }
+        }
+      }
+    });
+
+    const businessUser2 = await prisma.businessUser.create({
+      data: {
+        user: {
+          connect: { id: user2.id }
+        },
+        business: {
+          connect: { id: business2.id }
+        },
+        createdBy: {
+          connect: { id: admin.id }
+        }
+      }
+    });
+
+    const businessUser3 = await prisma.businessUser.create({
+      data: {
+        user: {
+          connect: { id: user3.id }
+        },
+        business: {
+          connect: { id: business3.id }
+        },
+        createdBy: {
+          connect: { id: admin.id }
+        }
+      }
+    });
+    
+    const pendingBusinessUser = await prisma.businessUser.create({
+      data: {
+        user: {
+          connect: { id: pendingUser.id }
+        },
+        business: {
+          connect: { id: pendingBusiness.id }
+        },
+        createdBy: {
+          connect: { id: admin.id }
+        }
+      }
+    });
+    
+    const suspendedBusinessUser = await prisma.businessUser.create({
+      data: {
+        user: {
+          connect: { id: suspendedUser.id }
+        },
+        business: {
+          connect: { id: suspendedBusiness.id }
+        },
+        createdBy: {
+          connect: { id: admin.id }
+        }
       }
     });
 
@@ -138,48 +222,101 @@ async function main() {
       suspendedBusinessUser
     });
 
-    // Create content
-    const content1 = await prisma.content.create({
+    // Create documents (formerly content)
+    const document1 = await prisma.document.create({
       data: {
         title: 'Introduction to Alta Coach',
         description: 'Learn the basics of using Alta Coach',
-        type: 'COURSE',
-        filePath: '/content/intro.pdf',
-        businessId: business1.id
+        contentType: 'COURSE',
+        source: 'business',
+        fileType: 'pdf',
+        language: 'English',
+        url: '/content/intro.pdf',
+        createdBy: {
+          connect: { id: admin.id }
+        }
       }
     });
 
-    const content2 = await prisma.content.create({
+    const document2 = await prisma.document.create({
       data: {
         title: 'Advanced Techniques',
         description: 'Master advanced coaching techniques',
-        type: 'GUIDE',
-        filePath: '/content/advanced.pdf',
-        businessId: business1.id
+        contentType: 'GUIDE',
+        source: 'business',
+        fileType: 'pdf',
+        language: 'English',
+        url: '/content/advanced.pdf',
+        createdBy: {
+          connect: { id: admin.id }
+        }
       }
     });
 
-    const content3 = await prisma.content.create({
+    const document3 = await prisma.document.create({
       data: {
         title: 'Practice Exercise 1',
         description: 'Breathing exercises for beginners',
-        type: 'EXERCISE',
-        filePath: '/content/exercise1.pdf',
-        businessId: business2.id
+        contentType: 'EXERCISE',
+        source: 'business',
+        fileType: 'pdf',
+        language: 'English',
+        url: '/content/exercise1.pdf',
+        createdBy: {
+          connect: { id: admin.id }
+        }
       }
     });
 
-    const content4 = await prisma.content.create({
+    const document4 = await prisma.document.create({
       data: {
         title: 'Common Questions',
         description: 'Frequently asked questions',
-        type: 'FAQ',
-        filePath: '/content/faq.pdf',
-        businessId: business3.id
+        contentType: 'FAQ',
+        source: 'admin',
+        fileType: 'pdf',
+        language: 'English',
+        url: '/content/faq.pdf',
+        createdBy: {
+          connect: { id: admin.id }
+        }
       }
     });
 
-    console.log('Created content:', { content1, content2, content3, content4 });
+    // Connect documents to businesses using BusinessDocument junction table
+    await prisma.businessDocument.create({
+      data: {
+        business: { connect: { id: business1.id } },
+        document: { connect: { id: document1.id } },
+        admin: { connect: { id: admin.id } }
+      }
+    });
+
+    await prisma.businessDocument.create({
+      data: {
+        business: { connect: { id: business1.id } },
+        document: { connect: { id: document2.id } },
+        admin: { connect: { id: admin.id } }
+      }
+    });
+
+    await prisma.businessDocument.create({
+      data: {
+        business: { connect: { id: business2.id } },
+        document: { connect: { id: document3.id } },
+        admin: { connect: { id: admin.id } }
+      }
+    });
+
+    await prisma.businessDocument.create({
+      data: {
+        business: { connect: { id: business3.id } },
+        document: { connect: { id: document4.id } },
+        admin: { connect: { id: admin.id } }
+      }
+    });
+
+    console.log('Created documents:', { document1, document2, document3, document4 });
 
     // Query all businesses to verify
     const allBusinesses = await prisma.business.findMany({
@@ -187,7 +324,6 @@ async function main() {
         id: true,
         name: true,
         status: true,
-        plan: true,
       }
     });
     
@@ -227,4 +363,4 @@ main()
   .catch(e => {
     console.error(e);
     process.exit(1);
-  }); 
+  });

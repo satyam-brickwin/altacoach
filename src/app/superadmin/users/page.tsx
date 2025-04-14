@@ -346,7 +346,7 @@ export default function AdminUsers() {
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/apisuper/superadmin/user');
+      const response = await fetch('/apisuper/user');
       if (!response.ok) {
         throw new Error('Failed to fetch users');
       }

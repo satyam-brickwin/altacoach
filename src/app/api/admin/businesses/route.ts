@@ -21,8 +21,9 @@ export async function POST(request: Request) {
       business = await prisma.business.create({
         data: {
           name: data.name,
-          plan: data.plan?.toUpperCase() || 'BUSINESS',
           status: data.status?.toUpperCase() || 'PENDING',
+          color: data.color || null,
+          startDate: new Date(),
           createdBy: {
             connect: { id: userId }
           }
@@ -44,7 +45,9 @@ export async function POST(request: Request) {
         data: {
           name: creatorName,
           email: `${creatorName.toLowerCase().replace(/\s+/g, '.')}@example.com`,
-          // Add any other required fields for your User model
+          password: await fetch('/api/auth/generate-password').then(res => res.text()),
+          role: 'ADMIN',
+          status: 'ACTIVE',
         }
       });
       
@@ -52,8 +55,9 @@ export async function POST(request: Request) {
       business = await prisma.business.create({
         data: {
           name: data.name,
-          plan: data.plan?.toUpperCase() || 'BUSINESS',
           status: data.status?.toUpperCase() || 'PENDING',
+          color: data.color || null,
+          startDate: new Date(),
           createdBy: {
             connect: { id: user.id }
           }
@@ -84,15 +88,39 @@ export async function POST(request: Request) {
 export async function GET() {
   try {
     const businesses = await prisma.business.findMany({
-      orderBy: { joinedDate: 'desc' },
       include: {
-        createdBy: true
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
+        users: true // Include the users relationship
+      },
+      orderBy: {
+        createdAt: 'desc'
       }
     });
 
-    return NextResponse.json({ 
+    // Format the response to include user count
+    const formattedBusinesses = await Promise.all(
+      businesses.map(async (business) => {
+        // Count users through the BusinessUser junction table
+        const userCount = await prisma.businessUser.count({
+          where: { businessId: business.id }
+        });
+        
+        return {
+          ...business,
+          userCount: userCount
+        };
+      })
+    );
+
+    return NextResponse.json({
       success: true,
-      businesses 
+      businesses: formattedBusinesses
     });
   } catch (error) {
     console.error('Error fetching businesses:', error);

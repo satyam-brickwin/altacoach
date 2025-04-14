@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
-import { useAuth, UserRole } from '../contexts/AuthContext';
+import { useAuth, UserRole } from '@/contexts/AuthContext';
 
 // Update the User interface to match the expected types
 interface User {
-  id?: string;          // Optional for new users
+  id?: string;          
   name: string;
   email: string;
   password: string;
-  status: string;       // Make status required
-  language: string;     // Make language required
-  role: UserRole;       // Changed from string to UserRole
-  businessId?: string;  // Optional for new users
+  status: string;       
+  language: string;     
+  role: string;         // Changed to string to be more flexible
+  businessId?: string;  // Business ID for association
   lastActive?: string;
   joinDate?: string;
 }
@@ -20,75 +20,79 @@ interface AddUserModalProps {
   onClose: () => void;
   onSuccess: (user: User) => void;
   translate: (key: string) => string;
-  defaultValues?: Partial<User>;
+  businessId?: string; // Business ID is now optional but important
 }
 
-const AddUserModal: React.FC<AddUserModalProps> = ({ 
+export default function AddUserModal({ 
   isOpen, 
   onClose, 
-  onSuccess, 
+  onSuccess,
   translate,
-  defaultValues
-}) => {
+  businessId 
+}: AddUserModalProps) {
   const { user } = useAuth();
-  const [userData, setUserData] = useState<User>({
+  const [formData, setFormData] = useState<User>({
     name: '',
     email: '',
     password: '',
-    status: defaultValues?.status || 'active',
-    language: defaultValues?.language || 'en',
-    role: defaultValues?.role || UserRole.USER // Use enum instead of string
+    status: 'active',
+    language: 'en',
+    role: 'USER',
+    businessId: businessId
   });
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setUserData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
     setError(null);
-    setIsLoading(true);
 
     try {
       // Validate required fields
-      if (!userData.name || !userData.email || !userData.password) {
+      if (!formData.name || !formData.email || !formData.password) {
         throw new Error('Name, email and password are required');
       }
 
       // Email validation
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(userData.email)) {
+      if (!emailRegex.test(formData.email)) {
         throw new Error('Please enter a valid email address');
       }
 
-      // Create the complete user object with all required fields
-      const completeUser: User = {
-        ...userData,
-        status: userData.status || 'active',
-        language: userData.language || 'en',
-        role: userData.role || UserRole.USER
+      // Include the businessId in the userData
+      const userData = {
+        ...formData,
+        businessId: businessId // Add the business ID from props
       };
 
-      await onSuccess(completeUser);
-      
+      console.log('Submitting new user with data:', userData);
+
+      // Call the parent's onSuccess handler
+      onSuccess(userData);
+
       // Reset form on success
-      setUserData({
+      setFormData({
         name: '',
         email: '',
         password: '',
-        status: defaultValues?.status || 'active',
-        language: defaultValues?.language || 'en',
-        role: defaultValues?.role || UserRole.USER
+        status: 'active',
+        language: 'en',
+        role: 'USER',
+        businessId: businessId
       });
-      
+
       onClose();
     } catch (error) {
+      console.error('Error in AddUserModal:', error);
       setError(error instanceof Error ? error.message : 'Failed to create user');
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -127,7 +131,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
               type="text"
               id="name"
               name="name"
-              value={userData.name}
+              value={formData.name}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] dark:bg-gray-700 dark:text-white"
               placeholder="John Smith"
@@ -142,7 +146,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
               type="email"
               id="email"
               name="email"
-              value={userData.email}
+              value={formData.email}
               onChange={handleChange}
               required
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] dark:bg-gray-700 dark:text-white"
@@ -158,12 +162,59 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
               type="password"
               id="password"
               name="password"
-              value={userData.password}
+              value={formData.password}
               onChange={handleChange}
               required
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] dark:bg-gray-700 dark:text-white"
               placeholder="••••••••"
             />
+          </div>
+
+          <div className="mb-4">
+            <label htmlFor="role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              {translate('role')}
+            </label>
+            <div className="relative">
+              <select
+                id="role"
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] dark:bg-gray-700 dark:text-white appearance-none bg-none"
+              >
+                <option value="USER">{translate('user')}</option>
+                <option value="ADMIN">{translate('admin')}</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              {translate('status')}
+            </label>
+            <div className="relative">
+              <select
+                id="status"
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] dark:bg-gray-700 dark:text-white appearance-none bg-none"
+              >
+                <option value="ACTIVE">{translate('active')}</option>
+                <option value="PENDING">{translate('pending')}</option>
+                <option value="SUSPENDED">{translate('suspended')}</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
           </div>
 
           <div className="mb-4">
@@ -174,7 +225,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
               <select
                 id="language"
                 name="language"
-                value={userData.language}
+                value={formData.language}
                 onChange={handleChange}
                 className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] dark:bg-gray-700 dark:text-white appearance-none bg-none"
               >
@@ -193,20 +244,29 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
             </div>
           </div>
           
+          {/* Hidden business ID field to ensure it's included in form submission */}
+          {businessId && (
+            <input 
+              type="hidden" 
+              name="businessId" 
+              value={businessId} 
+            />
+          )}
+          
           <div className="flex justify-end space-x-3">
             <button
               type="button"
               onClick={onClose}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-white dark:bg-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026]"
             >
-              Cancel
+              {translate('cancel')}
             </button>
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isSubmitting}
               className="px-4 py-2 text-sm font-medium text-white bg-[#C72026] border border-transparent rounded-md shadow-sm hover:bg-[#C72026]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Creating...' : 'Create User'}
+              {isSubmitting ? translate('creating') : translate('createUser')}
             </button>
           </div>
         </form>
@@ -214,5 +274,3 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
     </div>
   );
 }
-
-export default AddUserModal;
