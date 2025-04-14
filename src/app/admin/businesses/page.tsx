@@ -2381,10 +2381,10 @@ export default function AdminBusinesses() {
                   
                   {/* Business Details */}
                   <div className="grid grid-cols-2 gap-4 mt-4">
-                    <div>
+                    {/* <div>
                       <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('plan')}</p>
                       <p className="mt-1 text-sm text-gray-900 dark:text-white">{selectedBusiness.plan}</p>
-                    </div>
+                    </div> */}
                     <div>
                       <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('status')}</p>
                       <p className="mt-1">
@@ -2399,10 +2399,10 @@ export default function AdminBusinesses() {
                         </span>
                       </p>
                     </div>
-                    <div>
+                    {/* <div>
                       <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('userCount')}</p>
                       <p className="mt-1 text-sm text-gray-900 dark:text-white">{selectedBusiness.userCount}</p>
-                    </div>
+                    </div> */}
                     <div>
                       <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('Start Date')}</p>
                       <p className="mt-1 text-sm text-gray-900 dark:text-white">{selectedBusiness.joinedDate}</p>
@@ -2418,22 +2418,22 @@ export default function AdminBusinesses() {
                       </div>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('isActive')}</p>
+                      {/* <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('isActive')}</p> */}
                       <p className="mt-1">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        {/* <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           selectedBusiness.isActive 
                             ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200' 
                             : 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200'
                         }`}>
                           {selectedBusiness.isActive ? t('active') : t('deactivate')}
-                        </span>
+                        </span> */}
                       </p>
                     </div>
                   </div>
                 </div>
                 
                 <div className="mt-6">
-                  <button
+                  {/* <button
                     type="button"
                     onClick={() => {
                       closeViewModal();
@@ -2442,7 +2442,7 @@ export default function AdminBusinesses() {
                     className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#C72026] text-base font-medium text-white hover:bg-[#C72026]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026] sm:text-sm"
                   >
                     {t('edit')}
-                  </button>
+                  </button> */}
                 </div>
               </div>
             </div>

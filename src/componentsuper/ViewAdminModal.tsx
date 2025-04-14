@@ -24,7 +24,7 @@ export default function ViewAdminModal({ isOpen, onClose, admin, translate: t }:
 
   const getRoleName = (role: string): string => {
     if (role === 'ADMIN') return 'Admin';
-    if (role === 'BUSINESS') return 'Business Admin';
+    if (role === 'SUPER_ADMIN') return 'Super Admin';
     return 'User';
   };
 
