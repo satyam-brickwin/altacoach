@@ -7,6 +7,7 @@ interface Admin {
   email: string;
   role: string;
   lastActive?: string;
+  lastLogin?: string | Date; // Add this field
   status: string;
   joinDate?: string;
   createdAt?: Date;
@@ -32,6 +33,34 @@ export default function ViewAdminModal({ isOpen, onClose, admin, translate: t }:
     if (status === 'active') return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200';
     if (status === 'pending') return 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200';
     return 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200';
+  };
+
+  const formatLastActive = (admin: Admin) => {
+    // First try lastLogin
+    if (admin.lastLogin) {
+      try {
+        const date = new Date(admin.lastLogin);
+        if (!isNaN(date.getTime())) {
+          return date.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+        }
+      } catch (e) {
+        console.log("Error parsing lastLogin date:", e);
+      }
+    }
+    
+    // Fall back to createdAt if available
+    if (admin.createdAt) {
+      return `${t('At registration')} - ${new Date(admin.createdAt).toLocaleDateString()}`;
+    }
+    
+    // Final fallback
+    return t('Never');
   };
 
   return (
@@ -90,7 +119,9 @@ export default function ViewAdminModal({ isOpen, onClose, admin, translate: t }:
           </div>
           <div>
             <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">{t('lastActive')}</h4>
-            <p className="text-gray-900 dark:text-white">{admin.lastActive || 'Never'}</p>
+            <p className="text-gray-900 dark:text-white">
+              {formatLastActive(admin)}
+            </p>
           </div>
         </div>
 

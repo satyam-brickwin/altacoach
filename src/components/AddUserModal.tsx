@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { useAuth, UserRole } from '@/contexts/AuthContext';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
-// Update the User interface to match the expected types
+// Update the User interface to remove role
 interface User {
   id?: string;          
   name: string;
@@ -9,7 +9,6 @@ interface User {
   password: string;
   status: string;       
   language: string;     
-  role: string;         // Changed to string to be more flexible
   businessId?: string;  // Business ID for association
   lastActive?: string;
   joinDate?: string;
@@ -31,20 +30,39 @@ export default function AddUserModal({
   businessId 
 }: AddUserModalProps) {
   const { user } = useAuth();
+  
+  // Initialize with a default but immediately check localStorage in useEffect
   const [formData, setFormData] = useState<User>({
     name: '',
     email: '',
     password: '',
-    status: 'active',
-    language: 'en',
-    role: 'USER',
+    status: 'ACTIVE',
+    language: 'English', // Default to full language name
     businessId: businessId
   });
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // This effect ensures the language selection persists by retrieving from localStorage
+  useEffect(() => {
+    // Try to get previously selected language from localStorage
+    const savedLanguage = localStorage.getItem('preferredUserLanguage');
+    if (savedLanguage) {
+      console.log('Retrieved saved language from localStorage:', savedLanguage);
+      setFormData(prev => ({ ...prev, language: savedLanguage }));
+    }
+  }, [isOpen]); // Run when modal opens, not just on mount
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+    
+    // Special handling for language to save to localStorage
+    if (name === 'language') {
+      localStorage.setItem('preferredUserLanguage', value);
+      console.log('Language selected and saved to localStorage:', value);
+    }
+    
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -65,10 +83,14 @@ export default function AddUserModal({
         throw new Error('Please enter a valid email address');
       }
 
+      // Save current language selection for reuse
+      const currentLanguage = formData.language;
+      
       // Include the businessId in the userData
       const userData = {
         ...formData,
-        businessId: businessId // Add the business ID from props
+        status: formData.status.toUpperCase(), // Ensure status is uppercase
+        businessId: businessId
       };
 
       console.log('Submitting new user with data:', userData);
@@ -76,20 +98,19 @@ export default function AddUserModal({
       // Call the parent's onSuccess handler
       onSuccess(userData);
 
-      // Reset form on success
+      // Reset form on success but maintain the language preference
       setFormData({
         name: '',
         email: '',
         password: '',
-        status: 'active',
-        language: 'en',
-        role: 'USER',
+        status: 'ACTIVE',
+        language: currentLanguage, // Keep the selected language
         businessId: businessId
       });
 
       onClose();
     } catch (error) {
-      console.error('Error in AddUserModal:', error);
+      console.error('Error creating user:', error);
       setError(error instanceof Error ? error.message : 'Failed to create user');
     } finally {
       setIsSubmitting(false);
@@ -125,7 +146,7 @@ export default function AddUserModal({
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              {translate('name')}
+              {translate('Name')}
             </label>
             <input
               type="text"
@@ -140,7 +161,7 @@ export default function AddUserModal({
 
           <div className="mb-4">
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              {translate('email')} *
+              {translate('Email')} *
             </label>
             <input
               type="email"
@@ -156,7 +177,7 @@ export default function AddUserModal({
 
           <div className="mb-4">
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Password *
+              {translate('Password')} *
             </label>
             <input
               type="password"
@@ -171,31 +192,8 @@ export default function AddUserModal({
           </div>
 
           <div className="mb-4">
-            <label htmlFor="role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              {translate('role')}
-            </label>
-            <div className="relative">
-              <select
-                id="role"
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] dark:bg-gray-700 dark:text-white appearance-none bg-none"
-              >
-                <option value="USER">{translate('user')}</option>
-                <option value="ADMIN">{translate('admin')}</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div className="mb-4">
             <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              {translate('status')}
+              {translate('Status')}
             </label>
             <div className="relative">
               <select
@@ -219,7 +217,7 @@ export default function AddUserModal({
 
           <div className="mb-4">
             <label htmlFor="language" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              {translate('language')}
+              {translate('Language')}
             </label>
             <div className="relative">
               <select
@@ -229,12 +227,12 @@ export default function AddUserModal({
                 onChange={handleChange}
                 className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] dark:bg-gray-700 dark:text-white appearance-none bg-none"
               >
-                <option value="en">English</option>
-                <option value="es">Español</option>
-                <option value="fr">Français</option>
-                <option value="de">Deutsch</option>
-                <option value="pt">Português</option>
-                <option value="it">Italiano</option>
+                <option value="English">English</option>
+                <option value="Español">Español</option>
+                <option value="Français">Français</option>
+                <option value="Deutsch">Deutsch</option>
+                <option value="Português">Português</option>
+                <option value="Italiano">Italiano</option>
               </select>
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -259,14 +257,14 @@ export default function AddUserModal({
               onClick={onClose}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-white dark:bg-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026]"
             >
-              {translate('cancel')}
+              {translate('Cancel')}
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
               className="px-4 py-2 text-sm font-medium text-white bg-[#C72026] border border-transparent rounded-md shadow-sm hover:bg-[#C72026]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? translate('creating') : translate('createUser')}
+              {isSubmitting ? translate('creating') : translate('Create User')}
             </button>
           </div>
         </form>

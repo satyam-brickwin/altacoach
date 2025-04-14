@@ -23,7 +23,8 @@ export async function POST(request: Request) {
           name: data.name,
           status: data.status?.toUpperCase() || 'PENDING',
           color: data.color || null,
-          startDate: new Date(),
+          startDate: data.startDate ? new Date(data.startDate) : new Date(),
+          endDate: data.endDate ? new Date(data.endDate) : null, // Include endDate
           createdBy: {
             connect: { id: userId }
           }
@@ -57,7 +58,8 @@ export async function POST(request: Request) {
           name: data.name,
           status: data.status?.toUpperCase() || 'PENDING',
           color: data.color || null,
-          startDate: new Date(),
+          startDate: data.startDate ? new Date(data.startDate) : new Date(),
+          endDate: data.endDate ? new Date(data.endDate) : null, // Include endDate
           createdBy: {
             connect: { id: user.id }
           }

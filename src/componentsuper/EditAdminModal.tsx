@@ -31,10 +31,18 @@ export default function EditAdminModal({ isOpen, onClose, admin, translate, onSu
 
   useEffect(() => {
     if (admin) {
+      // Convert role to a consistent format for the form
+      let displayRole = admin.role;
+      
+      // Convert uppercase roles like 'SUPER_ADMIN' to the expected 'super_admin' format
+      if (admin.role) {
+        displayRole = admin.role.toLowerCase();
+      }
+      
       setFormData({
         name: admin.name,
         email: admin.email,
-        role: admin.role,
+        role: displayRole,
         status: admin.status,
       });
     }
@@ -56,21 +64,34 @@ export default function EditAdminModal({ isOpen, onClose, admin, translate, onSu
     setError(null);
 
     try {
+      // Make sure we have a default role value to avoid undefined
+      let normalizedRole: string = formData.role || 'admin';
+      
+      // If role comes from the UI dropdown selection as 'super_admin' or 'admin', use it directly
+      // If it comes as 'Super Admin' or 'Admin', convert it to the correct format
+      if (formData.role === 'Super Admin') {
+        normalizedRole = 'super_admin';
+      } else if (formData.role === 'Admin') {
+        normalizedRole = 'admin';
+      }
+      
+      // Always ensure role is lowercase for consistency with your backend
+      normalizedRole = normalizedRole.toLowerCase();
+
       // Create the update data object with only the fields that can be updated
-      // Ensure role is always lowercase when sent to database
       const updateData = {
-        name: formData.name,
-        email: formData.email,
-        role: formData.role?.toLowerCase(), // Convert role to lowercase
-        status: formData.status
+        name: formData.name || '',
+        email: formData.email || '',
+        role: normalizedRole, // Use the normalized role value
+        status: formData.status || 'active'
       };
+
+      console.log('Updating user with data:', updateData); // Debug log
 
       const response = await fetch(`/apisuper/superadmin/user/${admin.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          // Add authorization header if required
-          // 'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(updateData),
       });

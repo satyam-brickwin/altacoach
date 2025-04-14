@@ -102,12 +102,12 @@ interface NewUser {
   role?: string;  // Make it optional in the interface
 }
 
-// Update this line to accept the updated user as parameter
+// Update the EditUserModalProps interface in your code
 interface EditUserModalProps {
   isOpen: boolean;
   onClose: () => void;
   user: User | null;
-  onSuccess: (updatedUser: User) => void;
+  onSuccess: (updatedUser: User) => void;  // Changed from () => void to accept the user parameter
   translate: (key: string) => string;
 }
 
@@ -784,17 +784,18 @@ export default function AdminBusinesses() {
     }
   }, []);
 
-  const handleAddUserSuccess = async (newUser: User) => {
+  const handleAddUserSuccess = async (newUser: any) => {
     if (!newUser?.name || !selectedBusinessView) return;
 
     try {
       // Ensure business ID is included in the payload
+      // Add the missing 'role' property to satisfy the type constraint
       const userPayload = {
         ...newUser,
         businessId: selectedBusinessView.id,
         language: newUser.language || 'en',
         status: newUser.status || 'ACTIVE',
-        role: newUser.role || 'USER'
+        role: newUser.role || 'USER' // Add the role property if it's missing
       };
 
       console.log('Submitting user to API:', userPayload);
@@ -916,29 +917,24 @@ export default function AdminBusinesses() {
     setIsUploadDocumentModalOpen(true);
   }; // Add the closing semicolon here
 
-  // Update the handleToggleUserStatus function
+  // Update the handleToggleUserStatus function with proper typing
+
   const handleToggleUserStatus = async (user: User) => {
-    const newStatus = user.status === 'active' ? 'inactive' : 'active';
-    
     try {
+      // Normalize status case for comparison - make status check case-insensitive
+      const isCurrentlyActive = user.status?.toUpperCase() === 'ACTIVE';
+      const newStatus = isCurrentlyActive ? 'SUSPENDED' : 'ACTIVE';
+      
+      console.log(`Toggling status for user ${user.name} (${user.id}) from ${user.status} to ${newStatus}`);
+      
       // Optimistically update UI
-      setUsers(currentUsers =>
-        currentUsers.map(u =>
+      setUsers((prevUsers: User[]) => 
+        prevUsers.map(u =>
           u.id === user.id
             ? { ...u, status: newStatus }
             : u
         )
       );
-
-      // Update usersMap
-      setUsersMap(prev => ({
-        ...prev,
-        [selectedBusinessView?.id || '']: prev[selectedBusinessView?.id || ''].map(u =>
-          u.id === user.id
-            ? { ...u, status: newStatus }
-            : u
-        )
-      }));
 
       // Make API call to update status
       const response = await fetch(`/api/admin/users/${user.id}/status`, {
@@ -946,44 +942,48 @@ export default function AdminBusinesses() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Add this line to include auth cookies
         body: JSON.stringify({ status: newStatus }),
       });
 
-      const data = await response.json();
+      // Check if response is ok before parsing JSON
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed with status: ${response.status}`);
+      }
 
+      const data = await response.json();
+      
       if (!data.success) {
         throw new Error(data.error || 'Failed to update user status');
       }
 
-      // Show success toast
-      showToast(
-        `User ${user.name} has been ${newStatus === 'active' ? 'activated' : 'deactivated'}`,
-        'success'
-      );
-
+      console.log('User status updated successfully:', data);
+      
+      // Show success toast notification
+      showToast(`User ${user.name} ${newStatus.toLowerCase() === 'active' ? 'activated' : 'deactivated'} successfully`, 'success');
+      
     } catch (error) {
       console.error('Error updating user status:', error);
       
-      // Revert the state changes on error
-      setUsers(currentUsers =>
-        currentUsers.map(u =>
-          u.id === user.id
-            ? { ...u, status: user.status }
-            : u
-        )
-      );
-
-      setUsersMap(prev => ({
-        ...prev,
-        [selectedBusinessView?.id || '']: prev[selectedBusinessView?.id || ''].map(u =>
-          u.id === user.id
-            ? { ...u, status: user.status }
-            : u
-        )
-      }));
-
-      // Show error toast
-      showToast('Failed to update user status. Please try again.', 'error');
+      // Revert the UI update on error
+      if (user && user.id) {
+        setUsers((prevUsers: User[]) => 
+          prevUsers.map(u =>
+            u.id === user.id
+              ? { ...u, status: user.status }
+              : u
+          )
+        );
+      }
+      
+      // Refresh the users list in case of error
+      if (selectedBusinessView?.id) {
+        loadUsersForBusiness(selectedBusinessView.id);
+      }
+      
+      // Show error notification
+      showToast(`Failed to update user status: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
     }
   };
 
@@ -1134,8 +1134,13 @@ export default function AdminBusinesses() {
 
   // Filter businesses based on status and search term
   const filteredBusinesses = businesses.filter(business => {
-    const matchesStatus = statusFilter === 'all' || business.status === statusFilter;
+    // Make status comparison case-insensitive
+    const businessStatus = business.status ? business.status.toLowerCase() : '';
+    const filterStatus = statusFilter === 'all' ? '' : statusFilter.toLowerCase();
+    
+    const matchesStatus = statusFilter === 'all' || businessStatus === filterStatus;
     const matchesSearch = business.name.toLowerCase().includes(searchTerm.toLowerCase());
+    
     return matchesStatus && matchesSearch;
   });
 
@@ -1217,12 +1222,17 @@ export default function AdminBusinesses() {
     setError('');
 
     try {
-      // Include the required fields that match the schema
+      // Include all necessary fields including startDate and endDate
       const businessData = {
         name: formData.name,
-        plan: formData.plan || 'BUSINESS', // Default to BUSINESS if not specified
-        status: formData.status || 'PENDING', // Default to PENDING if not specified
-        createdBy: user?.name || 'Admin', // Include the createdBy field
+        plan: formData.plan || 'BUSINESS',
+        status: formData.status || 'PENDING',
+        createdBy: user?.name || 'Admin',
+        // Format dates properly for the API
+        startDate: formData.startDate ? new Date(formData.startDate).toISOString() : null,
+        endDate: formData.endDate ? new Date(formData.endDate).toISOString() : null,
+        // Add color if available
+        color: formData.color || '#C72026'
       };
 
       const response = await fetch('/api/admin/businesses', {
@@ -1244,8 +1254,11 @@ export default function AdminBusinesses() {
         ...data.business,
         userCount: 0,
         logo: '',
-        colorTheme: '#C72026',
+        colorTheme: businessData.color,
         isActive: data.business.status === 'ACTIVE',
+        // Make sure these dates are properly included in the UI state
+        startDate: businessData.startDate,
+        endDate: businessData.endDate
       };
 
       // Update the UI with the new business
@@ -1676,7 +1689,7 @@ export default function AdminBusinesses() {
                   </svg>
                 ) : (
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 9 9 0 018.646 3.646 9.003 9.003 9.003 0 0012 21a9.003 9.003 9.003 0 008.354-5.646z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 9 9 0 018.646 3.646A9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                   </svg>
                 )}
               </button>
@@ -1845,7 +1858,7 @@ export default function AdminBusinesses() {
                     <select
                       value={statusFilter}
                       onChange={(e) => setStatusFilter(e.target.value)}
-                      className="mt-1 block w-42 pl-3 pr-10 py-2 text-sm text-black border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] rounded-md"
+                      className="mt-1 block w-42 pl-3 pr-10 py-2 text-sm text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] rounded-md"
                     >
                       <option value="all">{t('allBusinesses')}</option>
                       <option value="active">{t('active')}</option>
@@ -1862,7 +1875,8 @@ export default function AdminBusinesses() {
                       className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] text-sm"
                     />
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M8 4a4 4 4 0 100 8 4 4 0 000-8zM2 8a6 6 6 6 0 1110.89 3.476l4.817 4.817a1 1 1 01-1.414 1.414l-4-4a6 6 6 6 0 01-8.89-3.476z" clipRule="evenodd" />
                       </svg>
                     </div>
                   </div>
@@ -1970,7 +1984,7 @@ export default function AdminBusinesses() {
                                   >
                                     {t('edit')}
                                   </button>
-                                  {business.status === 'pending' && (
+                                  {/* {business.status === 'pending' && (
                                     <button className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300">
                                       {t('approve')}
                                     </button>
@@ -1984,7 +1998,7 @@ export default function AdminBusinesses() {
                                     <button className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300">
                                       {t('approve')}
                                     </button>
-                                  )}
+                                  )} */}
                                   {/* <button 
                                     onClick={() => toggleBusinessActive(business)}
                                     className={`${
@@ -2234,7 +2248,40 @@ export default function AdminBusinesses() {
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <div className="text-sm text-gray-500 dark:text-gray-400">
-                                    {user?.language ? languageLabels[user.language as SupportedLanguage] || user.language : 'English'}
+                                    {(() => {
+                                      // If language is missing, default to English
+                                      if (!user?.language) return 'English';
+                                      
+                                      // Create a mapping for all possible formats
+                                      const languageDisplayMap: Record<string, string> = {
+                                        // Full names
+                                        'English': 'English',
+                                        'Español': 'Español',
+                                        'Français': 'Français',
+                                        'Deutsch': 'Deutsch',
+                                        'Português': 'Português',
+                                        'Italiano': 'Italiano',
+                                        
+                                        // Uppercase codes
+                                        'EN': 'English',
+                                        'ES': 'Español',
+                                        'FR': 'Français',
+                                        'DE': 'Deutsch',
+                                        'PT': 'Português',
+                                        'IT': 'Italiano',
+                                        
+                                        // Lowercase codes
+                                        'en': 'English',
+                                        'es': 'Español',
+                                        'fr': 'Français',
+                                        'de': 'Deutsch',
+                                        'pt': 'Português',
+                                        'it': 'Italiano'
+                                      };
+                                      
+                                      // Try to find the language in our mapping
+                                      return languageDisplayMap[user.language] || user.language;
+                                    })()}
                                   </div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
@@ -2270,12 +2317,12 @@ export default function AdminBusinesses() {
                                     <button
                                       onClick={() => handleToggleUserStatus(user)}
                                       className={`${
-                                        user.status === 'active'
+                                        user.status?.toLowerCase() === 'active'
                                           ? 'text-red-600 hover:text-red-900'
                                           : 'text-green-600 hover:text-green-900'
                                       }`}
                                     >
-                                      {user.status === 'active' ? 'Deactivate' : 'Activate'}
+                                      {user.status?.toLowerCase() === 'active' ? t('deactivate') : t('activate')}
                                     </button>
                                   </div>
                                 </td>
@@ -2768,7 +2815,7 @@ export default function AdminBusinesses() {
                   </div>
                   
                   {/* Start Date */}
-                  <div>
+                  {/* <div>
                     <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       {t('StartDate')}
                     </label>
@@ -2780,10 +2827,10 @@ export default function AdminBusinesses() {
                       onChange={handleEditInputChange}
                       className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                     />
-                  </div>
+                  </div> */}
 
                   {/* End Date */}
-                  <div>
+                  {/* <div>
                     <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       {t('EndDate')}
                     </label>
@@ -2795,7 +2842,7 @@ export default function AdminBusinesses() {
                       onChange={handleEditInputChange}
                       className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                     />
-                  </div>
+                  </div> */}
                   
                   {/* Status */}
                   <div>
@@ -2816,7 +2863,7 @@ export default function AdminBusinesses() {
                   </div>
                   
                   {/* Active Status Switch */}
-                  <div className="flex items-center">
+                  {/* <div className="flex items-center">
                     <input
                       id="isActive"
                       name="isActive"
@@ -2828,7 +2875,7 @@ export default function AdminBusinesses() {
                     <label htmlFor="isActive" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
                       {t('isActive')}
                     </label>
-                  </div>
+                  </div> */}
                   
                   <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
                     <button
@@ -2864,15 +2911,16 @@ export default function AdminBusinesses() {
         isOpen={isEditUserModalOpen}
         onClose={() => setIsEditUserModalOpen(false)}
         user={selectedUser}
-        onSuccess={async (updatedUser: { name: any; }) => {
-          try {
-            await refreshUsers();
-            setIsEditUserModalOpen(false);
-            showToast(`User ${updatedUser.name} updated successfully`, 'success');
-          } catch (error) {
-            console.error('Error after updating user:', error);
-            showToast('Failed to refresh user list', 'error');
-          }
+        onSuccess={() => {
+          refreshUsers()
+            .then(() => {
+              setIsEditUserModalOpen(false);
+              showToast(`User updated successfully`, 'success');
+            })
+            .catch(error => {
+              console.error('Error after updating user:', error);
+              showToast('Failed to refresh user list', 'error');
+            });
         }}
         translate={(key: string) => key}
       />

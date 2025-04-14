@@ -338,6 +338,12 @@ export default function AdminUsers() {
   const [editUser, setEditUser] = useState<User | null>(null);
   const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [actionLoading, setActionLoading] = useState<{[key: string]: boolean}>({});
+  const [notification, setNotification] = useState<{
+    message: string;
+    type: 'success' | 'error' | 'info';
+    visible: boolean;
+  } | null>(null);
   
   // Protect this page - only allow admin users
   const { isLoading: authLoading, isAuthenticated, user, logout } = useAuthProtection([UserRole.SUPER_ADMIN]);
@@ -482,6 +488,71 @@ export default function AdminUsers() {
       console.error('Error during logout:', error);
       // Force navigation even on error
       window.location.href = '/login';
+    }
+  };
+
+  const handleStatusChange = async (user: User, newStatus: 'active' | 'suspended') => {
+    try {
+      // Set loading state for this specific user
+      setActionLoading(prev => ({ ...prev, [user.id]: true }));
+      
+      const response = await fetch(`/apisuper/user/${user.id}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update user status');
+      }
+
+      // Update the user in the local state
+      setUsers(prevUsers =>
+        prevUsers.map(u =>
+          u.id === user.id ? { ...u, status: newStatus } : u
+        )
+      );
+      
+      // Format role for display
+      const roleDisplay = user.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Admin';
+      
+      // Show success notification with role information
+      setNotification({
+        message: `${roleDisplay} ${user.name} has been ${newStatus === 'active' ? 'activated' : 'suspended'}`,
+        type: 'success',
+        visible: true
+      });
+      
+      // Auto-hide after 5 seconds
+      setTimeout(() => {
+        setNotification(null);
+      }, 5000);
+      
+    } catch (error) {
+      console.error('Error updating user status:', error);
+      
+      // Show error notification
+      setNotification({
+        message: `Failed to update status: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        type: 'error',
+        visible: true
+      });
+      
+      // Auto-hide after 5 seconds
+      setTimeout(() => {
+        setNotification(null);
+      }, 5000);
+    } finally {
+      // Clear loading state for this user
+      setActionLoading(prev => {
+        const newState = { ...prev };
+        delete newState[user.id];
+        return newState;
+      });
     }
   };
 
@@ -817,12 +888,36 @@ export default function AdminUsers() {
                                 {t('edit')}
                               </button>
                               {user.status === 'active' ? (
-                                <button className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300">
-                                  {t('suspend')}
+                                <button 
+                                  className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+                                  onClick={() => handleStatusChange(user, 'suspended')}
+                                  disabled={actionLoading[user.id]}
+                                >
+                                  {actionLoading[user.id] ? (
+                                    <span className="flex items-center">
+                                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                      </svg>
+                                      Processing
+                                    </span>
+                                  ) : t('suspend')}
                                 </button>
                               ) : (
-                                <button className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300">
-                                  {t('activate')}
+                                <button 
+                                  className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300"
+                                  onClick={() => handleStatusChange(user, 'active')}
+                                  disabled={actionLoading[user.id]}
+                                >
+                                  {actionLoading[user.id] ? (
+                                    <span className="flex items-center">
+                                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                      </svg>
+                                      Processing
+                                    </span>
+                                  ) : t('activate')}
                                 </button>
                               )}
                             </div>
@@ -862,6 +957,29 @@ export default function AdminUsers() {
         translate={t}
         onSuccess={fetchUsers}
       />
+
+      {/* Custom Notification with solid colors that match page theme */}
+      {notification && notification.visible && (
+        <div 
+          className={`fixed bottom-4 right-4 p-4 rounded-md shadow-lg flex items-center z-50 ${
+            notification.type === 'success' 
+              ? 'bg-white text-[#C72026] border-l-4 border-[#C72026]' 
+              : notification.type === 'error'
+              ? 'bg-white text-[#C72026] border-l-4 border-[#C72026]'
+              : 'bg-white text-[#C72026] border-l-4 border-[#C72026]'
+          }`}
+        >
+          <span className="flex-grow">{notification.message}</span>
+          <button 
+            onClick={() => setNotification(null)} 
+            className="ml-4 text-[#C72026] hover:text-[#A51B20]"
+          >
+            <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
     </div>
   );
 }

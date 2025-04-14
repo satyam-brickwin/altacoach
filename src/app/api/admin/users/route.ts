@@ -38,6 +38,7 @@ export async function GET(request: Request) {
           email: true,
           role: true,
           status: true,
+          language: true, // Add this line to include language in the results
           createdAt: true,
           lastLogin: true,
           businesses: {
@@ -65,6 +66,7 @@ export async function GET(request: Request) {
         email: user.email,
         role: user.role,
         status: user.status,
+        language: user.language, // Add this line
         createdAt: user.createdAt,
         lastLogin: user.lastLogin,
         businessId: businessId,
@@ -80,6 +82,7 @@ export async function GET(request: Request) {
           email: true,
           role: true,
           status: true,
+          language: true, // Add this line to include language in the results
           createdAt: true,
           lastLogin: true,
           businesses: {
@@ -106,6 +109,7 @@ export async function GET(request: Request) {
         email: user.email,
         role: user.role,
         status: user.status,
+        language: user.language, // Add this line to include language in the results
         createdAt: user.createdAt,
         lastLogin: user.lastLogin,
         businessId: user.businesses[0]?.business.id || null,
@@ -130,7 +134,8 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const data = await request.json();
-    const { email, name, password, role = "user", language = "English", status = "ACTIVE", businessId } = data;
+    // Remove the default "English" here to ensure the provided language is used
+    const { email, name, password, role = "user", language, status = "ACTIVE", businessId } = data;
 
     if (!email || !name || !password) {
       return Response.json({ success: false, error: "Email, name, and password are required" }, { status: 400 });
@@ -138,26 +143,29 @@ export async function POST(request: Request) {
 
     // Ensure role is always lowercase before storing
     const normalizedRole = role.toLowerCase();
+    
+    // Use the provided language or default to "English" if truly missing
+    const userLanguage = language || "English";
 
-    console.log(`Creating user with data:`, { name, email, role: normalizedRole, businessId });
+    console.log(`Creating user with data:`, { name, email, role: normalizedRole, language: userLanguage, businessId });
 
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create the user with lowercase role
+    // Create the user with the correct language
     const newUser = await prisma.user.create({
       data: {
         email,
         name,
         password: hashedPassword,
-        role: normalizedRole, // This will ensure the role is always lowercase
-        language,
+        role: normalizedRole,
+        language: userLanguage, // This will use whatever language was selected or default to English
         status,
         isVerified: false,
       },
     });
 
-    console.log("Created new user:", newUser);
+    console.log("Created new user with language:", newUser.language);
 
     // If a business ID is provided, create the association
     if (businessId) {

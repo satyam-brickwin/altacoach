@@ -622,7 +622,7 @@ const SuperAdminSettings = () => {
           <div className="max-w-7xl mx-auto">
             <div className="flex justify-between items-center mb-6">
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{translate('settings')}</h1>
-              <div className="flex items-center space-x-2">
+              {/* <div className="flex items-center space-x-2">
                 <select
                   value={language}
                   onChange={handleLanguageChange}
@@ -634,7 +634,7 @@ const SuperAdminSettings = () => {
                     </option>
                   ))}
                 </select>
-              </div>
+              </div> */}
             </div>
             
             <p className="text-gray-600 dark:text-gray-400 mb-8">

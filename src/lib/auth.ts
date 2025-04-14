@@ -162,6 +162,18 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
+    async signIn({ user, account, profile }) {
+      // Update last login time
+      if (user?.id) {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            lastLogin: new Date()
+          }
+        });
+      }
+      return true;
+    },
   },
 };
 
@@ -187,4 +199,4 @@ declare module 'next-auth/jwt' {
     id: string;
     role: string;
   }
-} 
+}
