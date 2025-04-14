@@ -306,6 +306,42 @@ const handleDownloadSampleTemplate = () => {
   URL.revokeObjectURL(url);
 };
 
+// Update the ImportTemplateLink component to be positioned below the import button
+const ImportTemplateLink = () => {
+  const handleDownloadSampleTemplate = () => {
+    // Define the headers only (no data rows)
+    const headers = ['name*', 'email*', 'language*', 'status', 'role'];
+    
+    // Create a CSV with only headers
+    const csvContent = headers.join(',');
+    
+    // Create a Blob with the CSV content
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    
+    // Create a download link and trigger the download
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'user_import_template.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+  
+  return (
+    <button 
+      onClick={handleDownloadSampleTemplate}
+      className="text-red-600 hover:text-black-800 text-xs underline flex items-center mt-1 ml-1"
+    >
+      <span className="mr-1">sample import template</span>
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 3 0 003 3h10a3 3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+      </svg>
+    </button>
+  );
+};
+
 // Define translations for the admin dashboard
 const adminTranslations = {
   en: {
@@ -2070,36 +2106,41 @@ export default function AdminBusinesses() {
                     
                     {/* Add appropriate action button based on active filter */}
                     {activeFilter === 'users' ? (
-                      <div className="flex space-x-2">
-                        <div className="flex flex-col">
-                          <div className="mb-1">
+                      <div>
+                        <div className="flex space-x-2">
+                          <div className="flex flex-col">
                             <UserDataActions 
                               users={users}
                               onImportUsers={async (importedUsers) => {
                                 try {
+                                  // Check if we have a valid business ID first
+                                  if (!selectedBusinessView?.id) {
+                                    showToast('No business selected for importing users', 'error');
+                                    return;
+                                  }
+
+                                  console.log('Imported users to process:', importedUsers);
+                                  
                                   // First, validate for duplicates
                                   const duplicates = importedUsers.filter(newUser => 
                                     isDuplicateUser(newUser, users, selectedBusinessView.id)
                                   );
                             
                                   if (duplicates.length > 0) {
-                                    // Replace alert with toast notification
                                     showToast(`Duplicate users found: ${duplicates.map(d => d.email).join(', ')}`, 'warning');
                                     return;
                                   }
-                            
+
                                   // Add business ID and other required fields to each imported user
                                   const enrichedUsers = importedUsers.map(user => ({
                                     ...user,
-                                    id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // More unique temporary ID
                                     businessId: selectedBusinessView.id,
-                                    joinDate: new Date().toISOString().split('T')[0],
-                                    lastActive: new Date().toISOString().split('T')[0],
-                                    status: user.status || 'active',
-                                    createdBy: user?.name || 'Admin',
-                                    role: user.role || 'User', // Default role if not provided,
+                                    password: 'DefaultPass123!', // Add a default password that will be changed on first login
+                                    status: user.status || 'ACTIVE'
                                   }));
-                            
+
+                                  console.log('Sending enriched users to API:', enrichedUsers);
+
                                   // Make API call to bulk create users
                                   const response = await fetch('/api/admin/users/bulk', {
                                     method: 'POST',
@@ -2117,75 +2158,32 @@ export default function AdminBusinesses() {
                                   if (!data.success) {
                                     throw new Error(data.error || 'Failed to import users');
                                   }
-                            
-                                  // Process the response to ensure users have all required fields
-                                  const newUsers = data.users.map((user: any) => ({
-                                    ...user,
-                                    // Ensure these fields exist for UI rendering purposes
-                                    joinDate: user.joinDate || new Date().toISOString().split('T')[0],
-                                    lastActive: user.lastActive || new Date().toISOString().split('T')[0],
-                                    status: user.status || 'active',
-                                    createdBy: user.createdBy || user?.name || 'Admin',
-                                  }));
-                            
-                                  // Update users state with proper typing
-                                  setUsers(prevUsers => [...newUsers, ...prevUsers]); // Changed order to put new users first
-                            
-                                  // Update usersMap properly
-                                  setUsersMap(prev => {
-                                    const existingUsers = prev[selectedBusinessView.id] || [];
-                                    return {
-                                      ...prev,
-                                      [selectedBusinessView.id]: [...newUsers, ...existingUsers] // Changed order to put new users first
-                                    };
-                                  });
-                            
-                                  // Update business user count
-                                  setBusinesses(prevBusinesses =>
-                                    prevBusinesses.map(business =>
-                                      business.id === selectedBusinessView.id
-                                        ? { ...business, userCount: (business.userCount || 0) + newUsers.length }
-                                        : business
-                                    )
-                                  );
-                            
-                                  // Update selected business view
-                                  if (selectedBusinessView) {
-                                    setSelectedBusinessView({
-                                      ...selectedBusinessView,
-                                      userCount: (selectedBusinessView.userCount || 0) + newUsers.length,
-                                    });
-                                  }
-                            
-                                  // Replace alert with toast notification
-                                  showToast(`Successfully imported ${newUsers.length} users`, 'success');
-                            
-                                  // Force a re-render of filtered users
-                                  setUserSearchTerm(prev => prev + '');
-                            
+
+                                  // Update the UI with the new users
+                                  setUsers(prevUsers => [...data.users, ...prevUsers]);
+                                  
+                                  // Show success message
+                                  showToast(`Successfully imported ${data.users.length} users`, 'success');
+                                  
+                                  // Refresh the users list to ensure everything is up to date
+                                  loadUsersForBusiness(selectedBusinessView.id);
+                                  
                                 } catch (error) {
                                   console.error('Error importing users:', error);
-                                  // Replace alert with toast notification
-                                  showToast('Failed to import users. Please try again.', 'error');
+                                  showToast(`Failed to import users: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
                                 }
                               }}
-                              businessId={selectedBusinessView.id}
+                              businessId={selectedBusinessView?.id}
                             />
+                            <ImportTemplateLink />
                           </div>
-                          <button
-                            onClick={handleDownloadSampleTemplate}
-                            className="text-[10px] text-[#C72026] hover:text-[#C72026]/80 font-medium transition-colors duration-200 hover:underline self-start"
+                          <button 
+                            onClick={handleAddUser}
+                            className="h-[36px] inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#C72026] hover:bg-[#C72026]/90"
                           >
-                            Download sample template
+                            Add User
                           </button>
                         </div>
-                        
-                        <button 
-                          onClick={handleAddUser}
-                          className="h-[36px] inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#C72026] hover:bg-[#C72026]/90"
-                        >
-                          Add User
-                        </button>
                       </div>
                     ) : (
                       <button 
