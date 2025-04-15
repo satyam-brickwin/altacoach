@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
-import bcrypt from 'bcryptjs'; 
+import bcrypt from 'bcryptjs';
 import { hashPassword } from '@/lib/auth';
+import { sendPasswordResetEmail } from '@/lib/email/sendPasswordResetEmail';
+import crypto from 'crypto';
 
 export async function GET(request: Request) {
   try {
@@ -138,9 +140,9 @@ export async function POST(request: Request) {
     console.log('Creating user with data:', { name, email, role, businessId });
 
     // Basic validation
-    if (!email || !password) {
+    if (!email) {
       return NextResponse.json(
-        { success: false, error: 'Email and password are required' },
+        { success: false, error: 'Email is required' },
         { status: 400 }
       );
     }
@@ -172,7 +174,19 @@ export async function POST(request: Request) {
       }
     }
     
-    const hashedPassword = await bcrypt.hash(password, 10);
+    let hashedPassword: string | undefined;
+    let resetToken: string | undefined;
+    let resetTokenExpiry: Date | undefined;
+
+    if (password) {
+      hashedPassword = await bcrypt.hash(password, 10);
+    } else if (role === 'ADMIN') {
+      resetToken = crypto.randomBytes(32).toString('hex');
+      resetTokenExpiry = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30);
+    }
+
+    resetToken = crypto.randomBytes(32).toString('hex');
+    resetTokenExpiry = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30);
     
     // Create user and possibly associate with a business
     let newUser;
@@ -197,9 +211,11 @@ export async function POST(request: Request) {
           data: {
             name: name || email.split('@')[0],
             email,
-            password: hashedPassword,
+            password: hashedPassword || '',
             role: role || 'USER',
             status: 'ACTIVE',
+            resetToken,
+            resetTokenExpiry,
           }
         });
         
@@ -220,11 +236,18 @@ export async function POST(request: Request) {
         data: {
           name: name || email.split('@')[0],
           email,
-          password: hashedPassword,
+          password: hashedPassword || '',
           role: role || 'USER',
           status: 'ACTIVE',
+          resetToken,
+          resetTokenExpiry,
         }
       });
+    }
+
+    // Send password reset email if a token was generated
+    if (resetToken) {
+      await sendPasswordResetEmail(email, resetToken);
     }
 
     return NextResponse.json({

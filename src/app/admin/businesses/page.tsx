@@ -836,63 +836,65 @@ export default function AdminBusinesses() {
 
       console.log('Submitting user to API:', userPayload);
 
-      // Make API call to create user
-      const response = await fetch('/api/admin/users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userPayload),
-      });
+      try {
+        const response = await fetch('/api/admin/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(userPayload),
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Error response from API:', errorData);
-        throw new Error(errorData.error || 'Failed to create user');
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to create user');
+        }
+
+        if (!data.success) {
+          throw new Error(data.error || 'Failed to create user');
+        }
+
+        console.log('User created successfully:', data.user);
+
+        // Update local users state immediately
+        const newUserWithAllFields = {
+          ...data.user,
+          joinDate: data.user.joinDate || new Date().toISOString().split('T')[0],
+          lastActive: data.user.lastActive || new Date().toISOString().split('T')[0],
+        };
+        
+        // Update the users state
+        setUsers(prevUsers => [newUserWithAllFields, ...prevUsers]);
+        
+        // Update the usersMap
+        setUsersMap(prev => ({
+          ...prev,
+          [selectedBusinessView.id]: [newUserWithAllFields, ...(prev[selectedBusinessView.id] || [])]
+        }));
+        
+        // Update the business user count
+        setBusinesses(prevBusinesses =>
+          prevBusinesses.map(business =>
+            business.id === selectedBusinessView.id
+              ? { ...business, userCount: (business.userCount || 0) + 1 }
+              : business
+          )
+        );
+        
+        // Update the selected business view
+        setSelectedBusinessView(prev => 
+          prev ? { ...prev, userCount: (prev.userCount || 0) + 1 } : null
+        );
+
+        // Close modal and show success message
+        setIsAddUserModalOpen(false);
+        showToast(`User ${data.user.name} created successfully`, 'success');
+        
+      } catch (error) {
+        console.error('Error creating user:', error);
+        setError(error instanceof Error ? error.message : 'Failed to create user');
       }
-
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to create user');
-      }
-
-      console.log('User created successfully:', data.user);
-
-      // Update local users state immediately
-      const newUserWithAllFields = {
-        ...data.user,
-        joinDate: data.user.joinDate || new Date().toISOString().split('T')[0],
-        lastActive: data.user.lastActive || new Date().toISOString().split('T')[0],
-      };
-      
-      // Update the users state
-      setUsers(prevUsers => [newUserWithAllFields, ...prevUsers]);
-      
-      // Update the usersMap
-      setUsersMap(prev => ({
-        ...prev,
-        [selectedBusinessView.id]: [newUserWithAllFields, ...(prev[selectedBusinessView.id] || [])]
-      }));
-      
-      // Update the business user count
-      setBusinesses(prevBusinesses =>
-        prevBusinesses.map(business =>
-          business.id === selectedBusinessView.id
-            ? { ...business, userCount: (business.userCount || 0) + 1 }
-            : business
-        )
-      );
-      
-      // Update the selected business view
-      setSelectedBusinessView(prev => 
-        prev ? { ...prev, userCount: (prev.userCount || 0) + 1 } : null
-      );
-
-      // Close modal and show success message
-      setIsAddUserModalOpen(false);
-      showToast(`User ${data.user.name} created successfully`, 'success');
-      
     } catch (error) {
       console.error('Error creating user:', error);
       showToast(`Failed to create user: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');

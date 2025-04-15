@@ -134,52 +134,104 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const data = await request.json();
-    // Remove the default "English" here to ensure the provided language is used
-    const { email, name, password, role = "user", language, status = "ACTIVE", businessId } = data;
+    const { 
+      email, 
+      name, 
+      password, 
+      role = "user", 
+      language, 
+      status = "ACTIVE", 
+      businessId,
+      generateResetToken,
+      passwordPending
+    } = data;
 
-    if (!email || !name || !password) {
-      return Response.json({ success: false, error: "Email, name, and password are required" }, { status: 400 });
+    // Check for required fields
+    if (!email || !name) {
+      return Response.json({ success: false, error: "Email and name are required" }, { status: 400 });
     }
 
-    // Ensure role is always lowercase before storing
-    const normalizedRole = role.toLowerCase();
+    // Check for existing user
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
     
-    // Use the provided language or default to "English" if truly missing
+    if (existingUser) {
+      return Response.json(
+        { success: false, error: "A user with this email already exists" },
+        { status: 400 }
+      );
+    }
+
+    // Normalize role
+    const normalizedRole = role.toLowerCase();
     const userLanguage = language || "English";
 
-    console.log(`Creating user with data:`, { name, email, role: normalizedRole, language: userLanguage, businessId });
+    // Create user data object
+    let userData: any = {
+      email,
+      name,
+      role: normalizedRole,
+      language: userLanguage,
+      status,
+      isVerified: false,
+    };
 
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Important: Handle the password field based on whether verification is required
+    if (passwordPending) {
+      // Use a special placeholder that can't be used to log in
+      // This meets database schema requirements without allowing access
+      userData.password = "VERIFICATION_PENDING"; // Non-hashed placeholder
+    } else if (password) {
+      // If password is provided and not pending verification, hash it normally
+      const hashedPassword = await bcrypt.hash(password, 10);
+      userData.password = hashedPassword;
+    } else {
+      // Generate a temporary password that won't be used
+      const tempPassword = Math.random().toString(36).slice(-8);
+      const hashedTemp = await bcrypt.hash(tempPassword, 10);
+      userData.password = hashedTemp;
+    }
 
-    // Create the user with the correct language
+    // Generate reset token for password creation via email
+    if (generateResetToken) {
+      const crypto = require('crypto');
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      const resetTokenExpiry = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7); // 7 days
+      
+      userData.resetToken = resetToken;
+      userData.resetTokenExpiry = resetTokenExpiry;
+      
+      try {
+        const { sendPasswordResetEmail } = await import('@/lib/email/sendPasswordResetEmail');
+        // Modify your email template to explain this is for account creation
+        await sendPasswordResetEmail(email, resetToken);
+        console.log(`Password creation email sent to ${email}`);
+      } catch (emailError) {
+        console.error("Error sending password creation email:", emailError);
+      }
+    }
+
+    // Create the user
     const newUser = await prisma.user.create({
-      data: {
-        email,
-        name,
-        password: hashedPassword,
-        role: normalizedRole,
-        language: userLanguage, // This will use whatever language was selected or default to English
-        status,
-        isVerified: false,
-      },
+      data: userData
     });
 
-    console.log("Created new user with language:", newUser.language);
-
-    // If a business ID is provided, create the association
+    // Handle business association
     if (businessId) {
-      console.log(`Creating business association: userId=${newUser.id}, businessId=${businessId}, createdById=${newUser.id}`);
+      console.log(`Creating business association: userId=${newUser.id}, businessId=${businessId}`);
       
-      await prisma.$transaction(async (tx) => {
-        await tx.businessUser.create({
+      try {
+        await prisma.businessUser.create({
           data: {
             userId: newUser.id,
             businessId: businessId,
             createdById: newUser.id,
           },
         });
-      });
+      } catch (bizError) {
+        console.error("Error creating business association:", bizError);
+      }
     }
 
     return Response.json({
@@ -188,11 +240,12 @@ export async function POST(request: Request) {
         id: newUser.id,
         email: newUser.email,
         name: newUser.name,
-        role: newUser.role, // Will now be lowercase
+        role: newUser.role,
         status: newUser.status,
         language: newUser.language,
         isVerified: newUser.isVerified,
         businessId: businessId,
+        passwordPending: true
       },
     });
     

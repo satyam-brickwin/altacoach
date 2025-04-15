@@ -72,12 +72,12 @@ export default function AddUserModal({
     setError(null);
 
     try {
-      // Validate required fields
-      if (!formData.name || !formData.email || !formData.password) {
-        throw new Error('Name, email and password are required');
+      // Validation remains the same
+      if (!formData.name || !formData.email) {
+        throw new Error('Name and email are required');
       }
 
-      // Email validation
+      // Email validation remains the same
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(formData.email)) {
         throw new Error('Please enter a valid email address');
@@ -90,24 +90,44 @@ export default function AddUserModal({
       const userData = {
         ...formData,
         status: formData.status.toUpperCase(), // Ensure status is uppercase
-        businessId: businessId
+        businessId: businessId,
+        password: null, // Send null password - API will handle this correctly
+        role: 'USER', // Explicitly set role to USER
+        generateResetToken: true, // Flag to indicate we want to generate a reset token
+        passwordPending: true // New flag to indicate password should be set after verification
       };
 
       console.log('Submitting new user with data:', userData);
 
-      // Call the parent's onSuccess handler
-      onSuccess(userData);
+      // Make API call to create user
+      const response = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
 
-      // Reset form on success but maintain the language preference
+      // Rest of the function remains the same
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create user');
+      }
+
+      console.log('User created successfully:', data);
+      onSuccess(data.user);
+      
+      // Reset form
       setFormData({
         name: '',
         email: '',
         password: '',
         status: 'ACTIVE',
-        language: currentLanguage, // Keep the selected language
+        language: currentLanguage,
         businessId: businessId
       });
-
+      
       onClose();
     } catch (error) {
       console.error('Error creating user:', error);
@@ -175,21 +195,7 @@ export default function AddUserModal({
             />
           </div>
 
-          <div className="mb-4">
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              {translate('Password')} *
-            </label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] dark:bg-gray-700 dark:text-white"
-              placeholder="••••••••"
-            />
-          </div>
+          {/* Password field removed as we'll use email invitation now */}
 
           <div className="mb-4">
             <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -250,6 +256,12 @@ export default function AddUserModal({
               value={businessId} 
             />
           )}
+          
+          <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded">
+            <p className="text-sm text-blue-700 dark:text-blue-300">
+              {translate('An invitation email will be sent to the provided email address.')}
+            </p>
+          </div>
           
           <div className="flex justify-end space-x-3">
             <button

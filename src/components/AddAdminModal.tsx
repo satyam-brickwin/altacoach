@@ -98,7 +98,11 @@ const AddAdminModal: React.FC<AddAdminModalProps> = ({ isOpen, onClose, onSucces
       ...formData,
       name: formData.name.trim(),
       email: formData.email.trim(),
-      role: roleToDbFormat(formData.role) // Convert to db format for API
+      role: roleToDbFormat(formData.role), // Convert to db format for API
+      // Set password to empty string to trigger the reset token generation on the server
+      password: '',
+      // Add a flag to indicate we want to generate a reset token
+      generateResetToken: true
     };
 
     try {
@@ -218,20 +222,10 @@ const AddAdminModal: React.FC<AddAdminModalProps> = ({ isOpen, onClose, onSucces
             </select>
           </div>
 
-          <div className="mb-4">
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Password *
-            </label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] dark:bg-gray-700 dark:text-white"
-              placeholder="••••••••"
-            />
+          <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded">
+            <p className="text-sm text-blue-700 dark:text-blue-300">
+              {translate('An invitation email will be sent to the provided email address.')}
+            </p>
           </div>
 
           <div className="flex justify-end space-x-3">

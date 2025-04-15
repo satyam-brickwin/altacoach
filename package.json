@@ -57,6 +57,7 @@
     "lucide-react": "^0.462.0",
     "next": "^14.0.3",
     "next-auth": "^4.24.11",
+    "nodemailer": "^6.10.1",
     "openai": "^4.86.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

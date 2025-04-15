@@ -23,6 +23,8 @@ model User {
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
   lastLogin         DateTime?
+  resetToken     String?   @unique
+  resetTokenExpiry DateTime?
   
   // Relations
   createdBusinesses  Business[]         @relation("BusinessCreator")
