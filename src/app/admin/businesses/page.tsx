@@ -824,80 +824,55 @@ export default function AdminBusinesses() {
     if (!newUser?.name || !selectedBusinessView) return;
 
     try {
-      // Ensure business ID is included in the payload
-      // Add the missing 'role' property to satisfy the type constraint
-      const userPayload = {
-        ...newUser,
-        businessId: selectedBusinessView.id,
-        language: newUser.language || 'en',
+      // No need to make another API call as it's already done in AddUserModal
+      console.log('User created successfully:', newUser);
+
+      // Create a complete user object with required fields for display
+      const newUserWithAllFields = {
+        id: newUser.id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role || 'USER',
         status: newUser.status || 'ACTIVE',
-        role: newUser.role || 'USER' // Add the role property if it's missing
+        language: newUser.language || 'en',
+        businessId: selectedBusinessView.id,
+        lastActive: newUser.lastActive || new Date().toISOString().split('T')[0],
+        joinDate: newUser.joinDate || new Date().toISOString().split('T')[0],
+        isVerified: newUser.isVerified || false
       };
-
-      console.log('Submitting user to API:', userPayload);
-
-      try {
-        const response = await fetch('/api/admin/users', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(userPayload),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to create user');
-        }
-
-        if (!data.success) {
-          throw new Error(data.error || 'Failed to create user');
-        }
-
-        console.log('User created successfully:', data.user);
-
-        // Update local users state immediately
-        const newUserWithAllFields = {
-          ...data.user,
-          joinDate: data.user.joinDate || new Date().toISOString().split('T')[0],
-          lastActive: data.user.lastActive || new Date().toISOString().split('T')[0],
-        };
-        
-        // Update the users state
-        setUsers(prevUsers => [newUserWithAllFields, ...prevUsers]);
-        
-        // Update the usersMap
-        setUsersMap(prev => ({
+      
+      // Update users state immediately
+      setUsers(prevUsers => [newUserWithAllFields, ...prevUsers]);
+      
+      // Also update the usersMap 
+      setUsersMap(prev => {
+        const currentBusinessUsers = prev[selectedBusinessView.id] || [];
+        return {
           ...prev,
-          [selectedBusinessView.id]: [newUserWithAllFields, ...(prev[selectedBusinessView.id] || [])]
-        }));
-        
-        // Update the business user count
-        setBusinesses(prevBusinesses =>
-          prevBusinesses.map(business =>
-            business.id === selectedBusinessView.id
-              ? { ...business, userCount: (business.userCount || 0) + 1 }
-              : business
-          )
-        );
-        
-        // Update the selected business view
-        setSelectedBusinessView(prev => 
-          prev ? { ...prev, userCount: (prev.userCount || 0) + 1 } : null
-        );
+          [selectedBusinessView.id]: [newUserWithAllFields, ...currentBusinessUsers]
+        };
+      });
+      
+      // Update business user count
+      setBusinesses(prevBusinesses =>
+        prevBusinesses.map(business =>
+          business.id === selectedBusinessView.id
+            ? { ...business, userCount: (business.userCount || 0) + 1 }
+            : business
+        )
+      );
+      
+      // Update selected business view
+      setSelectedBusinessView(prev => 
+        prev ? { ...prev, userCount: (prev.userCount || 0) + 1 } : null
+      );
 
-        // Close modal and show success message
-        setIsAddUserModalOpen(false);
-        showToast(`User ${data.user.name} created successfully`, 'success');
-        
-      } catch (error) {
-        console.error('Error creating user:', error);
-        setError(error instanceof Error ? error.message : 'Failed to create user');
-      }
+      // Close modal and show success message
+      setIsAddUserModalOpen(false);
+      showToast(`User ${newUser.name} created successfully`, 'success');
     } catch (error) {
-      console.error('Error creating user:', error);
-      showToast(`Failed to create user: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
+      console.error('Error processing new user:', error);
+      showToast(`Error adding user to display: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
     }
   };
 
@@ -1531,24 +1506,23 @@ export default function AdminBusinesses() {
     }
   };
 
-  // Update the filteredUsers memoized value to correctly check businessId
+  // Update the filteredUsers memoized value to correctly include new users
   const filteredUsers = useMemo(() => {
-    // First, check if we have users data at all
-    if (!users || users.length === 0) {
-      console.log("No users data available");
-      return [];
-    }
-
-    // Log the selected business and available users for debugging
-    console.log("Selected business:", selectedBusinessView?.id);
-    console.log("Available users:", users);
+    if (!selectedBusinessView) return [];
+    
+    // Log for debugging
+    console.log("Filtering users", { 
+      users: users.length,
+      businessId: selectedBusinessView.id,
+      userSearchTerm
+    });
     
     return users.filter(user => {
       // Make sure user is a valid object with required properties
       if (!user) return false;
       
       // Check if the user's businessId matches the selected business
-      const matchesBusiness = selectedBusinessView && user.businessId === selectedBusinessView.id;
+      const matchesBusiness = user.businessId === selectedBusinessView.id;
       
       // Check if the user matches the search term (case insensitive)
       const matchesSearch = !userSearchTerm || 

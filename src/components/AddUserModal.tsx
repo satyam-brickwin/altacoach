@@ -72,7 +72,7 @@ export default function AddUserModal({
     setError(null);
 
     try {
-      // Validation remains the same
+      // Validate required fields
       if (!formData.name || !formData.email) {
         throw new Error('Name and email are required');
       }
@@ -91,7 +91,7 @@ export default function AddUserModal({
         ...formData,
         status: formData.status.toUpperCase(), // Ensure status is uppercase
         businessId: businessId,
-        password: null, // Send null password - API will handle this correctly
+        password: '', // Empty password to trigger reset token generation
         role: 'USER', // Explicitly set role to USER
         generateResetToken: true, // Flag to indicate we want to generate a reset token
         passwordPending: true // New flag to indicate password should be set after verification
@@ -108,26 +108,39 @@ export default function AddUserModal({
         body: JSON.stringify(userData),
       });
 
-      // Rest of the function remains the same
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || 'Failed to create user');
       }
 
-      console.log('User created successfully:', data);
-      onSuccess(data.user);
-      
-      // Reset form
+      // Format the user data to match what the UI expects
+      const newUserForUI = {
+        id: data.user?.id || Math.random().toString(36).substr(2, 9),
+        name: formData.name,
+        email: formData.email,
+        role: 'USER',
+        status: formData.status,
+        language: formData.language,
+        businessId: businessId,
+        isVerified: false,
+        lastActive: new Date().toISOString(),
+        joinDate: new Date().toISOString()
+      };
+
+      // Call the parent's onSuccess handler with properly formatted user
+      onSuccess(newUserForUI);
+
+      // Reset form on success but maintain the language preference
       setFormData({
         name: '',
         email: '',
         password: '',
         status: 'ACTIVE',
-        language: currentLanguage,
+        language: currentLanguage, // Keep the selected language
         businessId: businessId
       });
-      
+
       onClose();
     } catch (error) {
       console.error('Error creating user:', error);

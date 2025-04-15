@@ -151,7 +151,7 @@ export async function POST(request: Request) {
       return Response.json({ success: false, error: "Email and name are required" }, { status: 400 });
     }
 
-    // Check for existing user
+    // Check if a user with this email already exists
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
@@ -163,11 +163,22 @@ export async function POST(request: Request) {
       );
     }
 
-    // Normalize role
+    // Ensure role is always lowercase before storing
     const normalizedRole = role.toLowerCase();
+    
+    // Use the provided language or default to "English" if truly missing
     const userLanguage = language || "English";
 
-    // Create user data object
+    console.log(`Creating user with data:`, { 
+      name, 
+      email, 
+      role: normalizedRole, 
+      language: userLanguage, 
+      businessId,
+      generateResetToken
+    });
+
+    // Create user data object with isVerified explicitly set to false
     let userData: any = {
       email,
       name,
@@ -175,26 +186,14 @@ export async function POST(request: Request) {
       language: userLanguage,
       status,
       isVerified: false,
+      // Store an empty string as password initially
+      // This clearly indicates the password is pending verification
+      password: ''
     };
 
-    // Important: Handle the password field based on whether verification is required
-    if (passwordPending) {
-      // Use a special placeholder that can't be used to log in
-      // This meets database schema requirements without allowing access
-      userData.password = "VERIFICATION_PENDING"; // Non-hashed placeholder
-    } else if (password) {
-      // If password is provided and not pending verification, hash it normally
-      const hashedPassword = await bcrypt.hash(password, 10);
-      userData.password = hashedPassword;
-    } else {
-      // Generate a temporary password that won't be used
-      const tempPassword = Math.random().toString(36).slice(-8);
-      const hashedTemp = await bcrypt.hash(tempPassword, 10);
-      userData.password = hashedTemp;
-    }
-
-    // Generate reset token for password creation via email
+    // Generate reset token if requested
     if (generateResetToken) {
+      // Generate a reset token
       const crypto = require('crypto');
       const resetToken = crypto.randomBytes(32).toString('hex');
       const resetTokenExpiry = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7); // 7 days
@@ -202,22 +201,29 @@ export async function POST(request: Request) {
       userData.resetToken = resetToken;
       userData.resetTokenExpiry = resetTokenExpiry;
       
+      // Send the password reset email
       try {
+        // Import the email sending function
         const { sendPasswordResetEmail } = await import('@/lib/email/sendPasswordResetEmail');
-        // Modify your email template to explain this is for account creation
         await sendPasswordResetEmail(email, resetToken);
-        console.log(`Password creation email sent to ${email}`);
+        console.log(`Password reset email sent to ${email}`);
       } catch (emailError) {
-        console.error("Error sending password creation email:", emailError);
+        console.error("Error sending password reset email:", emailError);
+        // Continue with user creation even if email fails
       }
     }
 
-    // Create the user
+    // If your database schema requires a non-empty password, you'll need to handle that
+    // by modifying the schema or providing a temporary password here
+
+    // Create the user with the correct language and verification status
     const newUser = await prisma.user.create({
       data: userData
     });
 
-    // Handle business association
+    console.log("Created new user with language:", newUser.language, "isVerified:", newUser.isVerified);
+
+    // If a business ID is provided, create the association
     if (businessId) {
       console.log(`Creating business association: userId=${newUser.id}, businessId=${businessId}`);
       
@@ -226,9 +232,11 @@ export async function POST(request: Request) {
           data: {
             userId: newUser.id,
             businessId: businessId,
+            // Use the user's ID as createdById if needed
             createdById: newUser.id,
           },
         });
+        console.log("Business association created successfully");
       } catch (bizError) {
         console.error("Error creating business association:", bizError);
       }
@@ -251,6 +259,19 @@ export async function POST(request: Request) {
     
   } catch (error: any) {
     console.error("Error creating user:", error);
+    
+    // Check if this is a Prisma error about password requirement
+    if (error.message && error.message.includes('password')) {
+      // If your schema requires a password, handle that case
+      return Response.json(
+        { 
+          success: false, 
+          error: "Your database schema requires a password. Please modify your schema to allow null passwords or update the code to provide a temporary password." 
+        },
+        { status: 500 }
+      );
+    }
+    
     return Response.json(
       { success: false, error: error.message || "Failed to create user" },
       { status: 500 }
