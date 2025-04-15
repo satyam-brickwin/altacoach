@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
-// Update the User interface to remove role
+// Update the User interface to make password optional
 interface User {
   id?: string;          
   name: string;
   email: string;
-  password: string;
+  password?: string; // Make password optional
   status: string;       
   language: string;     
   businessId?: string;  // Business ID for association
   lastActive?: string;
   joinDate?: string;
+  isVerified?: boolean; // Add isVerified property
 }
 
 interface AddUserModalProps {
@@ -20,6 +21,7 @@ interface AddUserModalProps {
   onSuccess: (user: User) => void;
   translate: (key: string) => string;
   businessId?: string; // Business ID is now optional but important
+  showToast?: (message: string, type: 'success' | 'error' | 'warning' | 'info') => void;
 }
 
 export default function AddUserModal({ 
@@ -27,7 +29,8 @@ export default function AddUserModal({
   onClose, 
   onSuccess,
   translate,
-  businessId 
+  businessId,
+  showToast 
 }: AddUserModalProps) {
   const { user } = useAuth();
   
@@ -119,6 +122,7 @@ export default function AddUserModal({
         id: data.user?.id || Math.random().toString(36).substr(2, 9),
         name: formData.name,
         email: formData.email,
+        password: '', // Include the password to match the User interface
         role: 'USER',
         status: formData.status,
         language: formData.language,
@@ -130,6 +134,11 @@ export default function AddUserModal({
 
       // Call the parent's onSuccess handler with properly formatted user
       onSuccess(newUserForUI);
+
+      // Show toast notification about the invitation email
+      if (showToast) {
+        showToast(`Invitation email sent to ${formData.email}`, 'success');
+      }
 
       // Reset form on success but maintain the language preference
       setFormData({
@@ -270,11 +279,7 @@ export default function AddUserModal({
             />
           )}
           
-          <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded">
-            <p className="text-sm text-blue-700 dark:text-blue-300">
-              {translate('An invitation email will be sent to the provided email address.')}
-            </p>
-          </div>
+          {/* Removed the invitation email notification box */}
           
           <div className="flex justify-end space-x-3">
             <button

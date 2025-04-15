@@ -2904,6 +2904,7 @@ export default function AdminBusinesses() {
         onSuccess={handleAddUserSuccess}
         translate={(key: string) => key}
         businessId={selectedBusinessView?.id} // Make sure selectedBusinessView exists before accessing id
+        showToast={showToast}
       />
       <UploadDocumentModal
         isOpen={isUploadDocumentModalOpen}

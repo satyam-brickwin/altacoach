@@ -17,11 +17,13 @@ interface NewAdmin {
   password: string;
 }
 
+// Update the showToast prop type to match the page component
 interface AddAdminModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: (admin: NewAdmin) => void;
   translate: (key: string) => string;
+  showToast?: (message: string, type: 'success' | 'error' | 'warning' | 'info') => void;
 }
 
 // Helper function to convert UserRole enum to database format
@@ -33,7 +35,13 @@ const roleToDbFormat = (role: UserRole): string => {
   return role.toString().toLowerCase();
 };
 
-const AddAdminModal: React.FC<AddAdminModalProps> = ({ isOpen, onClose, onSuccess, translate }) => {
+const AddAdminModal: React.FC<AddAdminModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  onSuccess, 
+  translate,
+  showToast 
+}) => {
   const { user } = useAuth();
   const [formData, setFormData] = useState<NewAdmin>({
     name: '',
@@ -44,6 +52,7 @@ const AddAdminModal: React.FC<AddAdminModalProps> = ({ isOpen, onClose, onSucces
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notification, setNotification] = useState<{ visible: boolean; message: string; type: 'success' | 'error' | 'warning' | 'info' } | null>(null);
 
   // Add this function to check if current user is super admin
   const isSuperAdmin = () => {
@@ -125,6 +134,11 @@ const AddAdminModal: React.FC<AddAdminModalProps> = ({ isOpen, onClose, onSucces
       const saveSuccess = await saveNewAdmin(formData);
       if (!saveSuccess) {
         throw new Error('Failed to save admin locally');
+      }
+
+      // Show toast notification about the invitation email
+      if (showToast) {
+        showToast(`Invitation email sent to ${formData.email}`, 'success');
       }
 
       onSuccess(formData);
@@ -222,12 +236,6 @@ const AddAdminModal: React.FC<AddAdminModalProps> = ({ isOpen, onClose, onSucces
             </select>
           </div>
 
-          <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded">
-            <p className="text-sm text-blue-700 dark:text-blue-300">
-              {translate('An invitation email will be sent to the provided email address.')}
-            </p>
-          </div>
-
           <div className="flex justify-end space-x-3">
             <button
               type="button"
@@ -246,6 +254,31 @@ const AddAdminModal: React.FC<AddAdminModalProps> = ({ isOpen, onClose, onSucces
           </div>
         </form>
       </div>
+
+      {/* Your existing notification styling (looks good!) */}
+      {notification && notification.visible && (
+        <div 
+          className={`fixed bottom-4 right-4 p-4 rounded-md shadow-lg flex items-center z-50 ${
+            notification.type === 'success' 
+              ? 'bg-white text-[#C72026] border-l-4 border-[#C72026]' 
+              : notification.type === 'error'
+              ? 'bg-white text-[#C72026] border-l-4 border-[#C72026]'
+              : notification.type === 'warning'
+              ? 'bg-white text-amber-600 border-l-4 border-amber-500'
+              : 'bg-white text-[#C72026] border-l-4 border-[#C72026]'
+          }`}
+        >
+          <span className="flex-grow">{notification.message}</span>
+          <button 
+            onClick={() => setNotification(null)} 
+            className="ml-4 text-current hover:opacity-75"
+          >
+            <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
     </div>
   );
 };

@@ -332,7 +332,7 @@ export default function AdminUsers() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+  const [isAddAdminModalOpen, setIsAddAdminModalOpen] = useState(false);
   const [viewUser, setViewUser] = useState<User | null>(null);
   const [isViewUserModalOpen, setIsViewUserModalOpen] = useState(false);
   const [editUser, setEditUser] = useState<User | null>(null);
@@ -341,7 +341,7 @@ export default function AdminUsers() {
   const [actionLoading, setActionLoading] = useState<{[key: string]: boolean}>({});
   const [notification, setNotification] = useState<{
     message: string;
-    type: 'success' | 'error' | 'info';
+    type: 'success' | 'error' | 'warning' | 'info';
     visible: boolean;
   } | null>(null);
   
@@ -554,6 +554,22 @@ export default function AdminUsers() {
         return newState;
       });
     }
+  };
+
+  const handleAddAdminSuccess = () => {
+    fetchUsers();
+  };
+
+  const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info') => {
+    setNotification({
+      message,
+      type,
+      visible: true
+    });
+
+    setTimeout(() => {
+      setNotification(null);
+    }, 5000);
   };
 
   return (
@@ -778,7 +794,7 @@ export default function AdminUsers() {
                   {t('userManagement')}
                 </h2>
                 <button 
-                  onClick={() => setIsAddUserModalOpen(true)}
+                  onClick={() => setIsAddAdminModalOpen(true)}
                   className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#C72026] hover:bg-[#C72026]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026]">
                   <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -933,15 +949,16 @@ export default function AdminUsers() {
         </div>
       </div>
 
-      {/* Add User Modal */}
+      {/* Add Admin Modal */}
       <AddAdminModal
-        isOpen={isAddUserModalOpen}
-        onClose={() => setIsAddUserModalOpen(false)}
-        onSuccess={fetchUsers}
+        isOpen={isAddAdminModalOpen}
+        onClose={() => setIsAddAdminModalOpen(false)}
+        onSuccess={handleAddAdminSuccess}
         translate={t}
+        showToast={showToast} // Pass your toast function
       />
 
-      {/* View User Modal */}
+      {/* View Admin Modal */}
       <ViewAdminModal
         isOpen={isViewUserModalOpen}
         onClose={() => setIsViewUserModalOpen(false)}
@@ -966,13 +983,15 @@ export default function AdminUsers() {
               ? 'bg-white text-[#C72026] border-l-4 border-[#C72026]' 
               : notification.type === 'error'
               ? 'bg-white text-[#C72026] border-l-4 border-[#C72026]'
+              : notification.type === 'warning'
+              ? 'bg-white text-amber-600 border-l-4 border-amber-500'
               : 'bg-white text-[#C72026] border-l-4 border-[#C72026]'
           }`}
         >
           <span className="flex-grow">{notification.message}</span>
           <button 
             onClick={() => setNotification(null)} 
-            className="ml-4 text-[#C72026] hover:text-[#A51B20]"
+            className="ml-4 text-current hover:opacity-75"
           >
             <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
