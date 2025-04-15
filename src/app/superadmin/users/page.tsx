@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useLanguage, languageLabels, SupportedLanguage } from '@/contexts/LanguageContext';
 import { useDarkMode } from '@/contexts/DarkModeContext';
 import { useAuthProtection, UserRole } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import AddAdminModal from '@/components/AddAdminModal';
 import ViewAdminModal from '@/componentsuper/ViewAdminModal';
@@ -21,6 +22,8 @@ interface User {
   status: string;
   joinDate?: string;
   createdAt?: Date;
+  isVerified?: boolean;
+  lastLogin?: string;
 }
 
 // Sample user data - will be replaced with database data
@@ -346,7 +349,8 @@ export default function AdminUsers() {
   } | null>(null);
   
   // Protect this page - only allow admin users
-  const { isLoading: authLoading, isAuthenticated, user, logout } = useAuthProtection([UserRole.SUPER_ADMIN]);
+  const { isLoading: authLoading, isAuthenticated, user, isAuthorized } = useAuthProtection([UserRole.SUPER_ADMIN]);
+  const { logout } = useAuth();
 
   // Fetch users from the database
   const fetchUsers = async () => {
@@ -367,16 +371,19 @@ export default function AdminUsers() {
         role: user.role.toUpperCase(), // Normalize role to uppercase
         lastActive: user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never',
         status: user.status.toLowerCase(),
-        joinDate: user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown'
+        joinDate: user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown',
+        isVerified: user.isVerified || false, // Explicitly handle isVerified field
+        lastLogin: user.lastLogin,
+        createdAt: user.createdAt
       }));
       
       setUsers(formattedUsers);
       setIsLoading(false);
-    } catch (err) {
-      console.error('Error fetching users:', err);
-      setError((err as Error).message);
+    } catch (error) {
+      console.error('Error fetching users:', error);
       setIsLoading(false);
-      setUsers(sampleUserData);
+      // Show toast notification for error
+      showToast('Failed to fetch users', 'error');
     }
   };
 

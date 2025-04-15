@@ -8,125 +8,36 @@ import crypto from 'crypto';
 
 export async function GET(request: Request) {
   try {
-    // Get URL and search params
-    const { searchParams } = new URL(request.url);
-    const businessId = searchParams.get('businessId');
-    const excludeAdmins = searchParams.get('excludeAdmins') === 'true';
+    // Get all admin users from database
+    const admins = await prisma.user.findMany({
+      where: {
+        role: {
+          in: ['admin', 'super_admin'] // Fetch both admin and super_admin roles
+        }
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        status: true,
+        createdAt: true,
+        lastLogin: true,
+        isVerified: true // Make sure to include this field
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
     
-    // Build the query filter for user properties
-    const userFilter: any = {};
-    
-    if (excludeAdmins) {
-      userFilter.role = { not: 'ADMIN' };  // Exclude admin users
-    }
-    
-    // Fetch users based on whether businessId is provided
-    let users;
-    
-    if (businessId) {
-      // When businessId is provided, get users associated with that business
-      users = await prisma.user.findMany({
-        where: {
-          ...userFilter,
-          // Use the businesses relation to filter by businessId
-          businesses: {
-            some: {
-              businessId: businessId
-            }
-          }
-        },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          role: true,
-          status: true,
-          createdAt: true,
-          lastLogin: true,
-          // Include business info through the relation
-          businesses: {
-            where: { businessId: businessId },
-            select: {
-              business: {
-                select: {
-                  id: true,
-                  name: true
-                }
-              }
-            },
-            take: 1
-          }
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-      });
-      
-      // Transform result to match previous response format
-      users = users.map(user => ({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        status: user.status,
-        createdAt: user.createdAt,
-        lastLogin: user.lastLogin,
-        businessId: user.businesses[0]?.business.id || null,
-        businessName: user.businesses[0]?.business.name || null
-      }));
-    } else {
-      // When no businessId provided, get all users
-      users = await prisma.user.findMany({
-        where: userFilter,
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          role: true,
-          status: true,
-          createdAt: true,
-          lastLogin: true,
-          // Include first business info for display purposes
-          businesses: {
-            select: {
-              business: {
-                select: {
-                  id: true,
-                  name: true
-                }
-              }
-            },
-            take: 1
-          }
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-      });
-      
-      // Transform result to match previous response format
-      users = users.map(user => ({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        status: user.status,
-        createdAt: user.createdAt,
-        lastLogin: user.lastLogin,
-        businessId: user.businesses[0]?.business.id || null,
-        businessName: user.businesses[0]?.business.name || null
-      }));
-    }
-    
-    return NextResponse.json({
-      users,
+    return Response.json({
       success: true,
-      count: users.length,
+      users: admins
     });
   } catch (error) {
-    console.error('Error fetching users:', error);
-    return NextResponse.json(
-      { error: 'Internal server error', details: (error as Error).message },
+    console.error("Error fetching admin users:", error);
+    return Response.json(
+      { success: false, error: "Failed to fetch admin users" },
       { status: 500 }
     );
   }

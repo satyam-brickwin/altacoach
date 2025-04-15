@@ -6,11 +6,11 @@ interface Admin {
   name: string;
   email: string;
   role: string;
-  lastActive?: string;
-  lastLogin?: string | Date; // Add this field
   status: string;
   joinDate?: string;
   createdAt?: Date;
+  isVerified?: boolean;
+  lastLogin?: string | Date; // Adding lastLogin to the interface to fix the TypeScript error
 }
 
 interface ViewAdminModalProps {
@@ -33,6 +33,11 @@ export default function ViewAdminModal({ isOpen, onClose, admin, translate: t }:
     if (status === 'active') return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200';
     if (status === 'pending') return 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200';
     return 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200';
+  };
+
+  const getVerificationBadgeClass = (isVerified: boolean | undefined): string => {
+    if (isVerified) return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200';
+    return 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200';
   };
 
   const formatLastActive = (admin: Admin) => {
@@ -118,9 +123,11 @@ export default function ViewAdminModal({ isOpen, onClose, admin, translate: t }:
             <p className="text-gray-900 dark:text-white">{admin.joinDate || 'Unknown'}</p>
           </div>
           <div>
-            <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">{t('lastActive')}</h4>
+            <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">{t('Verified')}</h4>
             <p className="text-gray-900 dark:text-white">
-              {formatLastActive(admin)}
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium ${getVerificationBadgeClass(admin.isVerified)}`}>
+                {admin.isVerified ? t('Verified') : t('Not Verified')}
+              </span>
             </p>
           </div>
         </div>

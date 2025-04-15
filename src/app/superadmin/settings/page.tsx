@@ -32,24 +32,55 @@ const SuperAdminSettings = () => {
   const { user, isAuthenticated } = useAuth();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-  // Add handleLogout function
+  // Update the handleLogout function
   const handleLogout = async () => {
     try {
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      setIsProfileOpen(false); // Close the dropdown immediately
+      
+      // Step 1: Disable any auto-redirect in your app by setting a flag in session storage
+      sessionStorage.setItem('manual_logout', 'true');
+      
+      // Step 2: First clear client-side storage immediately
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // Step 3: Clear all cookies 
+      document.cookie.split(";").forEach((c) => {
+        const cookieName = c.trim().split("=")[0];
+        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
       });
 
-      if (response.ok) {
-        localStorage.removeItem('token');
-        router.push('/login');
+      // Step 4: Use both endpoints simultaneously to ensure logout happens
+      try {
+        // Try the super admin logout
+        await fetch('/apisuper/auth/logout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+        });
+      } catch (e) {
+        console.warn("Super admin logout failed, continuing...");
       }
+      
+      try {
+        // Also try the regular logout
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+        });
+      } catch (e) {
+        console.warn("Regular logout failed, continuing...");
+      }
+
+      // Step 5: Force redirect with a random parameter to prevent caching
+      const timestamp = new Date().getTime();
+      window.location.replace(`/login?t=${timestamp}`);
     } catch (error) {
       console.error('Error during logout:', error);
+      // If all else fails, force hard redirect to login
+      window.location.replace('/login');
     }
-    setIsProfileOpen(false);
   };
 
   // Use useMemo for stable reference to allowed roles
@@ -397,15 +428,18 @@ const SuperAdminSettings = () => {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Include cookies for authentication
+        cache: 'no-store', // Prevent caching of this request
         body: JSON.stringify({
-          currentPassword,
-          newPassword
+          currentPassword: currentPassword,
+          newPassword: newPassword
         }),
       });
       
+      const data = await response.json();
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || translate('failedToUpdatePassword'));
+        throw new Error(data.message || translate('failedToUpdatePassword'));
       }
       
       // Clear form on success
