@@ -16,6 +16,7 @@ import { ChatInput } from './components/ChatInput';
 import { EmptyState } from './components/EmptyState';
 import { cn } from './lib/utils';
 import { SuggestionModal } from '@/components/SuggestionModal';
+import { ResetPasswordModal } from '@/components/ResetPasswordModal';
 
 // Import icons
 import { 
@@ -374,6 +375,9 @@ export default function StaffDashboard() {
   // Add state for suggestion modal
   const [isSuggestionModalOpen, setIsSuggestionModalOpen] = useState(false);
   const [suggestionInput, setSuggestionInput] = useState('');
+
+  // Add state for password reset modal
+  const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false);
 
   // Toggle dropdown section function - MODIFIED HERE
   const toggleSection = (section: string) => {
@@ -846,6 +850,35 @@ export default function StaffDashboard() {
   const handleLogout = () => {
     logout();
     router.push('/login');
+  };
+
+  // Function to handle password reset
+  const handleResetPassword = async (currentPassword: string, newPassword: string) => {
+    try {
+      // Call the API to verify current password and update with new password
+      const response = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user?.id,
+          currentPassword,
+          newPassword,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to reset password');
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      throw error;
+    }
   };
 
   // Handle suggestion submission
@@ -1428,7 +1461,7 @@ export default function StaffDashboard() {
                 </button>
                 <div className="border-t dark:border-gray-700 my-1"></div>
                 <button
-                  onClick={() => alert('Password reset functionality would be integrated here')}
+                  onClick={() => setIsResetPasswordModalOpen(true)}
                   className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
                   role="menuitem"
                 >
@@ -1562,6 +1595,13 @@ export default function StaffDashboard() {
         />
       )}
       
+      <ResetPasswordModal
+        isOpen={isResetPasswordModalOpen}
+        onClose={() => setIsResetPasswordModalOpen(false)}
+        onSubmit={handleResetPassword}
+        language={language}
+      />
+
       <SuggestionModal
         isOpen={isSuggestionModalOpen}
         onClose={() => {
