@@ -419,9 +419,17 @@ const SuperAdminSettings = () => {
       return;
     }
     
+    // Ensure we have a user ID
+    if (!user?.id) {
+      setPasswordError(translate('notAuthenticated'));
+      return;
+    }
+    
     setIsPasswordSubmitting(true);
     
     try {
+      console.log("Attempting password reset for user:", user?.id);
+      
       // Call your API to update the password
       const response = await fetch('/apisuper/superadmin/reset-password', {
         method: 'POST',
@@ -431,15 +439,29 @@ const SuperAdminSettings = () => {
         credentials: 'include', // Include cookies for authentication
         cache: 'no-store', // Prevent caching of this request
         body: JSON.stringify({
-          currentPassword: currentPassword,
-          newPassword: newPassword
+          currentPassword,
+          newPassword,
+          userId: user?.id // Make sure to include user ID
         }),
       });
       
-      const data = await response.json();
+      // Log the full response for debugging
+      console.log("Password reset response status:", response.status);
+      
+      // First get the response as text
+      const responseText = await response.text();
+      console.log("Response text:", responseText);
+      
+      // Try to parse as JSON if possible
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (e) {
+        console.error("Failed to parse response as JSON:", e);
+      }
       
       if (!response.ok) {
-        throw new Error(data.message || translate('failedToUpdatePassword'));
+        throw new Error(data?.message || `Error: ${response.status} - ${response.statusText}`);
       }
       
       // Clear form on success
