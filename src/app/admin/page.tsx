@@ -11,10 +11,13 @@ import Image from 'next/image';
 interface Business {
   id: string;
   name: string;
-  plan: string;
   userCount: number;
-  status: 'active' | 'pending' | 'suspended';
+  status: string; // Changed from enum to string for more flexibility
   joinedDate: string;
+  endDate?: string; // Added endDate field
+  logo?: string; // Added logo field
+  startDate?: string; // Added startDate field
+  createdBy?: string | { name: string; email?: string; id?: string; }; // Added proper typing for createdBy
 }
 
 interface Content {
@@ -44,7 +47,7 @@ interface ContentStats {
 interface UserStats {
   totalUsers: number;
   activeUsers: number;
-  adminUsers: number;
+  regularUsers: number; // Added for regular (non-admin) users
   businessUsers: number;
 }
 
@@ -82,7 +85,7 @@ const AdminDashboard = () => {
   const [userStats, setUserStats] = useState<UserStats>({
     totalUsers: 0,
     activeUsers: 0,
-    adminUsers: 0,
+    regularUsers: 0, // Initialize regular users count
     businessUsers: 0
   });
   
@@ -91,6 +94,10 @@ const AdminDashboard = () => {
   
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
+
+  // Add state for the business detail modal
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setLanguage(e.target.value as SupportedLanguage);
@@ -101,6 +108,53 @@ const AdminDashboard = () => {
     console.log('Manually refreshing dashboard data...');
     setRefreshTrigger(prev => prev + 1);
   }, []);
+  
+  // Define userDisplayName - derive initial from user's name or email
+  const userDisplayName = useMemo(() => {
+    if (!user) return 'A'; // Default to 'A' for Admin if no user
+    if (user.name && user.name.length > 0) return user.name[0].toUpperCase();
+    if (user.email) {
+      const emailName = user.email.split('@')[0];
+      return emailName.charAt(0).toUpperCase();
+    }
+    return 'A'; // Default to 'A' for Admin
+  }, [user]);
+
+  // Check if user is staff/admin
+  const isStaffUser = useMemo(() => {
+    return user?.role === UserRole.ADMIN;
+  }, [user]);
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      setIsUserMenuOpen(false); // Close menu before logout
+      await logout();
+      // The logout function in AuthContext will handle navigation
+    } catch (error) {
+      console.error('Logout error:', error);
+      window.location.href = '/login'; // Fallback redirect
+    }
+  };
+
+  // Function to handle view button click with additional debugging
+  const handleViewBusiness = (business: Business) => {
+    console.log('Full business object being viewed:', business);
+    console.log('EndDate value:', business.endDate);
+    setSelectedBusiness(business);
+    setIsViewModalOpen(true);
+  };
+
+  // Function to close view modal
+  const closeViewModal = () => {
+    setIsViewModalOpen(false);
+  };
+
+  // Function to handle manage button click - redirect to business page
+  const handleManageBusiness = (businessId: string) => {
+    console.log('Navigating to business management page for ID:', businessId);
+    router.push(`/admin/businesses/${businessId}`);
+  };
   
   // Force rerender when language changes
   useEffect(() => {
@@ -116,7 +170,7 @@ const AdminDashboard = () => {
         console.log('Fetching dashboard stats...');
         // Fetch real statistics from the API with timestamp to prevent caching
         const timestamp = new Date().getTime();
-        const response = await fetch(`/api/admin/dashboard-stats?t=${timestamp}`, {
+        const response = await fetch(`/api/admin/dashboard-stats?t=${timestamp}&includeEndDate=true&rawData=true`, {
           method: 'GET',
           headers: {
             'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -166,20 +220,43 @@ const AdminDashboard = () => {
             });
           }
           
-          // User stats
+          // User stats - focus on regular users
           if (data.stats.users) {
+            // Regular users = total - (admins + super admins)
+            const admins = data.stats.users.admins || 0;
+            const superAdmins = data.stats.users.superAdmins || 0;
+            const totalUsers = data.stats.users.total || 0;
+            const regularUsers = totalUsers - (admins + superAdmins);
+            
             setUserStats({
-              totalUsers: data.stats.users.total || 0,
+              totalUsers: totalUsers,
               activeUsers: data.stats.users.active || 0,
-              adminUsers: data.stats.users.admins || 0,
+              regularUsers: regularUsers,
+              businessUsers: data.stats.users.business || 0
+            });
+            
+            console.log('User stats processed:', {
+              totalUsers,
+              activeUsers: data.stats.users.active || 0,
+              regularUsers,
               businessUsers: data.stats.users.business || 0
             });
           }
         }
         
         // Update recent businesses if available
-        if (data.recentBusinessRegistrations) {
-          setRecentBusinesses(data.recentBusinessRegistrations);
+        if (data.recentBusinessRegistrations && data.recentBusinessRegistrations.length > 0) {
+          console.log('Setting real business data from API:', data.recentBusinessRegistrations);
+          
+          const processedBusinesses = processBusinessData(data.recentBusinessRegistrations);
+          console.log('Processed businesses with fixed end dates:', processedBusinesses);
+          
+          // Replace mock business data with processed real data from the API
+          setRecentBusinesses(processedBusinesses);
+          // Also set the business state to ensure consistency
+          setBusinesses(processedBusinesses);
+        } else {
+          console.log('No recent businesses found in API response');
         }
       } catch (error) {
         console.error('Error fetching dashboard stats:', error);
@@ -205,7 +282,7 @@ const AdminDashboard = () => {
         setUserStats({
           totalUsers: 0,
           activeUsers: 0,
-          adminUsers: 0,
+          regularUsers: 0,
           businessUsers: 0
         });
       } finally {
@@ -221,111 +298,30 @@ const AdminDashboard = () => {
       console.log('User not yet authenticated, skipping stats fetch');
     }
   }, [isAuthenticated, authLoading, refreshTrigger]);
-  
-  // Load mock data only for businesses and content list (not for stats)
-  useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      const businessesData = [
-        {
-          id: '1',
-          name: 'Acme Corporation',
-          plan: 'Enterprise',
-          userCount: 85,
-          status: 'active' as const,
-          joinedDate: '2023-04-12'
-        },
-        {
-          id: '2',
-          name: 'Globex Industries',
-          plan: 'Professional',
-          userCount: 42,
-          status: 'active' as const,
-          joinedDate: '2023-05-25'
-        },
-        {
-          id: '3',
-          name: 'Stark Enterprises',
-          plan: 'Enterprise',
-          userCount: 127,
-          status: 'active' as const,
-          joinedDate: '2023-03-18'
-        },
-        {
-          id: '4',
-          name: 'Wayne Industries',
-          plan: 'Professional',
-          userCount: 36,
-          status: 'pending' as const,
-          joinedDate: '2023-07-02'
-        },
-        {
-          id: '5',
-          name: 'Umbrella Corporation',
-          plan: 'Basic',
-          userCount: 12,
-          status: 'suspended' as const,
-          joinedDate: '2023-01-30'
-        }
-      ];
+
+  const processBusinessData = (businesses: Business[]): Business[] => {
+    return businesses.map(business => {
+      console.log(`Business ${business.name} - Original Data:`, business);
       
-      setBusinesses(businessesData);
-      // Set recent businesses to the same data for demonstration
-      setRecentBusinesses(businessesData);
-
-      setContent([
-        {
-          id: '1',
-          title: 'Introduction to Sales',
-          type: 'course',
-          language: 'English',
-          lastUpdated: '2023-06-10'
-        },
-        {
-          id: '2',
-          title: 'Handling Objections',
-          type: 'guide',
-          language: 'French',
-          lastUpdated: '2023-05-15'
-        },
-        {
-          id: '3',
-          title: 'Customer Service Scenarios',
-          type: 'exercise',
-          language: 'German',
-          lastUpdated: '2023-07-20'
+      // Get all possible field names that might contain end date
+      const businessAny = business as any;
+      const possibleEndDateFields = ['endDate', 'end_date', 'subscription_end', 'expiry_date', 'expiryDate'];
+      
+      // Find the first field that exists and has a value
+      let endDate = null;
+      for (const field of possibleEndDateFields) {
+        if (businessAny[field]) {
+          endDate = businessAny[field];
+          console.log(`Found end date in field "${field}":`, endDate);
+          break;
         }
-      ]);
-
-      // We no longer set mock data for stats since that comes from the API now
-      setIsLoading(false);
-    }, 1000);
-  }, []);
-  
-  const userDisplayName = useMemo(() => {
-    if (!user) return 'U';
-    if (user?.name) return user.name[0].toUpperCase();
-    if (user?.email) {
-      const emailName = user.email.split('@')[0];
-      return emailName.charAt(0).toUpperCase();
-    }
-    return 'U';
-  }, [user]);
-
-  const isStaffUser = useMemo(() => {
-    return user?.role === UserRole.ADMIN;
-  }, [user]);
-
-  const handleLogout = async () => {
-    try {
-      setIsUserMenuOpen(false); // Close menu before logout
-      await logout();
-      // The logout function in AuthContext now handles navigation
-    } catch (error) {
-      console.error('Logout error:', error);
-      // Fallback navigation if needed
-      window.location.href = '/login';
-    }
+      }
+      
+      return {
+        ...business,
+        endDate: endDate
+      };
+    });
   };
 
   // If still loading or not authenticated, show loading spinner
@@ -368,7 +364,6 @@ const AdminDashboard = () => {
                 />
               </Link>
             </div>
-
             {/* Center - Title and Admin badge */}
             <div className="flex-1 flex justify-center">
               <div className="flex items-center">
@@ -382,7 +377,6 @@ const AdminDashboard = () => {
                 </span>
               </div>
             </div>
-
             {/* Right-side items - dark mode, language, profile */}
             <div className="flex items-center space-x-4">
               {/* Dark mode toggle */}
@@ -402,7 +396,6 @@ const AdminDashboard = () => {
                   </svg>
                 )}
               </button>
-
               {/* Language selector */}
               <div className="relative">
                 <button
@@ -416,7 +409,6 @@ const AdminDashboard = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
-
                 {isLanguageMenuOpen && (
                   <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 z-50">
                     {Object.entries(languageLabels).map(([code, label]) => (
@@ -438,7 +430,6 @@ const AdminDashboard = () => {
                   </div>
                 )}
               </div>
-
               {/* Profile dropdown */}
               <div className="ml-3 relative">
                 <button
@@ -474,7 +465,6 @@ const AdminDashboard = () => {
           </div>
         </div>
       </header>
-
       <div className="flex flex-col md:flex-row">
         {/* Sidebar Navigation */}
         <div className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 hidden md:block">
@@ -520,7 +510,6 @@ const AdminDashboard = () => {
             </nav>
           </div>
         </div>
-
         {/* Main Content */}
         <div className="flex-1 p-4 md:p-8" key={`admin-dashboard-${language}`}>
           <div className="max-w-7xl mx-auto">
@@ -559,7 +548,6 @@ const AdminDashboard = () => {
                   </div>
                 </div>
               </div>
-
               {/* Card: Total Users */}
               <div className="bg-[#C72026]/5 dark:bg-[#C72026]/10 rounded-lg p-6">
                 <div className="flex items-center">
@@ -574,7 +562,6 @@ const AdminDashboard = () => {
                   </div>
                 </div>
               </div>
-
               {/* Card: Content Items */}
               <div className="bg-[#C72026]/5 dark:bg-[#C72026]/10 rounded-lg p-6">
                 <div className="flex items-center">
@@ -618,7 +605,6 @@ const AdminDashboard = () => {
                   </div>
                 </div>
               </div>
-
               {/* Card: Content Management */}
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                 <div className="flex items-center mb-4">
@@ -644,7 +630,6 @@ const AdminDashboard = () => {
                   </div>
                 </div>
               </div>
-
               {/* Card: User Stats */}
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                 <div className="flex items-center mb-4">
@@ -660,10 +645,10 @@ const AdminDashboard = () => {
                     <span className="text-sm text-gray-700 dark:text-gray-300">{translate('activeUsers')}</span>
                     <span className="text-sm font-medium text-[#C72026] dark:text-[#C72026]">{userStats.activeUsers}</span>
                   </div>
-                  <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex justify-between items-center">
-                    <span className="text-sm text-gray-700 dark:text-gray-300">{translate('adminUsers')}</span>
-                    <span className="text-sm font-medium text-[#C72026] dark:text-[#C72026]">{userStats.adminUsers}</span>
-                  </div>
+                  {/* <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex justify-between items-center">
+                    <span className="text-sm text-gray-700 dark:text-gray-300">{translate('regularUsers')}</span>
+                    <span className="text-sm font-medium text-[#C72026] dark:text-[#C72026]">{userStats.regularUsers}</span>
+                  </div> */}
                   <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex justify-between items-center">
                     <span className="text-sm text-gray-700 dark:text-gray-300">{translate('businessUsers')}</span>
                     <span className="text-sm font-medium text-[#C72026] dark:text-[#C72026]">{userStats.businessUsers}</span>
@@ -678,9 +663,9 @@ const AdminDashboard = () => {
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                   {translate('recentRegistrations')}
                 </h2>
-                <button className="text-sm text-purple-600 dark:text-purple-400 hover:underline">
+                {/* <button className="text-sm text-purple-600 dark:text-purple-400 hover:underline">
                   {translate('viewAll')}
-                </button>
+                </button> */}
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -688,9 +673,6 @@ const AdminDashboard = () => {
                     <tr>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                         {translate('name')}
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        {translate('plan')}
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                         {translate('userCount')}
@@ -724,9 +706,6 @@ const AdminDashboard = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                          {business.plan}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                           {business.userCount}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -748,15 +727,42 @@ const AdminDashboard = () => {
                           {business.joinedDate}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button className="text-[#C72026] hover:text-[#C72026]/80 mr-3">
+                          <button 
+                            onClick={() => handleViewBusiness(business)} 
+                            className="text-[#C72026] hover:text-[#C72026]/80 mr-3"
+                          >
                             {translate('view')}
                           </button>
-                          <button className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300">
+                          <button 
+                            onClick={() => {
+                              console.log('Managing business with ID:', business.id);
+                              // router.push(`/admin/businesses/${business.id}`);
+                            }}
+                            className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300"
+                          >
                             {translate('manage')}
                           </button>
                         </td>
                       </tr>
                     ))}
+                    {recentBusinesses.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
+                          <div className="flex flex-col items-center justify-center space-y-3">
+                            <svg className="h-10 w-10 text-gray-400 dark:text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                            <p>{translate('noBusinessesFound') || 'No businesses found'}</p>
+                            <button
+                              onClick={refreshDashboardData}
+                              className="px-4 py-2 bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] dark:text-[#C72026] rounded-md hover:bg-[#C72026]/20 dark:hover:bg-[#C72026]/30 transition-colors text-sm"
+                            >
+                              {translate('refresh') || 'Refresh Data'}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -765,6 +771,136 @@ const AdminDashboard = () => {
         </div>
       </div>
 
+      {/* Business View Modal - Updated Design */}
+      {isViewModalOpen && selectedBusiness && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onClick={closeViewModal}></div>
+
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div className="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="flex justify-between items-start">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white" id="modal-title">
+                    {selectedBusiness.name}
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={closeViewModal}
+                    className="bg-white dark:bg-gray-800 rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026]"
+                  >
+                    <span className="sr-only">Close</span>
+                    <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                
+                <div className="mt-4 space-y-4">
+                  {/* Logo */}
+                  <div className="flex justify-center">
+                    {selectedBusiness.logo ? (
+                      <img 
+                        src={selectedBusiness.logo} 
+                        alt={`${selectedBusiness.name} logo`} 
+                        className="h-24 w-24 object-contain rounded-lg border border-gray-200 dark:border-gray-700"
+                      />
+                    ) : (
+                      <div 
+                        className="h-24 w-24 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center"
+                        style={{ backgroundColor: '#C72026' }}
+                      >
+                        <span className="text-3xl font-bold text-white">
+                          {selectedBusiness.name.charAt(0)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Business Details */}
+                  <div className="grid grid-cols-2 gap-4 mt-4">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{translate('Status') || 'Status'}</p>
+                      <p className="mt-1">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          selectedBusiness.status === 'active' || selectedBusiness.status === 'ACTIVE'
+                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200' 
+                            : selectedBusiness.status === 'pending' || selectedBusiness.status === 'PENDING'
+                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
+                            : 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200'
+                        }`}>
+                          {translate(selectedBusiness.status.toLowerCase()) || selectedBusiness.status}
+                        </span>
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{translate('userCount') || 'User Count'}</p>
+                      <p className="mt-1 text-sm text-gray-900 dark:text-white">{selectedBusiness.userCount || 0}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{translate('StartDate') || 'Start Date'}</p>
+                      <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                        {selectedBusiness.startDate ? new Date(selectedBusiness.startDate).toLocaleDateString() : 
+                         selectedBusiness.joinedDate ? selectedBusiness.joinedDate : 'Not set'}
+                      </p>
+                    </div>
+                    {/* <div>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{translate('EndDate') || 'End Date'}</p>
+                      <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                        {selectedBusiness.endDate ? (
+                          <>
+                            <span className="font-semibold">Raw value from DB:</span> {selectedBusiness.endDate}
+                            <br />
+                            <span className="text-xs text-gray-500">
+                              Formatted: {new Date(selectedBusiness.endDate).toLocaleDateString()}
+                            </span>
+                          </>
+                        ) : 'Not set'}
+                      </p>
+                    </div> */}
+                    <div>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{translate('Color') || 'Color'}</p>
+                      <div className="mt-1 flex items-center">
+                        <div 
+                          className="h-6 w-6 rounded-full mr-2" 
+                          style={{ backgroundColor: '#C72026' }}
+                        ></div>
+                        <p className="text-sm text-gray-900 dark:text-white">
+                          {'#C72026'}
+                        </p>
+                      </div>
+                    </div>
+                    {/* <div>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{translate('createdBy') || 'Created By'}</p>
+                      <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                        {typeof selectedBusiness.createdBy === 'string'
+                          ? selectedBusiness.createdBy
+                          : selectedBusiness.createdBy?.name || 'Admin'}
+                      </p>
+                    </div> */}
+                  </div>
+                </div>
+                
+                <div className="mt-6">
+                  {/* <button
+                    type="button"
+                    onClick={() => {
+                      closeViewModal();
+                      handleManageBusiness(selectedBusiness.id);
+                    }}
+                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#C72026] text-base font-medium text-white hover:bg-[#C72026]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026] sm:text-sm"
+                  >
+                    {translate('manage') || 'Manage'}
+                  </button> */}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Loading indicator */}
       {isLoading && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-4 flex items-center space-x-3">

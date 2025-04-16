@@ -1802,12 +1802,12 @@ export default function AdminBusinesses() {
             <ul className="space-y-2">
               <li>
                 <Link href="/admin" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
-                  {t('dashboard')}
+                  {t('Dashboard')}
                 </Link>
               </li>
               <li>
                 <Link href="/admin/businesses" className="block px-4 py-2 rounded-md bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] dark:text-[#C72026]">
-                  {t('businesses')}
+                  {t('Businesses')}
                 </Link>
               </li>
               <li>
@@ -1822,12 +1822,12 @@ export default function AdminBusinesses() {
               </li> */}
               <li>
                 <Link href="/admin/analytics" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
-                  {t('analytics')}
+                  {t('Analytics')}
                 </Link>
               </li>
               <li>
                 <Link href="/admin/settings" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
-                  {t('settings')}
+                  {t('Settings')}
                 </Link>
               </li>
             </ul>
