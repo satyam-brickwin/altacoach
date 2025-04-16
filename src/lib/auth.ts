@@ -149,16 +149,24 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, user }) {
+      // Persist the user id and role to the token right after sign in
       if (user) {
-        token.id = user.id;
-        token.role = user.role;
+        token.id = user.id ?? '';
+        token.role = user.role ?? '';
+        token.email = user.email ?? '';
+      } else {
+        token.id = token.id ?? '';
+        token.role = token.role ?? '';
+        token.email = token.email ?? '';
       }
       return token;
     },
-    async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as string;
+    async session({ session, token, user }) {
+      // For credentials provider, user is available; for JWT, use token
+      if (session.user) {
+        session.user.id = (user?.id ?? token?.id ?? '');
+        session.user.role = (user?.role ?? token?.role ?? '');
+        session.user.email = (user?.email ?? token?.email ?? '');
       }
       return session;
     },
@@ -198,5 +206,6 @@ declare module 'next-auth/jwt' {
   interface JWT {
     id: string;
     role: string;
+    email: string;
   }
 }

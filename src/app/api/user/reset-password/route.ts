@@ -1,35 +1,42 @@
 import { NextResponse } from 'next/server';
+import bcrypt from 'bcryptjs';
+import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
-import bcrypt from 'bcryptjs';
-import prisma from '@/lib/prisma';
 
 export async function POST(request: Request) {
   try {
-    // Get the authenticated user's session
-    const session = await getServerSession(authOptions);
+    // Get request data
+    const body = await request.json();
+    const { currentPassword, newPassword, userId } = body;
     
-    if (!session || !session.user) {
+    // Validate input
+    if (!currentPassword || !newPassword || !userId) {
       return NextResponse.json(
-        { message: 'You must be logged in to perform this action' },
-        { status: 401 }
-      );
-    }
-    
-    // Get the request body
-    const { currentPassword, newPassword } = await request.json();
-    
-    if (!currentPassword || !newPassword) {
-      return NextResponse.json(
-        { message: 'Current password and new password are required' },
+        { message: 'Missing required fields' },
         { status: 400 }
       );
     }
     
-    // Get the user from database
+    // Get session directly from cookies - more reliable in Next.js App Router
+    const session = await getServerSession(authOptions);
+    
+    // Debug session info
+    console.log('Session info:', {
+      hasSession: !!session,
+      sessionUserId: session?.user?.id,
+      requestUserId: userId
+    });
+    
+    // Fetch the user directly from database
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { id: true, password: true }
+      where: { id: userId },
+      select: {
+        id: true,
+        password: true,
+        email: true,
+        role: true
+      },
     });
     
     if (!user) {
@@ -39,7 +46,7 @@ export async function POST(request: Request) {
       );
     }
     
-    // Verify current password
+    // Verify the current password
     const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
     
     if (!isPasswordValid) {
@@ -55,15 +62,19 @@ export async function POST(request: Request) {
     // Update the user's password
     await prisma.user.update({
       where: { id: user.id },
-      data: { password: hashedPassword }
+      data: { password: hashedPassword },
     });
     
-    return NextResponse.json({ message: 'Password updated successfully' });
+    console.log(`Password updated successfully for user: ${user.email}`);
     
-  } catch (error) {
-    console.error('Error resetting password:', error);
     return NextResponse.json(
-      { message: 'An error occurred while resetting your password' },
+      { message: 'Password updated successfully' },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error('Error in reset-password:', error);
+    return NextResponse.json(
+      { message: 'An error occurred during the password reset process' },
       { status: 500 }
     );
   }

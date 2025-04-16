@@ -95,7 +95,7 @@ export default function AddUserModal({
         status: formData.status.toUpperCase(), // Ensure status is uppercase
         businessId: businessId,
         password: '', // Empty password to trigger reset token generation
-        role: 'USER', // Explicitly set role to USER
+        role: 'user', // Changed to lowercase 'user'
         generateResetToken: true, // Flag to indicate we want to generate a reset token
         passwordPending: true // New flag to indicate password should be set after verification
       };
@@ -123,7 +123,7 @@ export default function AddUserModal({
         name: formData.name,
         email: formData.email,
         password: '', // Include the password to match the User interface
-        role: 'USER',
+        role: 'user', // Changed to lowercase 'user'
         status: formData.status,
         language: formData.language,
         businessId: businessId,

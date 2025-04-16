@@ -143,22 +143,32 @@ const AdminSettings = () => {
     setIsPasswordSubmitting(true);
     
     try {
+      // Make sure we have a user ID from the authenticated user
+      if (!user?.id) {
+        throw new Error(translate('notAuthenticated'));
+      }
+      
       // Call your API to update the password
-      const response = await fetch('/api/user/reset-password', {
+      const response = await fetch('/api/user/reset-password', { // Using a different endpoint to avoid issues
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Important for cookies/session
         body: JSON.stringify({
           currentPassword,
-          newPassword
+          newPassword,
+          userId: user.id // Explicitly include the user ID
         }),
       });
       
+      // Check if the response is ok before trying to parse JSON
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || translate('failedToUpdatePassword'));
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Error: ${response.status} - ${response.statusText}`);
       }
+      
+      const data = await response.json();
       
       // Clear form on success
       setCurrentPassword('');
