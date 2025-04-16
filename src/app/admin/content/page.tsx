@@ -166,98 +166,6 @@ const adminTranslations = {
   // Add other languages as needed
 };
 
-const dummyContent: Content[] = [
-  {
-    id: '1',
-    title: 'Introduction to Sales Management',
-    description: 'Comprehensive guide to modern sales management techniques',
-    type: 'course',
-    filePath: '/content/sales-management.pdf',
-    language: 'en',
-    lastUpdated: '2025-04-05',
-    createdAt: '2025-03-01',
-    updatedAt: '2025-04-05',
-    createdBy: {
-      id: 'admin1',
-      name: 'Admin User',
-      email: 'admin@altacoach.com'
-    }
-  },
-  {
-    id: '2',
-    title: 'Guide de Vente Efficace',
-    description: 'Guide complet des techniques de vente modernes',
-    type: 'guide',
-    filePath: '/content/guide-vente.pdf',
-    language: 'fr',
-    lastUpdated: '2025-04-06',
-    createdAt: '2025-03-15',
-    updatedAt: '2025-04-06',
-    createdBy: {
-      id: 'admin2',
-      name: 'Marie Admin',
-      email: 'marie@altacoach.com'
-    }
-  },
-  {
-    id: '3',
-    title: 'Customer Relationship Exercise',
-    description: 'Interactive exercises for improving customer relationships',
-    type: 'exercise',
-    filePath: '/content/crm-exercise.pdf',
-    language: 'en',
-    lastUpdated: '2025-04-07',
-    createdAt: '2025-03-20',
-    updatedAt: '2025-04-07',
-    createdBy: {
-      id: 'admin1',
-      name: 'Admin User',
-      email: 'admin@altacoach.com'
-    }
-  },
-  {
-    id: '4',
-    title: 'FAQ - Formation Commercial',
-    description: 'Questions fréquentes sur la formation commerciale',
-    type: 'faq',
-    filePath: '/content/faq-commercial.pdf',
-    language: 'fr',
-    lastUpdated: '2025-04-08',
-    createdAt: '2025-03-25',
-    updatedAt: '2025-04-08',
-    createdBy: {
-      id: 'admin2',
-      name: 'Marie Admin',
-      email: 'marie@altacoach.com'
-    }
-  },
-  {
-    id: '5',
-    title: 'Sales Pipeline Management',
-    description: 'Best practices for managing your sales pipeline',
-    type: 'course',
-    filePath: '/content/pipeline-management.pdf',
-    language: 'en',
-    lastUpdated: '2025-04-09',
-    createdAt: '2025-03-30',
-    updatedAt: '2025-04-09',
-    createdBy: {
-      id: 'admin1',
-      name: 'Admin User',
-      email: 'admin@altacoach.com'
-    }
-  }
-];
-
-// Add initial stats
-const initialContentStats: ContentStats = {
-  total: 5,
-  courses: 2,
-  guides: 1,
-  exercises: 1,
-  faqs: 1
-};
-
 export default function AdminContent() {
   const { language, setLanguage, translate } = useLanguage();
   const { isDarkMode, toggleDarkMode } = useDarkMode();
@@ -290,11 +198,27 @@ export default function AdminContent() {
   const fetchContent = async () => {
     setIsLoading(true);
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Fetch from your API instead of using dummy data
+      const response = await fetch('/api/admin/content');
       
-      setContent(dummyContent);
-      setContentStats(initialContentStats);
+      if (!response.ok) {
+        throw new Error('Failed to load content data');
+      }
+      
+      const data = await response.json();
+      
+      // Set content from API
+      setContent(data.content || []);
+      
+      // Set stats from API
+      setContentStats(data.stats || {
+        total: 0,
+        courses: 0,
+        guides: 0,
+        exercises: 0,
+        faqs: 0
+      });
+      
       setError(null);
     } catch (error) {
       console.error('Error fetching content:', error);
@@ -309,7 +233,7 @@ export default function AdminContent() {
     fetchContent();
   }, []);
 
-  // Handle delete content
+  // Handle delete content - Updated to use the API
   const handleDeleteContent = async (id: string) => {
     if (!confirm('Are you sure you want to delete this content?')) {
       return;
@@ -318,32 +242,35 @@ export default function AdminContent() {
     setIsLoading(true);
     try {
       const response = await fetch(`/api/admin/content/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
       
       if (!response.ok) {
-        throw new Error('Failed to delete content');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete content');
       }
       
-      // Remove the deleted content from the state
-      setContent(content.filter(item => item.id !== id));
-      
-      // Update stats
-      setContentStats({
-        ...contentStats,
-        total: contentStats.total - 1,
-        courses: content.find(item => item.id === id)?.type === 'course' ? contentStats.courses - 1 : contentStats.courses,
-        guides: content.find(item => item.id === id)?.type === 'guide' ? contentStats.guides - 1 : contentStats.guides,
-        exercises: content.find(item => item.id === id)?.type === 'exercise' ? contentStats.exercises - 1 : contentStats.exercises,
-        faqs: content.find(item => item.id === id)?.type === 'faq' ? contentStats.faqs - 1 : contentStats.faqs
-      });
+      // On success, refresh the content list
+      fetchContent();
       
     } catch (error) {
       console.error('Error deleting content:', error);
-      alert('Failed to delete content');
+      alert(error instanceof Error ? error.message : 'Failed to delete content');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Handle viewing content - Updated to handle proper file URLs
+  const handleViewContent = (filePath: string) => {
+    // Check if it's a relative path and convert to absolute if needed
+    if (filePath.startsWith('/')) {
+      return `${window.location.origin}${filePath}`;
+    }
+    return filePath;
   };
 
   // Handle upload success
@@ -800,7 +727,7 @@ export default function AdminContent() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <a 
-                              href={item.filePath} 
+                              href={handleViewContent(item.filePath)} 
                               target="_blank" 
                               rel="noopener noreferrer"
                               className="text-[#C72026] dark:text-[#C72026] hover:text-[#C72026]/80 dark:hover:text-[#C72026]/80 mr-3"
@@ -812,7 +739,7 @@ export default function AdminContent() {
                               onClick={() => {
                                 // Create a link element and trigger download
                                 const link = document.createElement('a');
-                                link.href = item.filePath;
+                                link.href = handleViewContent(item.filePath);
                                 link.download = item.title;
                                 document.body.appendChild(link);
                                 link.click();
