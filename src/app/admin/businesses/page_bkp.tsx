@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage, languageLabels, SupportedLanguage } from '@/contexts/LanguageContext';
@@ -30,18 +30,10 @@ const isDuplicateUser = (newUser: NewUser, existingUsers: User[], currentBusines
 interface Business {
   id: string;
   name: string;
+  plan: string;
   status: string;
-  startDate?: string; // Changed from joinedDate
-  endDate?: string;   // New field
-  createdAt?: Date;   // Added
-  modifiedAt?: Date;  // Added
-  color?: string;     // New field
-  
-  // Optional plan field for backward compatibility
-  plan?: string;
-  
-  // Keep joinedDate temporarily for backward compatibility
-  joinedDate?: string;
+  joinedDate: string;
+  // Other fields...
   
   // Update the type of createdBy to match what the API returns
   createdBy?: { id: string; name: string; email: string } | string;
@@ -102,131 +94,132 @@ interface NewUser {
   role?: string;  // Make it optional in the interface
 }
 
-// Update the EditUserModalProps interface in your code
+// Update this line to accept the updated user as parameter
 interface EditUserModalProps {
   isOpen: boolean;
   onClose: () => void;
   user: User | null;
-  onSuccess: (updatedUser: User) => void;  // Changed from () => void to accept the user parameter
+  onSuccess: (updatedUser: User) => void;
   translate: (key: string) => string;
 }
 
 // Dummy data for documents and users
-const dummyDocuments: BusinessDocument[] = [
-  // Business Documents (Training Materials)
-  {
-    id: '1',
-    title: 'AI-Powered Learning Guide',
-    description: 'Complete guide to using altacoach AI-powered learning features',
-    type: 'PDF',
-    status: 'active',
-    created: '2024-01-15',
-    source: 'business',
-    category: 'training',
-    url: '/docs/ai-powered-learning-guide.pdf'
-  },
-  {
-    id: '2',
-    title: 'Post-Training Support Framework',
-    description: 'Framework for implementing continuous learning support',
-    type: 'PPTX',
-    status: 'active',
-    created: '2024-02-01',
-    source: 'business',
-    category: 'training',
-    url: '/docs/post-training-support.pptx'
-  },
-  {
-    id: '3',
-    title: 'Knowledge Retention Strategies',
-    description: 'Best practices for improving training retention rates',
-    type: 'PDF',
-    status: 'active',
-    created: '2024-03-01',
-    source: 'business',
-    category: 'training',
-    url: '/docs/retention-strategies.pdf'
-  },
-  {
-    id: '4',
-    title: 'Real-Time Coaching Manual',
-    description: 'Guide to implementing real-time coaching features',
-    type: 'DOCX',
-    status: 'active',
-    created: '2024-01-20',
-    source: 'business',
-    category: 'training',
-    url: '/docs/coaching-manual.docx'
-  },
-  {
-    id: '5',
-    title: 'Analytics & Reporting Guide',
-    description: 'How to use altacoach analytics for measuring training impact',
-    type: 'PDF',
-    status: 'active',
-    created: '2024-02-15',
-    source: 'business',
-    category: 'analytics',
-    url: '/docs/analytics-guide.pdf'
-  },
+// const documents: BusinessDocument[] = [
+//   // Business Documents (Training Materials)
+//   {
+//     id: '1',
+//     title: 'AI-Powered Learning Guide',
+//     description: 'Complete guide to using altacoach AI-powered learning features',
+//     type: 'PDF',
+//     status: 'active',
+//     created: '2024-01-15',
+//     source: 'business',
+//     category: 'training',
+//     url: '/docs/ai-powered-learning-guide.pdf'
+//   },
+//   {
+//     id: '2',
+//     title: 'Post-Training Support Framework',
+//     description: 'Framework for implementing continuous learning support',
+//     type: 'PPTX',
+//     status: 'active',
+//     created: '2024-02-01',
+//     source: 'business',
+//     category: 'training',
+//     url: '/docs/post-training-support.pptx'
+//   },
+//   {
+//     id: '3',
+//     title: 'Knowledge Retention Strategies',
+//     description: 'Best practices for improving training retention rates',
+//     type: 'PDF',
+//     status: 'active',
+//     created: '2024-03-01',
+//     source: 'business',
+//     category: 'training',
+//     url: '/docs/retention-strategies.pdf'
+//   },
+//   {
+//     id: '4',
+//     title: 'Real-Time Coaching Manual',
+//     description: 'Guide to implementing real-time coaching features',
+//     type: 'DOCX',
+//     status: 'active',
+//     created: '2024-01-20',
+//     source: 'business',
+//     category: 'training',
+//     url: '/docs/coaching-manual.docx'
+//   },
+//   {
+//     id: '5',
+//     title: 'Analytics & Reporting Guide',
+//     description: 'How to use altacoach analytics for measuring training impact',
+//     type: 'PDF',
+//     status: 'active',
+//     created: '2024-02-15',
+//     source: 'business',
+//     category: 'analytics',
+//     url: '/docs/analytics-guide.pdf'
+//   },
 
-  // Admin Documents
-  {
-    id: '6',
-    title: 'Platform Implementation Guide',
-    description: 'Technical guide for implementing altacoach',
-    type: 'PDF',
-    status: 'active',
-    created: '2024-02-15',
-    source: 'admin',
-    category: 'technical',
-    url: '/docs/implementation-guide.pdf'
-  },
-  {
-    id: '7',
-    title: 'Content Integration Manual',
-    description: 'Guide for integrating training content with altacoach',
-    type: 'DOCX',
-    status: 'active',
-    created: '2024-02-10',
-    source: 'admin',
-    category: 'technical',
-    url: '/docs/content-integration.docx'
-  },
-  {
-    id: '8',
-    title: 'User Management Policy',
-    description: 'Policies for managing user accounts and permissions',
-    type: 'PDF',
-    status: 'active',
-    created: '2024-01-25',
-    source: 'admin',
-    category: 'policy',
-    url: '/docs/user-management.pdf'
-  },
-  {
-    id: '9',
-    title: 'Performance Metrics Guide',
-    description: 'Guide to tracking and analyzing learning performance',
-    type: 'XLSX',
-    status: 'active',
-    created: '2024-03-01',
-    source: 'admin',
-    category: 'analytics',
-    url: '/docs/performance-metrics.xlsx'
-  },
-  {
-    id: '10',
-    title: 'Training ROI Calculator',
-    description: 'Spreadsheet for calculating training return on investment',
-    type: 'XLSX',
-    status: 'active',
-    created: '2024-02-20',
-    source: 'admin',
-    category: 'analytics',
-    url: '/docs/roi-calculator.xlsx'
-  }
-];
+//   // Admin Documents
+//   {
+//     id: '6',
+//     title: 'Platform Implementation Guide',
+//     description: 'Technical guide for implementing altacoach',
+//     type: 'PDF',
+//     status: 'active',
+//     created: '2024-02-15',
+//     source: 'admin',
+//     category: 'technical',
+//     url: '/docs/implementation-guide.pdf'
+//   },
+//   {
+//     id: '7',
+//     title: 'Content Integration Manual',
+//     description: 'Guide for integrating training content with altacoach',
+//     type: 'DOCX',
+//     status: 'active',
+//     created: '2024-02-10',
+//     source: 'admin',
+//     category: 'technical',
+//     url: '/docs/content-integration.docx'
+//   },
+//   {
+//     id: '8',
+//     title: 'User Management Policy',
+//     description: 'Policies for managing user accounts and permissions',
+//     type: 'PDF',
+//     status: 'active',
+//     created: '2024-01-25',
+//     source: 'admin',
+//     category: 'policy',
+//     url: '/docs/user-management.pdf'
+//   },
+//   {
+//     id: '9',
+//     title: 'Performance Metrics Guide',
+//     description: 'Guide to tracking and analyzing learning performance',
+//     type: 'XLSX',
+//     status: 'active',
+//     created: '2024-03-01',
+//     source: 'admin',
+//     category: 'analytics',
+//     url: '/docs/performance-metrics.xlsx'
+//   },
+//   {
+//     id: '10',
+//     title: 'Training ROI Calculator',
+//     description: 'Spreadsheet for calculating training return on investment',
+//     type: 'XLSX',
+//     status: 'active',
+//     created: '2024-02-20',
+//     source: 'admin',
+//     category: 'analytics',
+//     url: '/docs/roi-calculator.xlsx'
+//   }
+// ];
+
 
 const dummyUsers: User[] = [
   {
@@ -304,42 +297,6 @@ const handleDownloadSampleTemplate = () => {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
-};
-
-// Update the ImportTemplateLink component to be positioned below the import button
-const ImportTemplateLink = () => {
-  const handleDownloadSampleTemplate = () => {
-    // Define the headers only (no data rows)
-    const headers = ['name*', 'email*', 'language*', 'status', 'role'];
-    
-    // Create a CSV with only headers
-    const csvContent = headers.join(',');
-    
-    // Create a Blob with the CSV content
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    
-    // Create a download link and trigger the download
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'user_import_template.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-  
-  return (
-    <button 
-      onClick={handleDownloadSampleTemplate}
-      className="text-red-600 hover:text-black-800 text-xs underline flex items-center mt-1 ml-1"
-    >
-      <span className="mr-1">sample import template</span>
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 3 0 003 3h10a3 3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-      </svg>
-    </button>
-  );
 };
 
 // Define translations for the admin dashboard
@@ -608,21 +565,19 @@ const adminTranslations = {
   }
 };
 
-// Update BusinessFormData interface
 interface BusinessFormData {
   name: string;
+  plan: string;
   status: string;
-  email?: string;
-  phoneNumber?: string;
-  address?: string;
+  email: string;
+  phoneNumber: string;
+  address: string;
   logo?: string;
-  colorTheme?: string;
+  colorTheme: string;
   isActive: boolean;
-  createdBy?: string;
-  startDate: string; // Changed from joinedDate
-  endDate: string;
-  color?: string;
-  plan?: string; // Made optional
+  createdBy: string; // Add this field
+  startDate: string; // Add this field
+  endDate: string; // Add this field
 }
 
 const validateImportedUser = (user: NewUser): boolean => {
@@ -650,10 +605,7 @@ export default function AdminBusinesses() {
   const router = useRouter();
   const { user, logout } = useAuth(); // Get user and signOut from auth context
   const { showToast } = useToast(); // Add this hook
-
-  // Move the state declarations inside the component
-  const [selectedBusinessView, setSelectedBusinessView] = useState<Business | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'detail'>('list');
+  const [documents, setDocuments] = useState<BusinessDocument[]>([]);
 
   // Move businessData here, after user is available
   const businessData = [
@@ -725,6 +677,7 @@ export default function AdminBusinesses() {
 
   // State for businesses data
   const [businesses, setBusinesses] = useState<Business[]>(businessData);
+  // const [businesses, setBusinesses] = useState<Business[]>([]);
 
   // State for filtering and search
   const [statusFilter, setStatusFilter] = useState('all');
@@ -787,123 +740,25 @@ export default function AdminBusinesses() {
     }
   };
 
-  const loadUsersForBusiness = useCallback(async (businessId: string) => {
-    try {
-      console.log(`Fetching users for business: ${businessId}`);
-      const response = await fetch(`/api/admin/users?businessId=${businessId}`);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch users: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        console.log(`Found ${data.users.length} users for business ${businessId}`);
-        
-        // Update users array
-        setUsers(data.users);
-        
-        // Update usersMap
-        setUsersMap(prev => ({
-          ...prev,
-          [businessId]: data.users
-        }));
-        
-        return data.users;
-      } else {
-        throw new Error(data.error || 'Failed to fetch users');
-      }
-    } catch (error) {
-      console.error(`Error loading users for business ${businessId}:`, error);
-      return [];
-    }
-  }, []);
+  // State for selected business view and view mode
+  const [selectedBusinessView, setSelectedBusinessView] = useState<Business | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'detail'>('list');
 
-  const handleAddUserSuccess = async (newUser: any) => {
-    if (!newUser?.name || !selectedBusinessView) return;
-
-    try {
-      // No need to make another API call as it's already done in AddUserModal
-      console.log('User created successfully:', newUser);
-
-      // Create a complete user object with required fields for display
-      const newUserWithAllFields = {
-        id: newUser.id,
-        name: newUser.name,
-        email: newUser.email,
-        role: newUser.role || 'USER',
-        status: newUser.status || 'ACTIVE',
-        language: newUser.language || 'en',
-        businessId: selectedBusinessView.id,
-        lastActive: newUser.lastActive || new Date().toISOString().split('T')[0],
-        joinDate: newUser.joinDate || new Date().toISOString().split('T')[0],
-        isVerified: newUser.isVerified || false
-      };
-      
-      // Update users state immediately
-      setUsers(prevUsers => [newUserWithAllFields, ...prevUsers]);
-      
-      // Also update the usersMap 
-      setUsersMap(prev => {
-        const currentBusinessUsers = prev[selectedBusinessView.id] || [];
-        return {
-          ...prev,
-          [selectedBusinessView.id]: [newUserWithAllFields, ...currentBusinessUsers]
-        };
-      });
-      
-      // Update business user count
-      setBusinesses(prevBusinesses =>
-        prevBusinesses.map(business =>
-          business.id === selectedBusinessView.id
-            ? { ...business, userCount: (business.userCount || 0) + 1 }
-            : business
-        )
-      );
-      
-      // Update selected business view
-      setSelectedBusinessView(prev => 
-        prev ? { ...prev, userCount: (prev.userCount || 0) + 1 } : null
-      );
-
-      // Close modal and show success message
-      setIsAddUserModalOpen(false);
-      showToast(`User ${newUser.name} created successfully`, 'success');
-    } catch (error) {
-      console.error('Error processing new user:', error);
-      showToast(`Error adding user to display: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
-    }
-  };
-
-  const handleAddUser = () => {
-    if (!selectedBusinessView) {
-      showToast('Please select a business first', 'warning');
-      return;
-    }
-    setIsAddUserModalOpen(true);
-  };
-
-  const handleBusinessClick = async (business: Business) => {
-    setSelectedBusinessView(business); // Use the correct state setter
+  const handleBusinessClick = (business: Business) => {
+    setSelectedBusinessView(business);
     setViewMode('detail');
     
-    // Load users for this business
-    const users = await loadUsersForBusiness(business.id);
-    
-    // Update the userCount on the selected business
-    setSelectedBusinessView(prev => 
-      prev ? { ...prev, userCount: users.length } : null
-    );
-    
-    // Update the userCount in the businesses list
-    setBusinesses(prevBusinesses => 
-      prevBusinesses.map(b => 
-        b.id === business.id 
-          ? { ...b, userCount: users.length } 
-          : b
-      )
-    );
+    // Initialize users for this business if not already loaded
+    if (!usersMap[business.id]) {
+      const businessUsers = dummyUsers.filter(user => user.businessId === business.id);
+      setUsersMap(prev => ({
+        ...prev,
+        [business.id]: businessUsers
+      }));
+      setUsers(businessUsers);
+    } else {
+      setUsers(usersMap[business.id]);
+    }
   };
 
   const handleBackToList = () => {
@@ -926,28 +781,37 @@ export default function AdminBusinesses() {
   // Add this near your other state declarations
   const [usersMap, setUsersMap] = useState<Record<string, User[]>>({});
 
+  const handleAddUser = () => {
+    setIsAddUserModalOpen(true);
+  };
+
   const handleUploadDocument = () => {
     setIsUploadDocumentModalOpen(true);
-  }; // Add the closing semicolon here
+  };
 
-  // Update the handleToggleUserStatus function with proper typing
-
+  // Update the handleToggleUserStatus function
   const handleToggleUserStatus = async (user: User) => {
+    const newStatus = user.status === 'active' ? 'inactive' : 'active';
+    
     try {
-      // Normalize status case for comparison - make status check case-insensitive
-      const isCurrentlyActive = user.status?.toUpperCase() === 'ACTIVE';
-      const newStatus = isCurrentlyActive ? 'SUSPENDED' : 'ACTIVE';
-      
-      console.log(`Toggling status for user ${user.name} (${user.id}) from ${user.status} to ${newStatus}`);
-      
       // Optimistically update UI
-      setUsers((prevUsers: User[]) => 
-        prevUsers.map(u =>
+      setUsers(currentUsers =>
+        currentUsers.map(u =>
           u.id === user.id
             ? { ...u, status: newStatus }
             : u
         )
       );
+
+      // Update usersMap
+      setUsersMap(prev => ({
+        ...prev,
+        [selectedBusinessView?.id || '']: prev[selectedBusinessView?.id || ''].map(u =>
+          u.id === user.id
+            ? { ...u, status: newStatus }
+            : u
+        )
+      }));
 
       // Make API call to update status
       const response = await fetch(`/api/admin/users/${user.id}/status`, {
@@ -955,59 +819,53 @@ export default function AdminBusinesses() {
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include', // Add this line to include auth cookies
         body: JSON.stringify({ status: newStatus }),
       });
 
-      // Check if response is ok before parsing JSON
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Failed with status: ${response.status}`);
-      }
-
       const data = await response.json();
-      
+
       if (!data.success) {
         throw new Error(data.error || 'Failed to update user status');
       }
 
-      console.log('User status updated successfully:', data);
-      
-      // Show success toast notification
-      showToast(`User ${user.name} ${newStatus.toLowerCase() === 'active' ? 'activated' : 'deactivated'} successfully`, 'success');
-      
+      // Show success toast
+      showToast(
+        `User ${user.name} has been ${newStatus === 'active' ? 'activated' : 'deactivated'}`,
+        'success'
+      );
+
     } catch (error) {
       console.error('Error updating user status:', error);
       
-      // Revert the UI update on error
-      if (user && user.id) {
-        setUsers((prevUsers: User[]) => 
-          prevUsers.map(u =>
-            u.id === user.id
-              ? { ...u, status: user.status }
-              : u
-          )
-        );
-      }
-      
-      // Refresh the users list in case of error
-      if (selectedBusinessView?.id) {
-        loadUsersForBusiness(selectedBusinessView.id);
-      }
-      
-      // Show error notification
-      showToast(`Failed to update user status: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
+      // Revert the state changes on error
+      setUsers(currentUsers =>
+        currentUsers.map(u =>
+          u.id === user.id
+            ? { ...u, status: user.status }
+            : u
+        )
+      );
+
+      setUsersMap(prev => ({
+        ...prev,
+        [selectedBusinessView?.id || '']: prev[selectedBusinessView?.id || ''].map(u =>
+          u.id === user.id
+            ? { ...u, status: user.status }
+            : u
+        )
+      }));
+
+      // Show error toast
+      showToast('Failed to update user status. Please try again.', 'error');
     }
   };
 
-  // Update the fetchBusinesses function:
-
+  // Fetch businesses from API
   const fetchBusinesses = async () => {
     setIsLoading(true);
     setError('');
 
     try {
-      // First fetch businesses
       const response = await fetch('/api/admin/businesses');
       const data = await response.json();
       
@@ -1015,36 +873,7 @@ export default function AdminBusinesses() {
         throw new Error(data.error);
       }
 
-      // Get user counts for each business
-      const userCountPromises = data.businesses.map(async (business: Business) => {
-        try {
-          // Fetch users for this specific business
-          const usersResponse = await fetch(`/api/admin/users?businessId=${business.id}`);
-          const usersData = await usersResponse.json();
-          
-          if (usersData.success) {
-            // Update the business with the correct user count
-            business.userCount = usersData.users.length;
-            
-            // Also update the usersMap
-            setUsersMap(prev => ({
-              ...prev,
-              [business.id]: usersData.users
-            }));
-          }
-          
-          return business;
-        } catch (error) {
-          console.error(`Failed to fetch users for business ${business.id}:`, error);
-          return business; // Return the business without updated userCount
-        }
-      });
-
-      // Wait for all user count queries to complete
-      const businessesWithCounts = await Promise.all(userCountPromises);
-      
-      setBusinesses(businessesWithCounts);
-      
+      setBusinesses(data.businesses);
     } catch (error) {
       console.error('Error fetching businesses:', error);
       setError(typeof error === 'string' ? error : 'Failed to fetch businesses');
@@ -1099,6 +928,56 @@ export default function AdminBusinesses() {
     fetchUsers();
   }, []); // Only fetch once when component mounts
 
+  const fetchContent = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch('/api/admin/content');
+        const result = await response.json();
+    
+        if (!response.ok) throw new Error(result.error || 'Failed to fetch content');
+    
+        // Normalize backend content to match Content interface
+        const normalizedContent: Content[] = result.content.map((item: any) => ({
+          id: item.id.toString(),
+          title: item.title,
+          description: item.description,
+          type: item.type,
+          status: 'active',
+          created: item.createdAt,
+          source: item.source,
+          category: 'training',
+          url: item.url,
+
+          language: item.language,
+          updatedAt: item.updatedAt,
+          createdBy: item.createdBy ? {
+            id: item.createdBy.id.toString(),
+            name: item.createdBy.name,
+            email: item.createdBy.email
+          } : undefined,
+          business: item.business ? {
+            id: item.business.id.toString(),
+            name: item.business.name
+          } : undefined
+        }));
+
+        setDocuments(normalizedContent);
+        // setContentStats(result.stats);
+        setError(null);
+      } catch (error: any) {
+        console.error('Error fetching content:', error);
+        setError(error.message || 'Failed to load content');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    
+    // Fetch content data from the API
+    useEffect(() => {
+      fetchContent();
+    }, []);
+
   // Add near other state declarations
   const refreshUsers = useCallback(async () => {
     try {
@@ -1147,13 +1026,8 @@ export default function AdminBusinesses() {
 
   // Filter businesses based on status and search term
   const filteredBusinesses = businesses.filter(business => {
-    // Make status comparison case-insensitive
-    const businessStatus = business.status ? business.status.toLowerCase() : '';
-    const filterStatus = statusFilter === 'all' ? '' : statusFilter.toLowerCase();
-    
-    const matchesStatus = statusFilter === 'all' || businessStatus === filterStatus;
+    const matchesStatus = statusFilter === 'all' || business.status === statusFilter;
     const matchesSearch = business.name.toLowerCase().includes(searchTerm.toLowerCase());
-    
     return matchesStatus && matchesSearch;
   });
 
@@ -1176,16 +1050,17 @@ export default function AdminBusinesses() {
     setSelectedBusiness(business);
     setEditFormData({
       name: business.name,
+      plan: business.plan,
       status: business.status,
       email: '', // In a real app, you would fetch these from the API
       phoneNumber: '',
       address: '',
       logo: business.logo || '',
-      colorTheme: business.colorTheme || business.color || '#C72026',
-      isActive: business.isActive || business.status?.toLowerCase() === 'active',
-      startDate: business.startDate ? new Date(business.startDate).toISOString().split('T')[0] : 
-                (business.joinedDate ? business.joinedDate.split('T')[0] : ''),
-      endDate: business.endDate ? new Date(business.endDate).toISOString().split('T')[0] : ''
+      colorTheme: business.colorTheme || '#C72026',
+      isActive: business.isActive,
+      // createdBy: business.createdBy, // Preserve the original creator
+      startDate: '', // Default value
+      endDate: '' // Default value
     });
     setIsEditModalOpen(true);
   };
@@ -1235,17 +1110,12 @@ export default function AdminBusinesses() {
     setError('');
 
     try {
-      // Include all necessary fields including startDate and endDate
+      // Include the required fields that match the schema
       const businessData = {
         name: formData.name,
-        plan: formData.plan || 'BUSINESS',
-        status: formData.status || 'PENDING',
-        createdBy: user?.name || 'Admin',
-        // Format dates properly for the API
-        startDate: formData.startDate ? new Date(formData.startDate).toISOString() : null,
-        endDate: formData.endDate ? new Date(formData.endDate).toISOString() : null,
-        // Add color if available
-        color: formData.color || '#C72026'
+        plan: formData.plan || 'BUSINESS', // Default to BUSINESS if not specified
+        status: formData.status || 'PENDING', // Default to PENDING if not specified
+        createdBy: user?.name || 'Admin', // Include the createdBy field
       };
 
       const response = await fetch('/api/admin/businesses', {
@@ -1267,11 +1137,8 @@ export default function AdminBusinesses() {
         ...data.business,
         userCount: 0,
         logo: '',
-        colorTheme: businessData.color,
+        colorTheme: '#C72026',
         isActive: data.business.status === 'ACTIVE',
-        // Make sure these dates are properly included in the UI state
-        startDate: businessData.startDate,
-        endDate: businessData.endDate
       };
 
       // Update the UI with the new business
@@ -1306,8 +1173,7 @@ export default function AdminBusinesses() {
     }
   };
 
-  // Replace the handleEditSubmit function with this updated version:
-
+  // Handle form submission for editing a business
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isEditSubmitting || !selectedBusiness) return;
@@ -1316,30 +1182,18 @@ export default function AdminBusinesses() {
     setError('');
 
     try {
-      // Prepare the data to send to the API
-      const businessData = {
-        name: editFormData.name,
-        status: editFormData.status,
-        color: editFormData.color || editFormData.colorTheme,
-        startDate: editFormData.startDate ? new Date(editFormData.startDate).toISOString() : null,
-        endDate: editFormData.endDate ? new Date(editFormData.endDate).toISOString() : null,
-        isActive: editFormData.isActive,
-      };
+      // In a real app, this would be an API call
+      // const response = await fetch(`/api/admin/businesses/${selectedBusiness.id}`, {
+      //   method: 'PUT',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify(editFormData),
+      // });
+      // const data = await response.json();
 
-      // Make the API call to update the business
-      const response = await fetch(`/api/admin/businesses/${selectedBusiness.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(businessData),
-      });
-
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to update business');
-      }
+      // For demo purposes, we'll simulate a successful response
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Update the business in our state
       setBusinesses(prev => prev.map(business =>
@@ -1347,13 +1201,11 @@ export default function AdminBusinesses() {
           ? {
               ...business,
               name: editFormData.name,
+              plan: editFormData.plan,
               status: editFormData.status,
               logo: editFormData.logo,
-              color: editFormData.color || editFormData.colorTheme,
               colorTheme: editFormData.colorTheme,
-              isActive: editFormData.isActive,
-              startDate: editFormData.startDate,
-              endDate: editFormData.endDate
+              isActive: editFormData.isActive
             }
           : business
       ));
@@ -1362,12 +1214,12 @@ export default function AdminBusinesses() {
       closeEditModal();
 
       // Show success message
-      showToast('Business updated successfully', 'success');
+      // alert(t('businessUpdatedSuccessfully'));
 
     } catch (error) {
       console.error('Error updating business:', error);
       setError(typeof error === 'string' ? error : (error instanceof Error ? error.message : 'An unknown error occurred'));
-      showToast('Error updating business: ' + (error instanceof Error ? error.message : 'Unknown error'), 'error');
+      alert(t('errorUpdatingBusiness') + (error instanceof Error ? `: ${error.message}` : ''));
     } finally {
       setIsEditSubmitting(false);
     }
@@ -1495,7 +1347,7 @@ export default function AdminBusinesses() {
     switch (action) {
       case 'download':
         selectedIds.forEach(id => {
-          const doc = dummyDocuments.find(d => d.id === id);
+          const doc = documents.find(d => d.id === id);
           if (doc) handleDownload(doc);
         });
         showToast(`Downloading ${selectedIds.length} documents`, 'success');
@@ -1506,29 +1358,96 @@ export default function AdminBusinesses() {
     }
   };
 
-  // Update the filteredUsers memoized value to correctly include new users
-  const filteredUsers = useMemo(() => {
-    if (!selectedBusinessView) return [];
-    
-    // Log for debugging
-    console.log("Filtering users", { 
-      users: users.length,
-      businessId: selectedBusinessView.id,
-      userSearchTerm
-    });
-    
+  // Update the handleAddUserSuccess function
+  const handleAddUserSuccess = async (newUser: NewUser) => {
+    if (!newUser?.name || !selectedBusinessView) return;
+
+    try {
+
+      if (isDuplicateUser(newUser, users , selectedBusinessView.id)) {
+        showToast(`Duplicate user found : ${newUser.email} already exists in this business.`, 'warning');
+        return;
+      }
+
+
+      const response = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...newUser,
+          id: Date.now().toString(),
+          businessId: selectedBusinessView.id,
+          joinDate: new Date().toISOString().split('T')[0],
+          lastActive: new Date().toISOString().split('T')[0],
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error);
+      }
+
+      // Create the complete user object
+      const newUserWithDetails = {
+        ...data.user,
+        businessId: selectedBusinessView.id,
+        joinDate: new Date().toISOString().split('T')[0],
+        lastActive: new Date().toISOString().split('T')[0],
+        status: 'active',
+        createdBy: selectedBusinessView.name || user?.name || 'Admin', // Use business name first
+      };
+
+      // Update local users state - Add new user to beginning of array
+      setUsers(prevUsers => [newUserWithDetails, ...prevUsers]);
+
+      // Update usersMap state - Add new user to beginning of array
+      setUsersMap(prev => ({
+        ...prev,
+        [selectedBusinessView.id]: [
+          newUserWithDetails,
+          ...(prev[selectedBusinessView.id] || []),
+        ],
+      }));
+
+      // Rest of the function remains unchanged
+      // Update business user count
+      setBusinesses(prevBusinesses =>
+        prevBusinesses.map(business =>
+          business.id === selectedBusinessView.id
+            ? { ...business, userCount: (business.userCount || 0) + 1 }
+            : business
+        )
+      );
+
+      // Update the selected business view
+      if (selectedBusinessView) {
+        setSelectedBusinessView({
+          ...selectedBusinessView,
+          userCount: (selectedBusinessView.userCount || 0) + 1,
+        });
+      }
+
+      setIsAddUserModalOpen(false);
+      
+      // Force a re-render of filtered users
+      setUserSearchTerm(prev => prev + '');
+
+    } catch (error) {
+      console.error('Error creating user:', error);
+      showToast('Failed to create user. Please try again.','error');
+    }
+  };
+
+  // Add this computed value before your render
+  const filteredUsers = useCallback(() => {
     return users.filter(user => {
-      // Make sure user is a valid object with required properties
-      if (!user) return false;
-      
-      // Check if the user's businessId matches the selected business
-      const matchesBusiness = user.businessId === selectedBusinessView.id;
-      
-      // Check if the user matches the search term (case insensitive)
-      const matchesSearch = !userSearchTerm || 
-        (user.name && user.name.toLowerCase().includes(userSearchTerm.toLowerCase())) ||
-        (user.email && user.email.toLowerCase().includes(userSearchTerm.toLowerCase()));
-      
+      const matchesBusiness = user.businessId === selectedBusinessView?.id;
+      const matchesSearch = userSearchTerm === '' || 
+        user.name?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+        user.email?.toLowerCase().includes(userSearchTerm.toLowerCase());
       return matchesBusiness && matchesSearch;
     });
   }, [users, selectedBusinessView, userSearchTerm]);
@@ -1564,87 +1483,6 @@ export default function AdminBusinesses() {
       [documentId]: !prevSelected[documentId]
     }));
   };
-
-  useEffect(() => {
-    // Initialize usersMap for all businesses
-    const loadUserMap = async () => {
-      const promises = businesses.map(async (business) => {
-        try {
-          const response = await fetch(`/api/admin/users?businessId=${business.id}`);
-          const data = await response.json();
-          
-          if (data.success) {
-            return { businessId: business.id, users: data.users };
-          }
-          return { businessId: business.id, users: [] };
-        } catch (error) {
-          console.error(`Error loading users for business ${business.id}:`, error);
-          return { businessId: business.id, users: [] };
-        }
-      });
-      
-      const results = await Promise.all(promises);
-      
-      const newUsersMap: Record<string, User[]> = {};
-      results.forEach(({ businessId, users }) => {
-        newUsersMap[businessId] = users;
-      });
-      
-      setUsersMap(newUsersMap);
-    };
-    
-    loadUserMap();
-  }, [businesses]);
-
-  // Update the useEffect that fetches users for a business:
-
-  useEffect(() => {
-    if (selectedBusinessView) {
-      const fetchBusinessUsers = async () => {
-        try {
-          console.log(`Fetching users for business ID: ${selectedBusinessView.id}`);
-          
-          // For testing, try using the dummy data directly
-          if (process.env.NODE_ENV === 'development' && dummyUsers.length > 0) {
-            console.log("Using dummy users data for development");
-            // Filter dummy users for this business
-            const businessUsers = dummyUsers.filter(user => 
-              user.businessId === selectedBusinessView.id
-            );
-            console.log("Filtered users:", businessUsers);
-            setUsers(businessUsers);
-          } else {
-            const response = await fetch(`/api/admin/users?businessId=${selectedBusinessView.id}`);
-            
-            if (!response.ok) {
-              throw new Error(`Failed to fetch users: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            
-            if (data.success) {
-              console.log(`Found ${data.users.length} users for business ${selectedBusinessView.id}`);
-              setUsers(data.users);
-              
-              // Update the usersMap
-              setUsersMap(prev => ({
-                ...prev,
-                [selectedBusinessView.id]: data.users
-              }));
-            } else {
-              throw new Error(data.error || 'Failed to fetch users');
-            }
-          }
-          
-        } catch (error) {
-          console.error('Error fetching users for business:', error);
-          showToast('Failed to load user data', 'error');
-        }
-      };
-
-      fetchBusinessUsers();
-    }
-  }, [selectedBusinessView?.id]); // Depend only on the business ID
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -1701,7 +1539,7 @@ export default function AdminBusinesses() {
                   </svg>
                 ) : (
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 9 9 0 018.646 3.646A9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 9.003 0 008.354-5.646z" />
                   </svg>
                 )}
               </button>
@@ -1802,12 +1640,12 @@ export default function AdminBusinesses() {
             <ul className="space-y-2">
               <li>
                 <Link href="/admin" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
-                  {t('Dashboard')}
+                  {t('dashboard')}
                 </Link>
               </li>
               <li>
                 <Link href="/admin/businesses" className="block px-4 py-2 rounded-md bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] dark:text-[#C72026]">
-                  {t('Businesses')}
+                  {t('businesses')}
                 </Link>
               </li>
               <li>
@@ -1822,12 +1660,12 @@ export default function AdminBusinesses() {
               </li> */}
               <li>
                 <Link href="/admin/analytics" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
-                  {t('Analytics')}
+                  {t('analytics')}
                 </Link>
               </li>
               <li>
                 <Link href="/admin/settings" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
-                  {t('Settings')}
+                  {t('settings')}
                 </Link>
               </li>
             </ul>
@@ -1870,7 +1708,7 @@ export default function AdminBusinesses() {
                     <select
                       value={statusFilter}
                       onChange={(e) => setStatusFilter(e.target.value)}
-                      className="mt-1 block w-42 pl-3 pr-10 py-2 text-sm text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] rounded-md"
+                      className="mt-1 block w-42 pl-3 pr-10 py-2 text-sm text-black border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] rounded-md"
                     >
                       <option value="all">{t('allBusinesses')}</option>
                       <option value="active">{t('active')}</option>
@@ -1887,8 +1725,7 @@ export default function AdminBusinesses() {
                       className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-[#C72026] focus:border-[#C72026] text-sm"
                     />
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M8 4a4 4 4 0 100 8 4 4 0 000-8zM2 8a6 6 6 6 0 1110.89 3.476l4.817 4.817a1 1 1 01-1.414 1.414l-4-4a6 6 6 6 0 01-8.89-3.476z" clipRule="evenodd" />
+                      <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                       </svg>
                     </div>
                   </div>
@@ -1973,7 +1810,7 @@ export default function AdminBusinesses() {
                               </td>
                               {/* Joined date cell */}
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                {business.joinedDate?.split('T')[0] || business.startDate?.split('T')[0] || 'N/A'}
+                              2023-07-18
                               </td>
                               {/* Created By cell */}
                               <td className="px-6 py-4 whitespace-nowrap">
@@ -1996,7 +1833,7 @@ export default function AdminBusinesses() {
                                   >
                                     {t('edit')}
                                   </button>
-                                  {/* {business.status === 'pending' && (
+                                  {business.status === 'pending' && (
                                     <button className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300">
                                       {t('approve')}
                                     </button>
@@ -2010,7 +1847,7 @@ export default function AdminBusinesses() {
                                     <button className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300">
                                       {t('approve')}
                                     </button>
-                                  )} */}
+                                  )}
                                   {/* <button 
                                     onClick={() => toggleBusinessActive(business)}
                                     className={`${
@@ -2082,84 +1919,15 @@ export default function AdminBusinesses() {
                     
                     {/* Add appropriate action button based on active filter */}
                     {activeFilter === 'users' ? (
-                      <div>
-                        <div className="flex space-x-2">
-                          <div className="flex flex-col">
-                            <UserDataActions 
-                              users={users}
-                              onImportUsers={async (importedUsers) => {
-                                try {
-                                  // Check if we have a valid business ID first
-                                  if (!selectedBusinessView?.id) {
-                                    showToast('No business selected for importing users', 'error');
-                                    return;
-                                  }
-
-                                  console.log('Imported users to process:', importedUsers);
-                                  
-                                  // First, validate for duplicates
-                                  const duplicates = importedUsers.filter(newUser => 
-                                    isDuplicateUser(newUser, users, selectedBusinessView.id)
-                                  );
-                            
-                                  if (duplicates.length > 0) {
-                                    showToast(`Duplicate users found: ${duplicates.map(d => d.email).join(', ')}`, 'warning');
-                                    return;
-                                  }
-
-                                  // Add business ID and other required fields to each imported user
-                                  const enrichedUsers = importedUsers.map(user => ({
-                                    ...user,
-                                    businessId: selectedBusinessView.id,
-                                    password: 'DefaultPass123!', // Add a default password that will be changed on first login
-                                    status: user.status || 'ACTIVE'
-                                  }));
-
-                                  console.log('Sending enriched users to API:', enrichedUsers);
-
-                                  // Make API call to bulk create users
-                                  const response = await fetch('/api/admin/users/bulk', {
-                                    method: 'POST',
-                                    headers: {
-                                      'Content-Type': 'application/json',
-                                    },
-                                    body: JSON.stringify({
-                                      users: enrichedUsers,
-                                      businessId: selectedBusinessView.id
-                                    }),
-                                  });
-                            
-                                  const data = await response.json();
-                            
-                                  if (!data.success) {
-                                    throw new Error(data.error || 'Failed to import users');
-                                  }
-
-                                  // Update the UI with the new users
-                                  setUsers(prevUsers => [...data.users, ...prevUsers]);
-                                  
-                                  // Show success message
-                                  showToast(`Successfully imported ${data.users.length} users`, 'success');
-                                  
-                                  // Refresh the users list to ensure everything is up to date
-                                  loadUsersForBusiness(selectedBusinessView.id);
-                                  
-                                } catch (error) {
-                                  console.error('Error importing users:', error);
-                                  showToast(`Failed to import users: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
-                                }
-                              }}
-                              businessId={selectedBusinessView?.id}
-                            />
-                            <ImportTemplateLink />
-                          </div>
-                          <button 
-                            onClick={handleAddUser}
-                            className="h-[36px] inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#C72026] hover:bg-[#C72026]/90"
-                          >
-                            Add User
-                          </button>
-                        </div>
+                      <div className="flex space-x-2">
+                        
+                        
+                        <button 
+                          onClick={handleAddUser}
+                          className="h-[36px] inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#C72026] hover:bg-[#C72026]/90"
+                        >
+                          Add User
+                        </button>
                       </div>
                     ) : (
                       <button 
@@ -2201,108 +1969,67 @@ export default function AdminBusinesses() {
                           </tr>
                         </thead>
                         <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                          {filteredUsers.length === 0 ? (
-                            <tr>
-                              <td colSpan={6} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
-                                No users found for this business
+                          {filteredUsers().map((user) => user && (
+                            <tr key={user.id}>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                  {user?.name || 'N/A'}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                  {user?.email || 'N/A'}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                  {user?.language ? languageLabels[user.language as SupportedLanguage] || user.language : 'English'}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                  user?.status === 'active' 
+                                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                                    : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                }`}>
+                                  {user?.status || 'N/A'}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                  {selectedBusinessView?.name || user.createdBy || 'Admin'}
+                                </div>
+                              </td>
+                              {/* <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                  {user.lastActive ? new Date(user.lastActive).toLocaleDateString() : 'N/A'}
+                                </div>
+                              </td> */}
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex space-x-3">
+                                  <button
+                                    onClick={() => {
+                                      setSelectedUser(user);
+                                      setIsEditUserModalOpen(true);
+                                    }}
+                                    className="text-blue-600 hover:text-blue-900"
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    onClick={() => handleToggleUserStatus(user)}
+                                    className={`${
+                                      user.status === 'active'
+                                        ? 'text-red-600 hover:text-red-900'
+                                        : 'text-green-600 hover:text-green-900'
+                                    }`}
+                                  >
+                                    {user.status === 'active' ? 'Deactivate' : 'Activate'}
+                                  </button>
+                                </div>
                               </td>
                             </tr>
-                          ) : (
-                            filteredUsers.map((user) => (
-                              <tr key={user.id}>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                    {user.name || 'N/A'}
-                                  </div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="text-sm text-gray-500 dark:text-gray-400">
-                                    {user?.email || 'N/A'}
-                                  </div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="text-sm text-gray-500 dark:text-gray-400">
-                                    {(() => {
-                                      // If language is missing, default to English
-                                      if (!user?.language) return 'English';
-                                      
-                                      // Create a mapping for all possible formats
-                                      const languageDisplayMap: Record<string, string> = {
-                                        // Full names
-                                        'English': 'English',
-                                        'Español': 'Español',
-                                        'Français': 'Français',
-                                        'Deutsch': 'Deutsch',
-                                        'Português': 'Português',
-                                        'Italiano': 'Italiano',
-                                        
-                                        // Uppercase codes
-                                        'EN': 'English',
-                                        'ES': 'Español',
-                                        'FR': 'Français',
-                                        'DE': 'Deutsch',
-                                        'PT': 'Português',
-                                        'IT': 'Italiano',
-                                        
-                                        // Lowercase codes
-                                        'en': 'English',
-                                        'es': 'Español',
-                                        'fr': 'Français',
-                                        'de': 'Deutsch',
-                                        'pt': 'Português',
-                                        'it': 'Italiano'
-                                      };
-                                      
-                                      // Try to find the language in our mapping
-                                      return languageDisplayMap[user.language] || user.language;
-                                    })()}
-                                  </div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                    user?.status === 'active' 
-                                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
-                                      : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                                  }`}>
-                                    {user?.status || 'N/A'}
-                                  </span>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="text-sm text-gray-500 dark:text-gray-400">
-                                    {selectedBusinessView?.name || user.createdBy || 'Admin'}
-                                  </div>
-                                </td>
-                                {/* <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="text-sm text-gray-500 dark:text-gray-400">
-                                    {user.lastActive ? new Date(user.lastActive).toLocaleDateString() : 'N/A'}
-                                  </div>
-                                </td> */}
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="flex space-x-3">
-                                    <button
-                                      onClick={() => {
-                                        setSelectedUser(user);
-                                        setIsEditUserModalOpen(true);
-                                      }}
-                                      className="text-blue-600 hover:text-blue-900"
-                                    >
-                                      Edit
-                                    </button>
-                                    <button
-                                      onClick={() => handleToggleUserStatus(user)}
-                                      className={`${
-                                        user.status?.toLowerCase() === 'active'
-                                          ? 'text-red-600 hover:text-red-900'
-                                          : 'text-green-600 hover:text-green-900'
-                                      }`}
-                                    >
-                                      {user.status?.toLowerCase() === 'active' ? t('deactivate') : t('activate')}
-                                    </button>
-                                  </div>
-                                </td>
-                              </tr>
-                            ))
-                          )}
+                          ))}
                         </tbody>
                       </table>
                     ) : (
@@ -2324,7 +2051,7 @@ export default function AdminBusinesses() {
                           </tr>
                         </thead>
                         <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                          {dummyDocuments
+                          {documents
                             .filter(doc => activeFilter === 'all' || doc.source === activeFilter)
                             .map((document) => (
                               <tr key={document.id}>
@@ -2589,7 +2316,7 @@ export default function AdminBusinesses() {
                     ) : (
                       <div 
                         className="h-24 w-24 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center"
-                        style={{ backgroundColor: selectedBusiness.color || selectedBusiness.colorTheme || '#C72026' }}
+                        style={{ backgroundColor: selectedBusiness.colorTheme || '#C72026' }}
                       >
                         <span className="text-3xl font-bold text-white">
                           {selectedBusiness.name.charAt(0)}
@@ -2600,62 +2327,59 @@ export default function AdminBusinesses() {
                   
                   {/* Business Details */}
                   <div className="grid grid-cols-2 gap-4 mt-4">
+                    {/* <div>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('plan')}</p>
+                      <p className="mt-1 text-sm text-gray-900 dark:text-white">{selectedBusiness.plan}</p>
+                    </div> */}
                     <div>
                       <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('status')}</p>
                       <p className="mt-1">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          selectedBusiness.status === 'active' || selectedBusiness.status === 'ACTIVE'
+                          selectedBusiness.status === 'active' 
                             ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200' 
-                            : selectedBusiness.status === 'pending' || selectedBusiness.status === 'PENDING'
+                            : selectedBusiness.status === 'pending'
                             ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
                             : 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200'
                         }`}>
-                          {t(selectedBusiness.status.toLowerCase())}
+                          {t(selectedBusiness.status)}
                         </span>
                       </p>
                     </div>
-                    <div>
+                    {/* <div>
                       <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('userCount')}</p>
-                      <p className="mt-1 text-sm text-gray-900 dark:text-white">{selectedBusiness.userCount || 0}</p>
+                      <p className="mt-1 text-sm text-gray-900 dark:text-white">{selectedBusiness.userCount}</p>
+                    </div> */}
+                    <div>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('Start Date')}</p>
+                      <p className="mt-1 text-sm text-gray-900 dark:text-white">{selectedBusiness.joinedDate}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('StartDate')}</p>
-                      <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                        {selectedBusiness.startDate ? new Date(selectedBusiness.startDate).toLocaleDateString() : 
-                         selectedBusiness.joinedDate ? selectedBusiness.joinedDate : 'Not set'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('EndDate')}</p>
-                      <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                        {selectedBusiness.endDate ? new Date(selectedBusiness.endDate).toLocaleDateString() : 'Not set'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('Color')}</p>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('colorTheme')}</p>
                       <div className="mt-1 flex items-center">
                         <div 
                           className="h-6 w-6 rounded-full mr-2" 
-                          style={{ backgroundColor: selectedBusiness.color || selectedBusiness.colorTheme || '#C72026' }}
+                          style={{ backgroundColor: selectedBusiness.colorTheme || '#C72026' }}
                         ></div>
-                        <p className="text-sm text-gray-900 dark:text-white">
-                          {selectedBusiness.color || selectedBusiness.colorTheme || '#C72026'}
-                        </p>
+                        <p className="text-sm text-gray-900 dark:text-white">{selectedBusiness.colorTheme || '#C72026'}</p>
                       </div>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('createdBy')}</p>
-                      <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                        {typeof selectedBusiness.createdBy === 'string' 
-                          ? selectedBusiness.createdBy 
-                          : selectedBusiness.createdBy?.name || 'Admin'}
+                      {/* <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('isActive')}</p> */}
+                      <p className="mt-1">
+                        {/* <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          selectedBusiness.isActive 
+                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200' 
+                            : 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200'
+                        }`}>
+                          {selectedBusiness.isActive ? t('active') : t('deactivate')}
+                        </span> */}
                       </p>
                     </div>
                   </div>
                 </div>
                 
                 <div className="mt-6">
-                  <button
+                  {/* <button
                     type="button"
                     onClick={() => {
                       closeViewModal();
@@ -2664,7 +2388,7 @@ export default function AdminBusinesses() {
                     className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#C72026] text-base font-medium text-white hover:bg-[#C72026]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026] sm:text-sm"
                   >
                     {t('edit')}
-                  </button>
+                  </button> */}
                 </div>
               </div>
             </div>
@@ -2702,7 +2426,7 @@ export default function AdminBusinesses() {
                   {/* Business Name */}
                   <div>
                     <label htmlFor="edit-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {t('name')}
+                      {t('Business Name')}
                     </label>
                     <input
                       type="text"
@@ -2741,7 +2465,7 @@ export default function AdminBusinesses() {
                       ) : (
                         <div 
                           className="h-16 w-16 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center"
-                          style={{ backgroundColor: editFormData.colorTheme || editFormData.color || '#C72026' }}
+                          style={{ backgroundColor: editFormData.colorTheme }}
                         >
                           <span className="text-2xl font-bold text-white">
                             {editFormData.name.charAt(0)}
@@ -2750,7 +2474,7 @@ export default function AdminBusinesses() {
                       )}
                       <label htmlFor="logo-upload" className="ml-5 cursor-pointer">
                         <span className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026]">
-                          {t('uploadLogo')}
+                          {t('Upload Logo')}
                         </span>
                         <input
                           id="logo-upload"
@@ -2766,58 +2490,30 @@ export default function AdminBusinesses() {
                   
                   {/* Color Theme */}
                   <div>
-                    <label htmlFor="color" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {t('Color')}
+                    <label htmlFor="colorTheme" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {t('Color Theme')}
                     </label>
                     <div className="mt-1 flex items-center">
                       <input
                         type="color"
-                        name="color"
-                        id="color"
-                        value={editFormData.color || editFormData.colorTheme || '#C72026'}
+                        name="colorTheme"
+                        id="colorTheme"
+                        value={editFormData.colorTheme}
                         onChange={handleEditInputChange}
                         className="h-8 w-8 rounded-md border-0 cursor-pointer"
                       />
                       <input
                         type="text"
-                        name="color"
-                        value={editFormData.color || editFormData.colorTheme || '#C72026'}
+                        name="colorTheme"
+                        value={editFormData.colorTheme}
                         onChange={handleEditInputChange}
                         className="ml-2 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
                       />
                     </div>
                   </div>
                   
-                  {/* Start Date */}
-                  {/* <div>
-                    <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {t('StartDate')}
-                    </label>
-                    <input
-                      type="date"
-                      name="startDate"
-                      id="startDate"
-                      value={editFormData.startDate || ''}
-                      onChange={handleEditInputChange}
-                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
-                    />
-                  </div> */}
-
-                  {/* End Date */}
-                  {/* <div>
-                    <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {t('EndDate')}
-                    </label>
-                    <input
-                      type="date"
-                      name="endDate"
-                      id="endDate"
-                      value={editFormData.endDate || ''}
-                      onChange={handleEditInputChange}
-                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
-                    />
-                  </div> */}
-                  
+                  {/* Plan */}
+    
                   {/* Status */}
                   <div>
                     <label htmlFor="edit-status" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -2835,8 +2531,22 @@ export default function AdminBusinesses() {
                       <option value="suspended">{t('suspended')}</option>
                     </select>
                   </div>
+
+                  {/* <div>
+                    <label htmlFor="edit-createdBy" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {t('createdBy')}
+                    </label>
+                    <input
+                      type="text"
+                      name="createdBy"
+                      id="edit-createdBy"
+                      value={editFormData.createdBy}
+                      onChange={handleEditInputChange}
+                      className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
+                    />
+                  </div> */}
                   
-                  {/* Active Status Switch */}
+                  {/* Active Status */}
                   {/* <div className="flex items-center">
                     <input
                       id="isActive"
@@ -2857,7 +2567,7 @@ export default function AdminBusinesses() {
                       disabled={isEditSubmitting}
                       className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#C72026] text-white hover:bg-[#C72026]/90 sm:col-start-2 sm:text-sm"
                     >
-                      {isEditSubmitting ? t('submitting') : t('saveChanges')}
+                      {isEditSubmitting ? t('submitting') : t('Save Changes')}
                     </button>
                     <button
                       type="button"
@@ -2885,26 +2595,23 @@ export default function AdminBusinesses() {
         isOpen={isEditUserModalOpen}
         onClose={() => setIsEditUserModalOpen(false)}
         user={selectedUser}
-        onSuccess={() => {
-          refreshUsers()
-            .then(() => {
-              setIsEditUserModalOpen(false);
-              showToast(`User updated successfully`, 'success');
-            })
-            .catch(error => {
-              console.error('Error after updating user:', error);
-              showToast('Failed to refresh user list', 'error');
-            });
+        onSuccess={async (updatedUser: { name: any; }) => {
+          try {
+            await refreshUsers();
+            setIsEditUserModalOpen(false);
+            showToast(`User ${updatedUser.name} updated successfully`, 'success');
+          } catch (error) {
+            console.error('Error after updating user:', error);
+            showToast('Failed to refresh user list', 'error');
+          }
         }}
         translate={(key: string) => key}
       />
       <AddUserModal
         isOpen={isAddUserModalOpen}
         onClose={() => setIsAddUserModalOpen(false)}
-        onSuccess={handleAddUserSuccess}
+        onSuccess={handleAddUserSuccess}  // Update this line
         translate={(key: string) => key}
-        businessId={selectedBusinessView?.id} // Make sure selectedBusinessView exists before accessing id
-        showToast={showToast}
       />
       <UploadDocumentModal
         isOpen={isUploadDocumentModalOpen}
@@ -2913,6 +2620,7 @@ export default function AdminBusinesses() {
           setIsUploadDocumentModalOpen(false);
           // Refresh documents list if needed
         }}
+        businessId={selectedBusinessView?.id} 
         translate={t}
       />
       <ViewDocumentModal
