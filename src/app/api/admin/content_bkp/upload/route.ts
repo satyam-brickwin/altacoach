@@ -5,7 +5,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { PrismaClient } from '@prisma/client';
 import fs from 'fs';
 import path from 'path';
-import { FileType } from 'lucide-react';
 
 const prisma = new PrismaClient();
 
@@ -22,22 +21,10 @@ export async function POST(request: NextRequest) {
     const title = formData.get('title') as string;
     const description = formData.get('description') as string;
     const type = formData.get('type') as string;
-    const contentType = formData.get('doctype') as string;
     const language = formData.get('language') as string;
-    const source = formData.get('source') as string;
-    // const file = formData.get('file') as File;
-    const file = formData.get('file');
-    if (!file || !(file instanceof Blob)) {
-      return NextResponse.json({ error: 'Invalid file upload' }, { status: 400 });
-    }
-    console.log('Upload API called 1');
-    // const userIdStr = formData.get('userId');
-    // const userId = userIdStr ? parseInt(userIdStr.toString(), 10) : null;
-    // if (userIdStr && isNaN(userId)) {
-    //   return NextResponse.json({ error: 'Invalid userId' }, { status: 400 });
-    // }
-    const userId = formData.get('userId');
-    console.log('Upload API called 2');
+    const file = formData.get('file') as File;
+    const userId = formData.get('userId') as string;
+    
     console.log('Received upload request:', { 
       title, 
       type, 
@@ -68,36 +55,21 @@ export async function POST(request: NextRequest) {
       const publicFilePath = `/storage/content/${fileName}`;
       
       // Create a new content record in the database
-      const content = await prisma.document.create({
+      const content = await prisma.content.create({
         data: {
           title,
           description: description || null,
-          fileType: type,
+          type,
           language,
-          source,
-          contentType,
-          url: publicFilePath,
-          createdBy: userId ? { connect: { id: userId } } : undefined
+          filePath: publicFilePath,
+          createdById: userId || null,
+          businessId: null,
         }
       });
       
       console.log('Content record created in database:', content);
-
-      const businessId = formData.get('businessId');
-      // const businessId = businessIdRaw ? parseInt(businessIdRaw.toString(), 10) : null;
-   
-      if (businessId) {
-        await prisma.businessDocument.create({
-          data: {
-            businessId: businessId,
-            documentId: content.id,
-            adminId: userId ?? null
-          }
-        });
-      } else {
-        console.warn('Business document uploaded, but user has no businessId');
-      }
       
+      // Now try to save the file if possible
       try {
         // Ensure directories exist
         const storagePath = join(publicDirPath, 'storage');

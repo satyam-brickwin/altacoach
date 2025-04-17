@@ -21,9 +21,13 @@ export async function POST(request: Request) {
       business = await prisma.business.create({
         data: {
           name: data.name,
-          // plan: data.plan?.toUpperCase() || 'BUSINESS',
           status: data.status?.toUpperCase() || 'PENDING',
-          
+          color: data.color || null,
+          startDate: data.startDate ? new Date(data.startDate) : new Date(),
+          endDate: data.endDate ? new Date(data.endDate) : null, // Include endDate
+          createdBy: {
+            connect: { id: userId }
+          }
         },
         include: {
           createdBy: true
@@ -42,7 +46,9 @@ export async function POST(request: Request) {
         data: {
           name: creatorName,
           email: `${creatorName.toLowerCase().replace(/\s+/g, '.')}@example.com`,
-          // Add any other required fields for your User model
+          password: await fetch('/api/auth/generate-password').then(res => res.text()),
+          role: 'ADMIN',
+          status: 'ACTIVE',
         }
       });
       
@@ -50,8 +56,10 @@ export async function POST(request: Request) {
       business = await prisma.business.create({
         data: {
           name: data.name,
-          // plan: data.plan?.toUpperCase() || 'BUSINESS',
           status: data.status?.toUpperCase() || 'PENDING',
+          color: data.color || null,
+          startDate: data.startDate ? new Date(data.startDate) : new Date(),
+          endDate: data.endDate ? new Date(data.endDate) : null, // Include endDate
           createdBy: {
             connect: { id: user.id }
           }
@@ -78,6 +86,7 @@ export async function POST(request: Request) {
   }
 }
 
+// GET: List all businesses
 export async function GET() {
   try {
     const businesses = await prisma.business.findMany({

@@ -1,14 +1,11 @@
 import React, { useState } from 'react';
-import { useAuthProtection } from '@/contexts/AuthContext';
 
 interface UploadDocumentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
   translate: (key: string) => string;
-  businessId: string | undefined;
 }
-
 
 interface DocumentFormData {
   title: string;
@@ -18,8 +15,8 @@ interface DocumentFormData {
   file: File | null;
 }
 
-export default function UploadDocumentModal({ isOpen, onClose, onSuccess, translate,businessId }: UploadDocumentModalProps) {
-  const [formDataState, setFormDataState] = useState<DocumentFormData>({
+export default function UploadDocumentModal({ isOpen, onClose, onSuccess, translate }: UploadDocumentModalProps) {
+  const [formData, setFormData] = useState<DocumentFormData>({
     title: '',
     description: '',
     type: 'business',
@@ -29,25 +26,15 @@ export default function UploadDocumentModal({ isOpen, onClose, onSuccess, transl
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dragActive, setDragActive] = useState(false);
 
-  const { user } = useAuthProtection(['admin']);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [type, setType] = useState('course');
-  const [file, setFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormDataState(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setFormDataState(prev => ({ ...prev, file }));
+      setFormData(prev => ({ ...prev, file }));
     }
   };
 
@@ -68,54 +55,24 @@ export default function UploadDocumentModal({ isOpen, onClose, onSuccess, transl
     
     const file = e.dataTransfer.files?.[0];
     if (file) {
-      setFormDataState(prev => ({ ...prev, file }));
+      setFormData(prev => ({ ...prev, file }));
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!businessId) {
-      console.error("No business ID provided");
-      return;
-    }
-    if (isSubmitting || !formDataState.file) return;
+    if (isSubmitting) return;
 
     setIsSubmitting(true);
     try {
-      const formData = new FormData();
-      const fileExtension = formDataState.file?.name.split('.').pop()?.toLowerCase() || 'unknown';
-      formData.append('title', formDataState.title);
-      formData.append('description', formDataState.description);
-      formData.append('type', fileExtension);
-      formData.append('language', 'en');
-      formData.append('file', formDataState.file);
-      formData.append('source', 'business');
-      formData.append('doctype', formDataState.type);
-      formData.append('businessId', businessId);
-
-      if (user) {
-        formData.append('userId', user.id);
-      }
-
-      const response = await fetch('/api/admin/content/upload', {
-        method: 'POST',
-        body: formData
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.message || 'Failed to upload content');
-      }
-
-      // Reset form
-      setFormDataState({
-        title: '',
-        description: '',
-        type: 'business',
-        source: 'business',
-        file: null
-      });
-
+      // Here you would implement the actual file upload logic
+      // For example:
+      // const formDataToSend = new FormData();
+      // formDataToSend.append('file', formData.file);
+      // formDataToSend.append('title', formData.title);
+      // await fetch('/api/documents', { method: 'POST', body: formDataToSend });
+      
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
       onSuccess();
       onClose();
     } catch (error) {
@@ -161,7 +118,7 @@ export default function UploadDocumentModal({ isOpen, onClose, onSuccess, transl
                     type="text"
                     name="title"
                     required
-                    value={formDataState.title}
+                    value={formData.title}
                     onChange={handleInputChange}
                     className="mt-1 block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026]"
                   />
@@ -174,7 +131,7 @@ export default function UploadDocumentModal({ isOpen, onClose, onSuccess, transl
                   <textarea
                     name="description"
                     rows={3}
-                    value={formDataState.description}
+                    value={formData.description}
                     onChange={handleInputChange}
                     className="mt-1 block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026]"
                   />
@@ -186,7 +143,7 @@ export default function UploadDocumentModal({ isOpen, onClose, onSuccess, transl
                   </label>
                   <select
                     name="type"
-                    value={formDataState.type}
+                    value={formData.type}
                     onChange={handleInputChange}
                     className="mt-1 block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026]"
                   >
@@ -230,8 +187,8 @@ export default function UploadDocumentModal({ isOpen, onClose, onSuccess, transl
                       <p className="text-xs text-gray-500 dark:text-gray-400">
                         PDF, DOC, DOCX up to 10MB
                       </p>
-                      {formDataState.file && (
-                        <p className="text-sm text-[#C72026]">{formDataState.file.name}</p>
+                      {formData.file && (
+                        <p className="text-sm text-[#C72026]">{formData.file.name}</p>
                       )}
                     </div>
                   </div>
@@ -241,7 +198,7 @@ export default function UploadDocumentModal({ isOpen, onClose, onSuccess, transl
               <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3">
                 <button
                   type="submit"
-                  disabled={isSubmitting || !formDataState.file}
+                  disabled={isSubmitting || !formData.file}
                   className="inline-flex justify-center w-full px-4 py-2 text-sm font-medium text-white bg-[#C72026] border border-transparent rounded-md hover:bg-[#C72026]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026] disabled:opacity-50"
                 >
                   {isSubmitting ? translate('uploading') : translate('upload')}

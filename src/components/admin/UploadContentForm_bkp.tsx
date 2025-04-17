@@ -77,14 +77,11 @@ export default function UploadContentForm({ onUploadSuccess, onCancel }: UploadC
     // Check file type
     const allowedTypes = [
       'application/pdf',
-      'application/msword', // .doc
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
-      'application/vnd.ms-powerpoint', // .ppt
-      'application/vnd.openxmlformats-officedocument.presentationml.presentation', // .pptx
-      'application/vnd.ms-excel', // .xls
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
-      'text/csv', // .csv
-      'text/plain', // .txt
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-powerpoint',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'text/plain',
       'text/markdown',
       'application/json',
       'application/zip',
@@ -93,7 +90,7 @@ export default function UploadContentForm({ onUploadSuccess, onCancel }: UploadC
     ];
     
     if (file && !allowedTypes.includes(file.type)) {
-      errors.file = 'File type not supported. Supported: PDF, Word, Excel, PowerPoint, CSV, text, image, zip';
+      errors.file = 'File type not supported. Please upload a PDF, Word, PowerPoint, text, or image file';
     }
     
     if (Object.keys(errors).length > 0) {
@@ -108,15 +105,12 @@ export default function UploadContentForm({ onUploadSuccess, onCancel }: UploadC
     
     try {
       // Create form data
-      const fileExtension = file.name.split('.').pop()?.toLowerCase() || 'unknown';
       const formData = new FormData();
       formData.append('title', title);
       formData.append('description', description);
-      formData.append('type', fileExtension);
+      formData.append('type', type);
       formData.append('language', contentLanguage);
-      formData.append('source', 'admin');
       formData.append('file', file as File);
-      formData.append('doctype', 'admin');
       
       // Add user info if available
       if (user) {

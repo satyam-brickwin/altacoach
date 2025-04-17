@@ -48,6 +48,16 @@ interface UserStats {
   businessUsers: number;
 }
 
+// Add a new interface for admin users
+interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  lastLogin: string;
+}
+
 const SuperAdminDashboard = () => {
   const router = useRouter();
   const { logout } = useAuth();
@@ -92,6 +102,9 @@ const SuperAdminDashboard = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
+  // Add a new state for admin users
+  const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
+
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setLanguage(e.target.value as SupportedLanguage);
   };
@@ -127,104 +140,29 @@ const SuperAdminDashboard = () => {
   
   // Fetch stats from the database
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchDashboardData = async () => {
       setIsLoading(true);
       try {
-        console.log('Fetching dashboard stats...');
-        // Fetch real statistics from the API with timestamp to prevent caching
-        const timestamp = new Date().getTime();
-        const response = await fetch(`/apisuper/superadmin/dashboard-stats?t=${timestamp}`, {
-          method: 'GET',
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0'
-          }
-        });
+        // Fetch admin users data from the correct endpoint
+        const adminResponse = await fetch('/api/admin/users');
+        if (!adminResponse.ok) throw new Error('Failed to fetch admin users');
+        const adminData = await adminResponse.json();
         
-        console.log('API response status:', response.status);
+        // Set the admin users data from the API response
+        setAdminUsers(adminData.users.map((user: { id: any; name: any; email: any; role: any; status: string; lastLogin: string | number | Date; }) => ({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          status: user.status === 'ACTIVE' ? 'Active' : 'Inactive',
+          lastLogin: user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'
+        })));
         
-        if (!response.ok) {
-          throw new Error(`Failed to fetch dashboard stats: ${response.status} ${response.statusText}`);
-        }
+        // Other dashboard data fetching...
         
-        const data = await response.json();
-        console.log('Dashboard stats data:', data);
-        
-        if (!data.success) {
-          throw new Error('API returned unsuccessful response');
-        }
-        
-        // Debug logging to show received values for statistics
-        console.log('Business stats from API:', data.stats.businesses);
-        console.log('User stats from API:', data.stats.users);
-        console.log('Content stats from API:', data.stats.content);
-        
-        // Update with real data from database
-        if (data.stats) {
-          // Business stats
-          if (data.stats.businesses) {
-            setBusinessStats({
-              totalBusinesses: data.stats.businesses.total || 0,
-              activeBusinesses: data.stats.businesses.active || 0,
-              pendingBusinesses: data.stats.businesses.pending || 0,
-              suspendedBusinesses: data.stats.businesses.suspended || 0
-            });
-          }
-          
-          // Content stats
-          if (data.stats.content) {
-            setContentStats({
-              totalContent: data.stats.content.total || 0,
-              courses: data.stats.content.courses || 0,
-              guides: data.stats.content.guides || 0,
-              exercises: data.stats.content.exercises || 0,
-              faqs: data.stats.content.faqs || 0
-            });
-          }
-          
-          // User stats
-          if (data.stats.users) {
-            setUserStats({
-              totalUsers: data.stats.users.total || 0,
-              activeUsers: data.stats.users.active || 0,
-              adminUsers: data.stats.users.admins || 0,
-              businessUsers: data.stats.users.business || 0
-            });
-          }
-        }
-        
-        // Update recent businesses if available
-        if (data.recentBusinessRegistrations) {
-          setRecentBusinesses(data.recentBusinessRegistrations);
-        }
       } catch (error) {
-        console.error('Error fetching dashboard stats:', error);
-        // Show error in console with full stack trace to help debug
-        console.trace('Dashboard stats fetch error stack:');
-        
-        // No fallback to mock data - if the API fails, show zeros
-        setBusinessStats({
-          totalBusinesses: 0,
-          activeBusinesses: 0,
-          pendingBusinesses: 0,
-          suspendedBusinesses: 0
-        });
-
-        setContentStats({
-          totalContent: 0,
-          courses: 0,
-          guides: 0,
-          exercises: 0,
-          faqs: 0
-        });
-
-        setUserStats({
-          totalUsers: 0,
-          activeUsers: 0,
-          adminUsers: 0,
-          businessUsers: 0
-        });
+        console.error('Error fetching dashboard data:', error);
+        // toast.error('Failed to load dashboard data');
       } finally {
         setIsLoading(false);
       }
@@ -232,8 +170,8 @@ const SuperAdminDashboard = () => {
 
     // Only fetch stats when user is authenticated
     if (isAuthenticated && !authLoading) {
-      console.log('User authenticated, fetching stats...');
-      fetchStats();
+      console.log('User authenticated, fetching stats and admin users...');
+      fetchDashboardData();
     } else {
       console.log('User not yet authenticated, skipping stats fetch');
     }
@@ -672,95 +610,149 @@ const SuperAdminDashboard = () => {
               </div>
             </div>
 
-            {/* Recent Registrations */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden mt-8">
-              <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {translate('recentRegistrations')}
-                </h2>
-                <button className="text-sm text-purple-600 dark:text-purple-400 hover:underline">
-                  {translate('viewAll')}
-                </button>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                  <thead className="bg-gray-50 dark:bg-gray-700">
-                    <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        {translate('name')}
-                      </th>
-                      {/* <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        {translate('plan')}
-                      </th> */}
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        {translate('userCount')}
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        {translate('status')}
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        {translate('joined')}
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        {translate('actions')}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    {recentBusinesses.map((business) => (
-                      <tr key={business.id} className="hover:bg-[#C72026]/5 dark:hover:bg-[#C72026]/10">
-                        <td className="px-6 py-4 whitespace-nowrap">
+            {/* Admin & Super Admin Details in Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              {/* Super Admin Users Card */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-[0_2px_4px_rgba(199,32,38,0.1)] p-6">
+                <div className="flex items-center mb-4">
+                  <div className="bg-[#C72026]/10 dark:bg-[#C72026]/20 rounded-full p-3 mr-4">
+                    <svg className="h-5 w-5 text-[#C72026] dark:text-[#C72026]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{translate('Super Admin Users')}</h3>
+                </div>
+                
+                <div className="space-y-3">
+                  {adminUsers
+                    .filter(admin => admin.role.toLowerCase() === 'super_admin' || admin.role.toLowerCase() === 'super admin' || admin.role.toLowerCase() === 'superadmin')
+                    .map(admin => (
+                      <div key={admin.id} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md">
+                        <div className="flex items-center justify-between">
                           <div className="flex items-center">
-                            <div className="h-10 w-10 flex-shrink-0 bg-[#C72026]/10 dark:bg-[#C72026]/20 rounded-full flex items-center justify-center">
-                              <span className="text-lg font-semibold text-[#C72026] dark:text-[#C72026]">
-                                {business.name.charAt(0)}
+                            <div className="w-8 h-8 bg-[#C72026]/10 dark:bg-[#C72026]/20 rounded-full flex items-center justify-center mr-3">
+                              <span className="text-sm font-medium text-[#C72026] dark:text-[#C72026]">
+                                {admin.name?.[0]?.toUpperCase()}
                               </span>
                             </div>
-                            <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                {business.name}
-                              </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{admin.name}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">{admin.email}</p>
                             </div>
                           </div>
-                        </td>
-                        {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                          {business.plan}
-                        </td> */}
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                          {business.userCount}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            business.status === 'active' 
-                              ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' 
-                              : business.status === 'pending' 
-                                ? 'bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200' 
-                                : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
+                            admin.status === 'Active' 
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' 
+                              : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
                           }`}>
-                            {business.status === 'active' 
-                              ? translate('active') 
-                              : business.status === 'pending' 
-                                ? translate('pending') 
-                                : translate('suspended')}
+                            {admin.status}
                           </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                          {business.joinedDate}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button className="text-[#C72026] dark:text-[#C72026] hover:text-[#C72026]/80 dark:hover:text-[#C72026]/80 mr-3">
-                            {translate('view')}
-                          </button>
-                          <button className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300">
-                            {translate('manage')}
-                          </button>
-                        </td>
-                      </tr>
+                        </div>
+                        {/* <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                          {translate('Last Login')}: {admin.lastLogin}
+                        </div> */}
+                      </div>
                     ))}
-                  </tbody>
-                </table>
+                  
+                  {/* Show current user if no super admin data available */}
+                  {adminUsers.filter(admin => admin.role.toLowerCase() === 'super_admin' || admin.role.toLowerCase() === 'super admin' || admin.role.toLowerCase() === 'superadmin').length === 0 && (
+                    <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className="w-8 h-8 bg-[#C72026]/10 dark:bg-[#C72026]/20 rounded-full flex items-center justify-center mr-3">
+                            <span className="text-sm font-medium text-[#C72026] dark:text-[#C72026]">
+                              {user?.name?.[0]?.toUpperCase() || 'S'}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{user?.name || 'Super Admin'}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{user?.email || 'admin@altacoach.com'}</p>
+                          </div>
+                        </div>
+                        <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                          Active
+                        </span>
+                      </div>
+                      {/* <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                        {translate('Last Login')}: {new Date().toLocaleDateString()}
+                      </div> */}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Admin Users Card */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-[0_2px_4px_rgba(199,32,38,0.1)] p-6">
+                <div className="flex items-center mb-4">
+                  <div className="bg-purple-100 dark:bg-purple-900 rounded-full p-3 mr-4">
+                    <svg className="h-5 w-5 text-purple-600 dark:text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{translate('Admin Users')}</h3>
+                </div>
+                
+                <div className="space-y-3">
+                  {adminUsers
+                    .filter(admin => 
+                      admin.role.toLowerCase().includes('admin') && 
+                      !admin.role.toLowerCase().includes('super')
+                    )
+                    .map(admin => (
+                      <div key={admin.id} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center mr-3">
+                              <span className="text-sm font-medium text-purple-600 dark:text-purple-400">
+                                {admin.name?.[0]?.toUpperCase()}
+                              </span>
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{admin.name}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">{admin.email}</p>
+                            </div>
+                          </div>
+                          <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            admin.status === 'Active' 
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' 
+                              : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
+                          }`}>
+                            {admin.status}
+                          </span>
+                        </div>
+                        {/* <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                          {translate('Last Login')}: {admin.lastLogin}
+                        </div> */}
+                      </div>
+                    ))}
+                  
+                  {/* Show sample admin if no admin data available */}
+                  {adminUsers.filter(admin => 
+                    admin.role.toLowerCase().includes('admin') && 
+                    !admin.role.toLowerCase().includes('super')
+                  ).length === 0 ? (
+                    <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md">
+                      <div className="text-center py-3 text-gray-500 dark:text-gray-400">
+                        <p>No regular admin users found</p>
+                        <Link href="/superadmin/users" className="text-[#C72026] hover:underline mt-2 inline-block">
+                          Add a new admin
+                        </Link>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+                
+                <div className="mt-4 flex justify-end">
+                  <Link href="/superadmin/users" className="text-sm font-medium text-[#C72026] hover:text-[#A51B1F] flex items-center">
+                    {translate('Manage admin users')}
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </Link>
+                </div>
               </div>
             </div>
+            
           </div>
         </div>
       </div>
