@@ -1560,10 +1560,18 @@ export default function AdminBusinesses() {
 
   // Add this function where you have other handler functions
   const handleDocumentSelection = (documentId: string, filter: 'all' | 'admin' | 'business') => {
-    setSelectedDocuments(prevSelected => ({
-      ...prevSelected,
-      [documentId]: !prevSelected[documentId]
-    }));
+    setSelectedDocuments(prevSelected => {
+      const newSelection = {
+        ...prevSelected,
+        [documentId]: !prevSelected[documentId]
+      };
+      
+      // Log selection for debugging
+      console.log(`Document ${documentId} is now ${newSelection[documentId] ? 'selected' : 'unselected'}`);
+      console.log(`Total selected documents: ${Object.values(newSelection).filter(Boolean).length}`);
+      
+      return newSelection;
+    });
   };
 
   useEffect(() => {
@@ -1807,6 +1815,122 @@ export default function AdminBusinesses() {
     }
   };
 
+  // Enhanced connectDocumentsToBusinessUsers function with better error handling for 405 errors
+  const connectDocumentsToBusinessUsers = async (documentIds: string[], businessId: string) => {
+    try {
+      // Show loading toast with detailed information about the operation
+      showToast(`Connecting ${documentIds.length} documents to business users...`, 'info');
+      
+      // Fetch users for this business to get their IDs
+      const usersResponse = await fetch(`/api/admin/users?businessId=${businessId}`);
+      
+      if (!usersResponse.ok) {
+        throw new Error(`Failed to fetch business users: ${usersResponse.status}`);
+      }
+      
+      const usersData = await usersResponse.json();
+      
+      if (!usersData.success || !usersData.users || !usersData.users.length) {
+        throw new Error('No users found for this business');
+      }
+      
+      // Extract user IDs for the connection operation
+      const userIds = usersData.users.map((user: User) => user.id);
+      
+      console.log(`Connecting ${documentIds.length} documents to ${userIds.length} users in business ${businessId}`);
+      
+      // Make API call to connect documents to business users - ensure the API endpoint is correct
+      const response = await fetch('/api/admin/content/connect-to-business', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          documentIds,
+          businessId,
+          userIds, // Pass the user IDs to the API
+          createUserContentMapping: true // Flag to create mappings in the UserContent table
+        }),
+      });
+      
+      // Specific handling for 405 Method Not Allowed error
+      if (response.status === 405) {
+        console.error('API route method not allowed. Endpoint may not support POST method.');
+        throw new Error('API endpoint does not support this operation. Please check the route implementation.');
+      }
+      
+      // Check if the response is ok before attempting to parse JSON
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorMessage;
+        
+        try {
+          // Try to parse as JSON first
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error || `Server responded with status: ${response.status}`;
+        } catch (jsonError) {
+          // If JSON parsing fails, use the raw text or status code
+          errorMessage = errorText || `Server responded with status: ${response.status}`;
+        }
+        
+        throw new Error(errorMessage);
+      }
+      
+      // Safely parse JSON response
+      let data;
+      try {
+        const responseText = await response.text();
+        data = responseText ? JSON.parse(responseText) : { success: true };
+      } catch (jsonError) {
+        console.error('Error parsing JSON response:', jsonError);
+        throw new Error('Invalid JSON response from server');
+      }
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to connect documents to business users');
+      }
+      
+      // Log the database results for verification
+      console.log('Document connections created:', data.connections || 'Success');
+      
+      // Clear selection after successful connection
+      setSelectedDocuments({});
+      
+      // Show detailed success message with the number of document-user connections created
+      const businessName = selectedBusinessView?.name || 'current business';
+      const userCount = userIds.length;
+      const totalConnections = userCount * documentIds.length;
+      
+      showToast(
+        `Successfully connected ${documentIds.length} documents to ${userCount} users in ${businessName} (${totalConnections} connections created)`, 
+        'success'
+      );
+      
+      // Refresh documents to show updated status
+      if (selectedBusinessView) {
+        fetchContent(selectedBusinessView.id);
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error connecting documents to business:', error);
+      
+      // Add specific detection for 405 errors
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      if (errorMessage.includes('405') || errorMessage.includes('method not allowed')) {
+        showToast('API route configuration error. Please contact your administrator.', 'error');
+        // Log additional troubleshooting info
+        console.error('API endpoint error: The route may not be implemented or may not accept POST requests.');
+        return false;
+      }
+      
+      // Other error handling remains the same
+      showToast(`Failed to connect documents to users: ${errorMessage}`, 'error');
+      return false;
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header with logo and Admin badge */}
@@ -1862,7 +1986,7 @@ export default function AdminBusinesses() {
                   </svg>
                 ) : (
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 9 9 0 018.646 3.646A9.003 9.003 0 0012 21a9.003 9.003 9.003 0 008.354-5.646z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 9 9 11-18 0 9 9 0 0012 21a9.003 9.003 9 0 008.354-5.646z" />
                   </svg>
                 )}
               </button>
@@ -2049,7 +2173,7 @@ export default function AdminBusinesses() {
                     />
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M8 4a4 4 4 0 100 8 4 4 0 000-8zM2 8a6 6 6 6 0 1110.89 3.476l4.817 4.817a1 1 1 01-1.414 1.414l-4-4a6 6 6 6 0 01-8.89-3.476z" clipRule="evenodd" />
+                        <path fillRule="evenodd" d="M8 4a4 4 4 0 100 8 4 4 0 000-8zM2 8a6 6 6 6 11-18 0 9 9 0 0118 0zM12.89 3.476l4.817 4.817a1 1 1 01-1.414 1.414l-4-4a6 6 6 6 0 01-8.89-3.476z" clipRule="evenodd" />
                       </svg>
                     </div>
                   </div>
@@ -2176,7 +2300,7 @@ export default function AdminBusinesses() {
                       className="flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                     >
                       <svg className="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 01-1.414 1.414l-4-4a1 1 010-1.414l4-4a1 1 011.414 0z" clipRule="evenodd" />
+                        <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 01-1.414 1.414l-4-4a6 6 6 6 0 01-8.89-3.476z" clipRule="evenodd" />
                       </svg>
                       Back to Businesses
                     </button>
@@ -2298,12 +2422,38 @@ export default function AdminBusinesses() {
                         </div>
                       </div>
                     ) : (
-                      <button 
-                        onClick={handleUploadDocument}
-                        className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#C72026] hover:bg-[#C72026]/90"
-                      >
-                        Upload Document
-                      </button>
+                      <div className="flex space-x-2">
+                        {/* Add Save to Business button - only show when documents are selected and we're in admin documents tab */}
+                        {activeFilter === 'admin' && selectedBusinessView && Object.values(selectedDocuments).some(selected => selected) && (
+                          <button 
+                            onClick={() => {
+                              const selectedIds = Object.entries(selectedDocuments)
+                                .filter(([_, isSelected]) => isSelected)
+                                .map(([id]) => id);
+                              
+                              if (selectedIds.length === 0) {
+                                showToast('Please select documents first', 'warning');
+                                return;
+                              }
+                              
+                              connectDocumentsToBusinessUsers(selectedIds, selectedBusinessView.id);
+                            }}
+                            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700"
+                            title={`Save selected documents to all users in ${selectedBusinessView.name}`}
+                          >
+                            <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Save to Business Users
+                          </button>
+                        )}
+                        <button 
+                          onClick={handleUploadDocument}
+                          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#C72026] hover:bg-[#C72026]/90"
+                        >
+                          Upload Document
+                        </button>
+                      </div>
                     )}
                   </div>
 
@@ -2319,6 +2469,24 @@ export default function AdminBusinesses() {
                       className="w-full px-3 py-2 border rounded-md focus:ring-[#C72026] focus:border-[#C72026]"
                     />
                   </div>
+
+                  {/* Add some visual indicator for the number of selected documents in the admin documents tab */}
+                  {activeFilter === 'admin' && Object.values(selectedDocuments).some(selected => selected) && (
+                    <div className="mb-2 flex items-center text-sm text-gray-600 dark:text-gray-400">
+                      <span className="inline-flex items-center pr-2">
+                        <svg className="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 9 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {Object.values(selectedDocuments).filter(Boolean).length} documents selected
+                      </span>
+                      <button 
+                        onClick={() => setSelectedDocuments({})}
+                        className="text-xs text-red-600 hover:text-red-800 underline"
+                      >
+                        Clear selection
+                      </button>
+                    </div>
+                  )}
 
                   {/* Inside the business details view content area */}
                   <div className="overflow-x-auto">
