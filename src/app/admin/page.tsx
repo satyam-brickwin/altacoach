@@ -36,14 +36,6 @@ interface BusinessStats {
   suspendedBusinesses: number;
 }
 
-interface ContentStats {
-  totalContent: number;
-  courses: number;
-  guides: number;
-  exercises: number;
-  faqs: number;
-}
-
 interface UserStats {
   totalUsers: number;
   activeUsers: number;
@@ -75,8 +67,8 @@ const AdminDashboard = () => {
     pendingBusinesses: 0,
     suspendedBusinesses: 0
   });
-  const [contentStats, setContentStats] = useState<ContentStats>({
-    totalContent: 0,
+  const [contentStats, setContentStats] = useState({
+    total: 0,
     courses: 0,
     guides: 0,
     exercises: 0,
@@ -168,9 +160,9 @@ const AdminDashboard = () => {
       setIsLoading(true);
       try {
         console.log('Fetching dashboard stats...');
-        // Fetch real statistics from the API with timestamp to prevent caching
-        const timestamp = new Date().getTime();
-        const response = await fetch(`/api/admin/dashboard-stats?t=${timestamp}&includeEndDate=true&rawData=true`, {
+        
+        // Fetch business and user stats
+        const dashboardResponse = await fetch(`/api/admin/dashboard-stats?t=${new Date().getTime()}`, {
           method: 'GET',
           headers: {
             'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -179,76 +171,82 @@ const AdminDashboard = () => {
           }
         });
         
-        console.log('API response status:', response.status);
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch dashboard stats: ${response.status} ${response.statusText}`);
+        if (!dashboardResponse.ok) {
+          throw new Error(`Failed to fetch dashboard stats: ${dashboardResponse.status}`);
         }
         
-        const data = await response.json();
-        console.log('Dashboard stats data:', data);
+        const dashboardData = await dashboardResponse.json();
         
-        if (!data.success) {
-          throw new Error('API returned unsuccessful response');
+        // Fetch content stats
+        const contentResponse = await fetch('/api/admin/content/altamedia');
+        
+        if (!contentResponse.ok) {
+          throw new Error(`Failed to fetch content stats: ${contentResponse.status}`);
         }
         
-        // Debug logging to show received values for statistics
-        console.log('Business stats from API:', data.stats.businesses);
-        console.log('User stats from API:', data.stats.users);
-        console.log('Content stats from API:', data.stats.content);
+        const contentData = await contentResponse.json();
         
-        // Update with real data from database
-        if (data.stats) {
+        console.log('Raw content API response:', contentData);
+        console.log('Content stats being set:', {
+          total: contentData.stats.total || 0,
+          courses: contentData.stats.courses || 0,
+          guides: contentData.stats.guides || 0,
+          exercises: contentData.stats.exercises || 0,
+          faqs: contentData.stats.faqs || 0
+        });
+
+        console.log('Content stats from API:', contentData.stats);
+        
+        // Update the content stats using the same structure as in the content page
+        setContentStats({
+          total: contentData.stats.total || 0,
+          courses: contentData.stats.courses || 0,
+          guides: contentData.stats.guides || 0,
+          exercises: contentData.stats.exercises || 0,
+          faqs: contentData.stats.faqs || 0
+        });
+        
+        // Update business and user stats from dashboardData
+        if (dashboardData.stats) {
           // Business stats
-          if (data.stats.businesses) {
+          if (dashboardData.stats.businesses) {
             setBusinessStats({
-              totalBusinesses: data.stats.businesses.total || 0,
-              activeBusinesses: data.stats.businesses.active || 0,
-              pendingBusinesses: data.stats.businesses.pending || 0,
-              suspendedBusinesses: data.stats.businesses.suspended || 0
-            });
-          }
-          
-          // Content stats
-          if (data.stats.content) {
-            setContentStats({
-              totalContent: data.stats.content.total || 0,
-              courses: data.stats.content.courses || 0,
-              guides: data.stats.content.guides || 0,
-              exercises: data.stats.content.exercises || 0,
-              faqs: data.stats.content.faqs || 0
+              totalBusinesses: dashboardData.stats.businesses.total || 0,
+              activeBusinesses: dashboardData.stats.businesses.active || 0,
+              pendingBusinesses: dashboardData.stats.businesses.pending || 0,
+              suspendedBusinesses: dashboardData.stats.businesses.suspended || 0
             });
           }
           
           // User stats - focus on regular users
-          if (data.stats.users) {
+          if (dashboardData.stats.users) {
             // Regular users = total - (admins + super admins)
-            const admins = data.stats.users.admins || 0;
-            const superAdmins = data.stats.users.superAdmins || 0;
-            const totalUsers = data.stats.users.total || 0;
+            const admins = dashboardData.stats.users.admins || 0;
+            const superAdmins = dashboardData.stats.users.superAdmins || 0;
+            const totalUsers = dashboardData.stats.users.total || 0;
             const regularUsers = totalUsers - (admins + superAdmins);
             
             setUserStats({
               totalUsers: totalUsers,
-              activeUsers: data.stats.users.active || 0,
+              activeUsers: dashboardData.stats.users.active || 0,
               regularUsers: regularUsers,
-              businessUsers: data.stats.users.business || 0
+              businessUsers: dashboardData.stats.users.business || 0
             });
             
             console.log('User stats processed:', {
               totalUsers,
-              activeUsers: data.stats.users.active || 0,
+              activeUsers: dashboardData.stats.users.active || 0,
               regularUsers,
-              businessUsers: data.stats.users.business || 0
+              businessUsers: dashboardData.stats.users.business || 0
             });
           }
         }
         
         // Update recent businesses if available
-        if (data.recentBusinessRegistrations && data.recentBusinessRegistrations.length > 0) {
-          console.log('Setting real business data from API:', data.recentBusinessRegistrations);
+        if (dashboardData.recentBusinessRegistrations && dashboardData.recentBusinessRegistrations.length > 0) {
+          console.log('Setting real business data from API:', dashboardData.recentBusinessRegistrations);
           
-          const processedBusinesses = processBusinessData(data.recentBusinessRegistrations);
+          const processedBusinesses = processBusinessData(dashboardData.recentBusinessRegistrations);
           console.log('Processed businesses with fixed end dates:', processedBusinesses);
           
           // Replace mock business data with processed real data from the API
@@ -272,7 +270,7 @@ const AdminDashboard = () => {
         });
 
         setContentStats({
-          totalContent: 0,
+          total: 0,
           courses: 0,
           guides: 0,
           exercises: 0,
@@ -298,6 +296,10 @@ const AdminDashboard = () => {
       console.log('User not yet authenticated, skipping stats fetch');
     }
   }, [isAuthenticated, authLoading, refreshTrigger]);
+
+  useEffect(() => {
+    console.log('Current contentStats state:', contentStats);
+  }, [contentStats]);
 
   const processBusinessData = (businesses: Business[]): Business[] => {
     return businesses.map(business => {
@@ -572,7 +574,7 @@ const AdminDashboard = () => {
                   </div>
                   <div>
                     <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200">{translate('contentItems')}</h2>
-                    <p className="text-3xl font-bold text-[#C72026] dark:text-[#C72026]">{contentStats.totalContent}</p>
+                    <p className="text-3xl font-bold text-[#C72026] dark:text-[#C72026]">{contentStats.total}</p>
                   </div>
                 </div>
               </div>
@@ -618,15 +620,27 @@ const AdminDashboard = () => {
                 <div className="grid grid-cols-1 gap-4">
                   <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex justify-between items-center">
                     <span className="text-sm text-gray-700 dark:text-gray-300">{translate('courses')}</span>
-                    <span className="text-sm font-medium text-[#C72026] dark:text-[#C72026]">{contentStats.courses}</span>
+                    <span className="text-sm font-medium text-[#C72026] dark:text-[#C72026]">
+                      {contentStats.courses}
+                    </span>
                   </div>
                   <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex justify-between items-center">
                     <span className="text-sm text-gray-700 dark:text-gray-300">{translate('guides')}</span>
-                    <span className="text-sm font-medium text-[#C72026] dark:text-[#C72026]">{contentStats.guides}</span>
+                    <span className="text-sm font-medium text-[#C72026] dark:text-[#C72026]">
+                      {contentStats.guides}
+                    </span>
                   </div>
                   <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex justify-between items-center">
                     <span className="text-sm text-gray-700 dark:text-gray-300">{translate('exercises')}</span>
-                    <span className="text-sm font-medium text-[#C72026] dark:text-[#C72026]">{contentStats.exercises}</span>
+                    <span className="text-sm font-medium text-[#C72026] dark:text-[#C72026]">
+                      {contentStats.exercises}
+                    </span>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex justify-between items-center">
+                    <span className="text-sm text-gray-700 dark:text-gray-300">{translate('faqs')}</span>
+                    <span className="text-sm font-medium text-[#C72026] dark:text-[#C72026]">
+                      {contentStats.faqs}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -736,7 +750,7 @@ const AdminDashboard = () => {
                           <button 
                             onClick={() => {
                               console.log('Managing business with ID:', business.id);
-                              // router.push(`/admin/businesses/${business.id}`);
+                              router.push(`/admin/businesses`);
                             }}
                             className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300"
                           >
@@ -791,7 +805,7 @@ const AdminDashboard = () => {
                     className="bg-white dark:bg-gray-800 rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026]"
                   >
                     <span className="sr-only">Close</span>
-                    <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 24 24" stroke="currentColor" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>

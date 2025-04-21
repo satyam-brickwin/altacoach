@@ -19,11 +19,11 @@ import { SuggestionModal } from '@/components/SuggestionModal';
 import { ResetPasswordModal } from '@/components/ResetPasswordModal';
 
 // Import icons
-import { 
-  MessageSquare, 
-  Clock, 
-  Trash2, 
-  Brain, 
+import {
+  MessageSquare,
+  Clock,
+  Trash2,
+  Brain,
   ArrowLeft,
   Menu as MenuIcon,
   MoreVertical,
@@ -341,7 +341,9 @@ export default function StaffDashboard() {
   const { user, logout, isAuthenticated } = useAuth();
   const allowedRoles = useMemo(() => [UserRole.STAFF, UserRole.USER], []);
   const { isLoading: authLoading } = useAuthProtection(allowedRoles);
-  
+  const [availableDocuments, setAvailableDocuments] = useState([]);
+  const [chatId, setChatId] = useState<string | null>(null);
+
   // State
   const [messages, setMessages] = useState<Array<{
     id: string;
@@ -353,25 +355,25 @@ export default function StaffDashboard() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  
+
   // Menu state
   const [menuOpen, setMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
-  
+
   // View state
   const [activeView, setActiveView] = useState<'chat' | 'history' | 'cannedQuestions' | 'quizMode'>('chat');
-  
+
   // Quiz mode state
   const [quizMode, setQuizMode] = useState(false);
-  
+
   // Add state for tracking which dropdowns are expanded - MOVED HERE
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
   // Add new state variables
   const [lastClickTime, setLastClickTime] = useState<{ [key: string]: number }>({});
   const [inputValue, setInputValue] = useState('');
-  
+
   // Add state for suggestion modal
   const [isSuggestionModalOpen, setIsSuggestionModalOpen] = useState(false);
   const [suggestionInput, setSuggestionInput] = useState('');
@@ -388,13 +390,13 @@ export default function StaffDashboard() {
       setIsLoading(false); // Reset loading state
       setQuizMode(false); // Reset quiz mode
       setInputValue(''); // Clear input field
-      
+
       // Set active view to chat for proper UI update
       setActiveView('chat');
-      
+
       // Set the new expanded section
       setExpandedSection(section);
-      
+
       // If on mobile, close the menu
       if (window.innerWidth < 1024) {
         setMenuOpen(false);
@@ -404,7 +406,7 @@ export default function StaffDashboard() {
       setExpandedSection(null);
     }
   };
-  
+
   // Available languages
   const languages = [
     { code: 'en', name: 'English' },
@@ -413,7 +415,7 @@ export default function StaffDashboard() {
     { code: 'it', name: 'Italiano' },
     { code: 'es', name: 'Español' }
   ];
-  
+
   // Example questions for staff to choose from
   const [exampleQuestions] = useState([
     "What are the main features of this AI assistant?",
@@ -466,6 +468,19 @@ export default function StaffDashboard() {
     }
   ]);
 
+  useEffect(() => {
+    console.log('[DEBUG] user:', user); // Is user defined?
+    if (user) {
+      fetch(`/api/chat-documents?userId=${user.id}`)
+        .then(res => res.json())
+        .then(data => {
+          console.log('📄 Documents for current user:', data);
+          setAvailableDocuments(data);
+        })
+        .catch(err => console.error('Failed to fetch user documents', err));
+    }
+  }, [user]);
+
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -477,14 +492,14 @@ export default function StaffDashboard() {
       // Close menus when clicking outside
       if (menuOpen || settingsOpen) {
         const target = e.target as HTMLElement;
-        if (!target.closest('.menu-dropdown') && !target.closest('.menu-trigger') && 
-            !target.closest('.settings-dropdown') && !target.closest('.settings-trigger')) {
+        if (!target.closest('.menu-dropdown') && !target.closest('.menu-trigger') &&
+          !target.closest('.settings-dropdown') && !target.closest('.settings-trigger')) {
           // setMenuOpen(false);
           setSettingsOpen(false);
         }
       }
     };
-    
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
@@ -543,7 +558,7 @@ export default function StaffDashboard() {
     ];
     return feedbacks[Math.floor(Math.random() * feedbacks.length)];
   };
-  
+
   const generateQuizQuestion = () => {
     const questions = [
       "What are the three key components of an effective marketing strategy?",
@@ -565,22 +580,22 @@ export default function StaffDashboard() {
     setIsLoading(false);
     setQuizMode(false);
     setInputValue('');
-    
+
     // Update view
     setActiveView(view);
     toggleSection(view);
   };
-  
+
   // Function to handle quiz subject selection
   const handleStartQuiz = (subject: string) => {
     // Clear existing messages and ensure we're not in a previous quiz
     setMessages([]);
     setActiveView('chat');
-    
+
     // Set quiz mode with a slight delay to ensure state is reset properly
     setTimeout(() => {
       setQuizMode(true);
-      
+
       // Add a welcome message for the quiz
       const welcomeMessage = {
         id: uuidv4(),
@@ -588,9 +603,9 @@ export default function StaffDashboard() {
         text: `Welcome to the ${subject} quiz! I'll ask you a series of questions to test your knowledge. Let's begin with the first question:\n\n${generateQuizQuestion()}`,
         timestamp: new Date().toISOString(),
       };
-      
+
       setMessages([welcomeMessage]);
-      
+
       // Close menu on mobile only
       if (window.innerWidth < 1024) {
         setMenuOpen(false);
@@ -641,6 +656,44 @@ export default function StaffDashboard() {
         setIsLoading(false);
         return;
       }
+
+      if (!quizMode) {
+        const fileIds = availableDocuments.map((doc: any) => doc.id);
+
+        const endpoint = chatId
+          ? `/api/chat/${chatId}/ask`
+          : `/api/chat/create`;
+
+        const payload = chatId
+          ? { question: content, file_ids: fileIds }
+          : { name: 'New Chat', user_id: user.id, question: content, file_ids: fileIds };
+
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await response.json();
+
+        if (!chatId && data.chat_id) {
+          setChatId(data.chat_id); // 💾 save new chat ID
+        }
+
+        const aiMessage = {
+          id: uuidv4(),
+          role: 'assistant' as const,
+          text: data?.answer ?? DEFAULT_RESPONSE,
+          timestamp: new Date().toISOString(),
+        };
+
+        setMessages(prev => [...prev, aiMessage]);
+        setIsLoading(false);
+        return;
+      }
+
 
       // Rest of the existing code for handling regular messages
       if (quizMode && messages.length > 0 && messages[messages.length - 1].role === 'assistant') {
@@ -704,12 +757,12 @@ export default function StaffDashboard() {
       handleSendMessage(userMessage.text);
     }
   };
-  
+
   // Handle stop generating
   const handleStopGenerating = () => {
     setIsLoading(false);
   };
-  
+
   // Handle delete message
   const handleDeleteMessage = (id: string) => {
     const index = messages.findIndex(m => m.id === id);
@@ -717,7 +770,7 @@ export default function StaffDashboard() {
       setMessages(messages.slice(0, index));
     }
   };
-  
+
   // Handle suggested question click
   const handleSuggestedQuestion = (question: string) => {
     setMessages([]);
@@ -751,32 +804,32 @@ export default function StaffDashboard() {
             isCannedQuestion: true,
           }),
         })
-        .then(response => response.json())
-        .then(data => {
-          const aiMessage = {
-            id: uuidv4(),
-            role: 'assistant' as const,
-            text: data.message || "I'm sorry, I couldn't generate a response.",
-            timestamp: new Date().toISOString(),
-          };
+          .then(response => response.json())
+          .then(data => {
+            const aiMessage = {
+              id: uuidv4(),
+              role: 'assistant' as const,
+              text: data.message || "I'm sorry, I couldn't generate a response.",
+              timestamp: new Date().toISOString(),
+            };
 
-          setMessages(prev => [...prev, aiMessage]);
-        })
-        .catch(error => {
-          console.error("Error fetching canned question response:", error);
+            setMessages(prev => [...prev, aiMessage]);
+          })
+          .catch(error => {
+            console.error("Error fetching canned question response:", error);
 
-          const errorMessage = {
-            id: uuidv4(),
-            role: 'assistant' as const,
-            text: `Sorry, I encountered an error. Please try again.`,
-            timestamp: new Date().toISOString(),
-          };
+            const errorMessage = {
+              id: uuidv4(),
+              role: 'assistant' as const,
+              text: `Sorry, I encountered an error. Please try again.`,
+              timestamp: new Date().toISOString(),
+            };
 
-          setMessages(prev => [...prev, errorMessage]);
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
+            setMessages(prev => [...prev, errorMessage]);
+          })
+          .finally(() => {
+            setIsLoading(false);
+          });
       }, typingDelay);
     }, 50);
 
@@ -839,7 +892,7 @@ export default function StaffDashboard() {
   const handleEmojiPicker = () => {
     alert('Emoji picker would be integrated here');
   };
-  
+
   // Handle language change
   const handleLanguageChange = (langCode: string) => {
     setLanguage(langCode as SupportedLanguage);
@@ -867,13 +920,13 @@ export default function StaffDashboard() {
           newPassword,
         }),
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.message || 'Failed to reset password');
       }
-      
+
       return data;
     } catch (error) {
       console.error('Error resetting password:', error);
@@ -891,61 +944,61 @@ export default function StaffDashboard() {
   // Enhanced custom input component
   const EnhancedInput = () => {
     const heightRef = useRef('auto');
-    
+
     const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setInputValue(e.target.value);
       const selectionStart = e.target.selectionStart;
       const selectionEnd = e.target.selectionEnd;
-      
+
       setTimeout(() => {
         if (inputRef.current) {
           const clone = document.createElement('textarea');
           const styles = window.getComputedStyle(inputRef.current);
-          
+
           Array.from(styles).forEach(key => {
             clone.style.setProperty(key, styles.getPropertyValue(key));
           });
-          
+
           clone.value = e.target.value;
           clone.style.position = 'absolute';
           clone.style.visibility = 'hidden';
           clone.style.height = 'auto';
           document.body.appendChild(clone);
-          
+
           const newHeight = `${Math.min(clone.scrollHeight, 100)}px`;
           document.body.removeChild(clone);
-          
+
           if (heightRef.current !== newHeight) {
             heightRef.current = newHeight;
             inputRef.current.style.height = 'auto';
             inputRef.current.style.height = newHeight;
           }
-          
+
           inputRef.current.focus();
           inputRef.current.setSelectionRange(selectionStart, selectionEnd);
         }
       }, 0);
     };
-    
+
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         handleSubmit();
       }
     };
-    
+
     const handleSubmit = () => {
       if (inputValue.trim() && !isLoading) {
         handleSendMessage(inputValue);
         setInputValue('');
-        
+
         heightRef.current = 'auto';
         if (inputRef.current) {
           inputRef.current.style.height = 'auto';
         }
       }
     };
-    
+
     return (
       <div className="p-2 sm:p-3 border dark:border-gray-700 bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-lg w-full">
         <div className="flex items-end gap-1 sm:gap-2">
@@ -955,24 +1008,23 @@ export default function StaffDashboard() {
               value={inputValue}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              placeholder={quizMode 
-                ? translations[language]?.typeYourAnswer || 'Type your answer...' 
+              placeholder={quizMode
+                ? translations[language]?.typeYourAnswer || 'Type your answer...'
                 : translations[language]?.askQuestion || 'Ask a question...'}
               disabled={isLoading}
               className="enhanced-input w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base resize-none overflow-y-auto max-h-[80px] sm:max-h-[100px] rounded-xl border-0 focus:outline-none focus:ring-0 bg-transparent text-gray-800 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400"
               rows={1}
             />
           </div>
-          
+
           <button
             type="button"
             onClick={handleSubmit}
             disabled={!inputValue.trim() || isLoading}
-            className={`p-1.5 sm:p-2 rounded-full transition-colors ${
-              !inputValue.trim() || isLoading
-                ? 'text-gray-400 dark:text-gray-600'
-                : 'text-[#C72026] dark:text-[#C72026] hover:bg-[#C72026]/10 dark:hover:bg-[#C72026]/30'
-            }`}
+            className={`p-1.5 sm:p-2 rounded-full transition-colors ${!inputValue.trim() || isLoading
+              ? 'text-gray-400 dark:text-gray-600'
+              : 'text-[#C72026] dark:text-[#C72026] hover:bg-[#C72026]/10 dark:hover:bg-[#C72026]/30'
+              }`}
           >
             <Send size={16} className="sm:w-[18px] sm:h-[18px]" />
           </button>
@@ -982,10 +1034,9 @@ export default function StaffDashboard() {
   };
 
   return (
-    <div className="h-screen flex overflow-hidden">
-      <div className={`fixed top-0 left-0 h-full bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 w-[260px] z-50 flex flex-col transition-transform duration-300 ease-in-out shadow-lg overflow-y-auto ${
-        menuOpen ? "translate-x-0" : "-translate-x-full"
-      }`}>
+    <div className="h-screen flex overflow-scroll">
+      <div className={`fixed top-0 left-0 h-full bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 w-[260px] z-50 flex flex-col transition-transform duration-300 ease-in-out shadow-lg overflow-y-auto ${menuOpen ? "translate-x-0" : "-translate-x-full"
+        }`}>
         <div className="p-2">
           <button
             onClick={() => {
@@ -1014,17 +1065,17 @@ export default function StaffDashboard() {
                 <Brain size={16} className="mr-3 text-[#C72026] dark:text-[#C72026]" />
                 <span>{translations[language]?.menu.quizMode || 'Quiz Mode'}</span>
               </div>
-              <svg 
+              <svg
                 className={`w-4 h-4 transition-transform ${expandedSection === 'quizMode' ? 'rotate-180' : ''}`}
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24" 
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
                 xmlns="http://www.w3.org/2000/svg"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
-            
+
             {expandedSection === 'quizMode' && (
               <div className="pl-8 pr-3 pb-3 space-y-3 animate-fadeIn">
                 <div>
@@ -1064,7 +1115,7 @@ export default function StaffDashboard() {
                     Customer Relationship Management
                   </button>
                 </div>
-                
+
                 <div>
                   <div className="text-xs font-medium text-[#C72026] dark:text-[#C72026] mb-2">
                     Product Knowledge
@@ -1102,7 +1153,7 @@ export default function StaffDashboard() {
                     Technical Specifications
                   </button>
                 </div>
-                
+
                 <div>
                   <div className="text-xs font-medium text-[#C72026] dark:text-[#C72026] mb-2">
                     Industry Knowledge
@@ -1156,17 +1207,17 @@ export default function StaffDashboard() {
                 <MessageSquare size={16} className="mr-3 text-[#C72026] dark:text-[#C72026]" />
                 <span>{translations[language]?.menu.cannedQuestions || 'Canned Questions'}</span>
               </div>
-              <svg 
+              <svg
                 className={`w-4 h-4 transition-transform ${expandedSection === 'cannedQuestions' ? 'rotate-180' : ''}`}
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24" 
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
                 xmlns="http://www.w3.org/2000/svg"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
-            
+
             {expandedSection === 'cannedQuestions' && (
               <div className="pl-8 pr-3 pb-3 space-y-3 animate-fadeIn">
                 <div>
@@ -1191,7 +1242,7 @@ export default function StaffDashboard() {
                     </button>
                   ))}
                 </div>
-                
+
                 <div>
                   <div className="text-xs font-medium text-[#C72026] dark:text-[#C72026] mb-1.5">
                     {translations[language]?.categories.marketing || 'Marketing'}
@@ -1215,7 +1266,7 @@ export default function StaffDashboard() {
                     </button>
                   ))}
                 </div>
-                
+
                 <div>
                   <div className="text-xs font-medium text-[#C72026] dark:text-[#C72026] mb-1.5">
                     {translations[language]?.categories.customerSupport || 'Customer Support'}
@@ -1238,7 +1289,7 @@ export default function StaffDashboard() {
                     </button>
                   ))}
                 </div>
-                
+
                 <div>
                   <div className="text-xs font-medium text-[#C72026] dark:text-[#C72026] mb-1.5">
                     {translations[language]?.categories.documentAnalysis || 'Document Analysis'}
@@ -1277,24 +1328,23 @@ export default function StaffDashboard() {
                 <Clock size={16} className="mr-3 text-[#C72026] dark:text-[#C72026]" />
                 <span>{translations[language]?.menu.history || 'History'}</span>
               </div>
-              <svg 
+              <svg
                 className={`w-4 h-4 transition-transform ${expandedSection === 'history' ? 'rotate-180' : ''}`}
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24" 
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
                 xmlns="http://www.w3.org/2000/svg"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
-            
+
             {expandedSection === 'history' && (
               <div className="pl-8 pr-3 pb-3 space-y-3 animate-fadeIn">
                 {chatHistory.map((chat) => (
                   <button
                     key={chat.id}
                     className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
-                    onClick={() => handleLoadChat(chat.id)}
                   >
                     <div className="truncate font-medium">{chat.title}</div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -1308,16 +1358,16 @@ export default function StaffDashboard() {
         </div>
 
         <div className="border-b dark:border-gray-700">
-            <button
-              onClick={() => setIsSuggestionModalOpen(true)}
-              className="flex items-center justify-between w-full px-3 py-3 rounded-md text-sm hover:bg-gray-100 dark:hover:bg-gray-700/50 group"
-            >
-              <div className="flex items-center">
-                <PlusCircle size={16} className="mr-3 text-[#C72026] dark:text-[#C72026]" />
-                <span>{translations[language]?.menu.suggestions || 'Suggestions'}</span>
-              </div>
-            </button>
-          </div>
+          <button
+            onClick={() => setIsSuggestionModalOpen(true)}
+            className="flex items-center justify-between w-full px-3 py-3 rounded-md text-sm hover:bg-gray-100 dark:hover:bg-gray-700/50 group"
+          >
+            <div className="flex items-center">
+              <PlusCircle size={16} className="mr-3 text-[#C72026] dark:text-[#C72026]" />
+              <span>{translations[language]?.menu.suggestions || 'Suggestions'}</span>
+            </div>
+          </button>
+        </div>
 
         <div className="flex-1"></div>
       </div>
@@ -1326,7 +1376,7 @@ export default function StaffDashboard() {
         <header className="h-14 flex items-center justify-between px-4 backdrop-blur-md bg-white/0 dark:bg-gray-900/0">
           {/* Left - Menu Button and Logo */}
           <div className="flex items-center space-x-3">
-            <button 
+            <button
               className="p-2 hover:bg-gray-100/60 dark:hover:bg-gray-700/60 rounded-md"
               onClick={() => setMenuOpen(!menuOpen)}
             >
@@ -1371,7 +1421,7 @@ export default function StaffDashboard() {
             >
               <MoreVertical size={20} className="text-gray-700 dark:text-white" />
             </button>
-            
+
             {settingsOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border dark:border-gray-700 z-50 settings-dropdown">
                 <button
@@ -1382,19 +1432,18 @@ export default function StaffDashboard() {
                 >
                   <Globe size={16} className="mr-2 dark:text-white" />
                   <span className="dark:text-white">{translations[language]?.settings.language || 'Language'}</span>
-                  <svg 
-                    className={`ml-auto h-4 w-4 transition-transform ${
-                      isLanguageDropdownOpen ? 'rotate-90' : ''
-                    }`}
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24" 
+                  <svg
+                    className={`ml-auto h-4 w-4 transition-transform ${isLanguageDropdownOpen ? 'rotate-90' : ''
+                      }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                     xmlns="http://www.w3.org/2000/svg"
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
-                </button> 
-                
+                </button>
+
                 {isLanguageDropdownOpen && (
                   <div className="border-t dark:border-gray-700">
                     <div className="py-1 px-2">
@@ -1410,11 +1459,10 @@ export default function StaffDashboard() {
                               setIsLanguageDropdownOpen(false);
                               setSettingsOpen(false);
                             }}
-                            className={`flex items-center justify-center px-2 py-2 text-sm rounded-md ${
-                              language === lang.code 
-                                ? 'bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] dark:text-[#C72026]' 
-                                : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200'
-                            }`}
+                            className={`flex items-center justify-center px-2 py-2 text-sm rounded-md ${language === lang.code
+                              ? 'bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] dark:text-[#C72026]'
+                              : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200'
+                              }`}
                           >
                             <span>{lang.name}</span>
                             {language === lang.code && (
@@ -1428,7 +1476,7 @@ export default function StaffDashboard() {
                     </div>
                   </div>
                 )}
-                
+
                 <button
                   onClick={toggleDarkMode}
                   className="flex items-center w-full px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -1444,7 +1492,7 @@ export default function StaffDashboard() {
                   )}
                   <span className="dark:text-white">{translations[language]?.settings.darkMode || 'Dark Mode'}</span>
                 </button>
-                
+
                 <button
                   onClick={() => alert('Admin functionality would be integrated here')}
                   className="flex items-center w-full px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -1485,13 +1533,13 @@ export default function StaffDashboard() {
           </div>
         </header>
 
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-scroll">
           <div className="max-w-3xl mx-auto px-4">
             {activeView === 'history' ? (
               <div className="space-y-4">
                 <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Chat History</h2>
                 {chatHistory.map((chat) => (
-                  <div 
+                  <div
                     key={chat.id}
                     className="p-4 border dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer"
                     onClick={() => handleLoadChat(chat.id)}
@@ -1500,7 +1548,7 @@ export default function StaffDashboard() {
                     <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">{chat.snippet}</p>
                     <div className="flex justify-between items-center mt-2">
                       <span className="text-xs text-gray-500 dark:text-gray-500">{chat.date}</span>
-                      <button 
+                      <button
                         onClick={(e) => {
                           e.stopPropagation();
                           alert(`Delete chat ${chat.id} in a real application`);
@@ -1550,16 +1598,16 @@ export default function StaffDashboard() {
                 </div>
               </div>
             ) : messages.length === 0 ? (
-              <EmptyState 
-                title={translations[language]?.emptyState?.title} 
+              <EmptyState
+                title={translations[language]?.emptyState?.title}
                 description={translations[language]?.emptyState?.description}
                 suggestions={translations[language]?.emptyState?.suggestions}
               />
             ) : (
               <div className="space-y-4 pb-24">
                 {messages.map((message, index) => (
-                  <ChatMessage 
-                    key={message.id} 
+                  <ChatMessage
+                    key={message.id}
                     message={message}
                     isLast={index === messages.length - 1}
                     onDeleteMessage={handleDeleteMessage}
@@ -1572,29 +1620,28 @@ export default function StaffDashboard() {
           </div>
         </div>
 
-      {activeView === 'chat' && (
-        <div className={`fixed bottom-0 z-10 bg-gradient-to-t from-white dark:from-gray-900 pt-6 pb-4 ${
-          menuOpen ? "lg:left-[260px]" : "left-0"
-        } right-0 transition-all duration-300`}>
-          <div className="max-w-3xl mx-auto px-4">
-            <EnhancedInput />
-            <div className="mt-2 text-center text-xs text-gray-500 dark:text-gray-400">
-              <p className="italic">
+        {activeView === 'chat' && (
+          <div className={`fixed bottom-0 z-10 bg-gradient-to-t from-white dark:from-gray-900 pt-6 pb-4 ${menuOpen ? "lg:left-[260px]" : "left-0"
+            } right-0 transition-all duration-300`}>
+            <div className="max-w-3xl mx-auto px-4">
+              <EnhancedInput />
+              <div className="mt-2 text-center text-xs text-gray-500 dark:text-gray-400">
+                <p className="italic">
                   altacoach is an AI and may make mistakes. Please verify any important information.
-              </p>
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
       </div>
 
       {menuOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/40 z-40 lg:hidden"
           onClick={() => setMenuOpen(false)}
         />
       )}
-      
+
       <ResetPasswordModal
         isOpen={isResetPasswordModalOpen}
         onClose={() => setIsResetPasswordModalOpen(false)}

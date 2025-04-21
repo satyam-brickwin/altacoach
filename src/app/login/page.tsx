@@ -254,11 +254,11 @@ export default function LoginPage() {
             )}
 
             {/* Language selector */}
-            <div className="mb-6">
-              <label htmlFor="language" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            {/* <div className="mb-6"> */}
+              {/* <label htmlFor="language" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 {translate('language')}
-              </label>
-              <select
+              </label> */}
+              {/* <select
                 id="language"
                 name="language"
                 className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
@@ -270,16 +270,16 @@ export default function LoginPage() {
                     {String(label)}
                   </option>
                 ))}
-              </select>
-            </div>
+              </select> */}
+            {/* </div> */}
 
             {/* Role Selection */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <div className="mb-0">
+              {/* <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {translate('selectRole')}
-              </label>
+              </label> */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4">
-                <button
+                {/* <button
                   type="button"
                   onClick={() => handleRoleSelect(UserRole.ADMIN)}
                   className={`${selectedRole === UserRole.ADMIN
@@ -291,8 +291,8 @@ export default function LoginPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                   </svg>
                   {translate('admin')}
-                </button>
-                <button
+                </button> */}
+                {/* <button
                   type="button"
                   onClick={() => handleRoleSelect(UserRole.STAFF)}
                   className={`${selectedRole === UserRole.STAFF
@@ -304,8 +304,8 @@ export default function LoginPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                   </svg>
                   {translate('staff')}
-                </button>
-                <button
+                </button> */}
+                {/* <button
                   type="button"
                   onClick={() => handleRoleSelect(UserRole.SUPER_ADMIN)}
                   className={`${selectedRole === UserRole.SUPER_ADMIN
@@ -317,7 +317,7 @@ export default function LoginPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                   </svg>
                   {translate('super')}
-                </button>
+                </button> */}
               </div>
             </div>
 
@@ -436,106 +436,7 @@ export default function LoginPage() {
             </form>
 
             {/* Quick Access Buttons */}
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
-                    {translate('quickAccess')} ({translate('noLoginRequired')})
-                  </span>
-                </div>
-              </div>
 
-              <div className="mt-4">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
-                  {/* Admin Dashboard Button */}
-                  <button
-                    // type="button"
-                    // onClick={async () => {
-                    //   setIsSubmitting(false);
-                    //   const success = await login('admin@altacoach.com', 'admin123', UserRole.ADMIN);
-                    //   if (success) {
-                    //     router.push('/admin');
-                    //   } else {
-                    //     setLoginError('Failed to login as admin');
-                    //   }
-                    //   setIsSubmitting(false);
-                    // }}
-                    className="py-2 px-4 border border-green-500 rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 w-full"
-                  >
-                    Admin Dashboard
-                  </button>
-
-                  {/* Staff Dashboard Button */}
-                  <button
-                    type="button"
-                    // onClick={async () => {
-                    //   setIsSubmitting(true);
-                    //   const success = await login(
-                    //     'staff@acmecorporation.com',
-                    //     'password',
-                    //     UserRole.STAFF,
-                    //     '1'
-                    //   );
-                    //   if (success) {
-                    //     router.push('/staff');
-                    //   } else {
-                    //     setLoginError('Failed to login as staff');
-                    //   }
-                    //   setIsSubmitting(false);
-                    // }}
-                    className="py-2 px-4 border border-blue-500 rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 w-full"
-                  >
-                    Staff Dashboard
-                  </button>
-
-                  {/* Super Admin Dashboard Button */}
-                  {/*<button
-                    type="button"
-                    onClick={async () => {
-                      setIsSubmitting(true);
-                      const success = await login('superadmin@altacoach.com', 'superadmin123', UserRole.SUPER_ADMIN);
-                      if (success) {
-                        router.push('/superadmin');
-                      } else {
-                        setLoginError('Failed to login as super admin');
-                      }
-                      setIsSubmitting(false);
-                    }}
-                    className="py-2 px-4 border border-red-500 rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 w-full"
-                  >
-                    Super Admin
-                  </button>*/}
-                  <button
-                    type="button"
-                    // onClick={async () => {
-                    //   setIsSubmitting(true);
-                    //   const success = await login('superadmin@altacoach.com', 'superadmin123', UserRole.SUPER_ADMIN);
-                    //   /*if (success) {
-                    //     router.push('/superadmin');
-                    //   } else {
-                    //     setLoginError('Failed to login as super admin');
-                    //   }*/
-                    //   if (success) {
-                    //     if (role === UserRole.SUPER_ADMIN) {
-                    //       router.push('/superadmin');
-                    //     } else {
-                    //       router.push('/');
-                    //     }
-                    //   } else {
-                    //     setLoginError('Failed to login as super admin');
-                    //   }
-                    //   setIsSubmitting(false);
-                    // }}
-                    className="py-2 px-4 border border-red-500 rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 w-full"
-                  >
-                    Super Admin
-                  </button>
-                </div>
-              </div>
-            </div>
 
             {/* Sign Up Link */}
             <div className="mt-6">
@@ -543,17 +444,11 @@ export default function LoginPage() {
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
                 </div>
-                <div className="relative flex justify-center text-sm">
+                {/* <div className="relative flex justify-center text-sm">
                   <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
                     {translate('dontHaveAccount')}
                   </span>
-                </div>
-              </div>
-
-              <div className="mt-6">
-                <Link href="/signup" className="w-full flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                  {translate('signUp')}
-                </Link>
+                </div> */}
               </div>
 
               {/* Super Admin access button with matching Sign Up UI */}

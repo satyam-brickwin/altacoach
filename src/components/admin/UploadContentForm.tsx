@@ -116,7 +116,7 @@ export default function UploadContentForm({ onUploadSuccess, onCancel }: UploadC
       formData.append('language', contentLanguage);
       formData.append('source', 'admin');
       formData.append('file', file as File);
-      formData.append('doctype', 'admin');
+      formData.append('doctype', type);
       
       // Add user info if available
       if (user) {
@@ -297,11 +297,11 @@ export default function UploadContentForm({ onUploadSuccess, onCancel }: UploadC
               disabled={uploading}
               required
             >
-              <option value="en">English</option>
-              <option value="fr">Français</option>
-              <option value="de">Deutsch</option>
-              <option value="es">Español</option>
-              <option value="it">Italiano</option>
+              <option value="English">English</option>
+              <option value="Français">Français</option>
+              <option value="Deutsch">Deutsch</option>
+              <option value="Español">Español</option>
+              <option value="Italiano">Italiano</option>
             </select>
           </div>
           

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 interface SuggestionModalProps {
   isOpen: boolean;
@@ -75,5 +75,66 @@ export const SuggestionModal: React.FC<SuggestionModalProps> = ({
         </div>
       </div>
     </div>
+  );
+};
+
+interface SuggestionButtonProps {
+  onSubmitSuggestion: (suggestion: string) => void;
+  language?: string;
+}
+
+export const SuggestionButton: React.FC<SuggestionButtonProps> = ({ 
+  onSubmitSuggestion,
+  language 
+}) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [suggestionInput, setSuggestionInput] = useState('');
+
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSuggestionInput(''); // Reset input when closing
+  };
+
+  const handleSubmitSuggestion = (suggestion: string) => {
+    onSubmitSuggestion(suggestion);
+    setSuggestionInput(''); // Reset input after submission
+  };
+
+  return (
+    <>
+      <button
+        onClick={handleOpenModal}
+        className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-[#C72026]"
+        aria-label="Submit suggestion"
+        title="Submit suggestion"
+      >
+        {/* Bulb Icon - using SVG for better customization */}
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          viewBox="0 0 24 24" 
+          fill="none" 
+          stroke="currentColor" 
+          strokeWidth="2" 
+          strokeLinecap="round" 
+          strokeLinejoin="round" 
+          className="w-5 h-5 text-[#C72026]"
+        >
+          <path d="M9 18h6M10 22h4M12 2v1M12 7v1M12 12v1M4.93 4.93l.7.7M18.36 4.93l-.7.7M3 12h1M20 12h1M6 16.66A6 6 0 1 1 18 16.66"></path>
+        </svg>
+      </button>
+
+      <SuggestionModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onSubmit={handleSubmitSuggestion}
+        suggestionInput={suggestionInput}
+        setSuggestionInput={setSuggestionInput}
+        language={language}
+      />
+    </>
   );
 };

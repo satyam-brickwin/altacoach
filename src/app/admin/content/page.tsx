@@ -287,27 +287,10 @@ export default function AdminContent() {
   const isStaffUser = user?.role === 'admin';
 
   // Fetch content function
-  // const fetchContent = async () => {
-  //   setIsLoading(true);
-  //   try {
-  //     // Simulate API call delay
-  //     await new Promise(resolve => setTimeout(resolve, 1000));
-      
-  //     setContent(dummyContent);
-  //     setContentStats(initialContentStats);
-  //     setError(null);
-  //   } catch (error) {
-  //     console.error('Error fetching content:', error);
-  //     setError('Failed to load content data');
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
-
   const fetchContent = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/admin/content');
+      const response = await fetch('/api/admin/content/altamedia');
       const result = await response.json();
   
       if (!response.ok) throw new Error(result.error || 'Failed to fetch content');
@@ -320,9 +303,9 @@ export default function AdminContent() {
         type: item.contentType,
         language: item.language,
         filePath: item.url, // Assuming 'url' stores file path
-        lastUpdated: item.updatedAt,
+        lastUpdated: item.modifiedAt, // Change this line - use modifiedAt instead of updatedAt
         createdAt: item.createdAt,
-        updatedAt: item.updatedAt,
+        updatedAt: item.modifiedAt, // Change this line - map modifiedAt to updatedAt
         createdBy: item.createdBy ? {
           id: item.createdBy.id.toString(),
           name: item.createdBy.name,
@@ -838,7 +821,16 @@ export default function AdminContent() {
                             {item.language}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                            {item.lastUpdated}
+                            {item.updatedAt ? new Date(item.updatedAt).toLocaleDateString(
+                              language === 'fr' ? 'fr-FR' : 'en-US', 
+                              { 
+                                year: 'numeric', 
+                                month: 'short', 
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              }
+                            ) : 'N/A'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <a 

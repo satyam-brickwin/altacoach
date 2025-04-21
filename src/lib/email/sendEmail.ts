@@ -13,8 +13,8 @@ export async function sendEmail({
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: 'vinod.sharma@brickwin.net',
-      pass: 'lavs onuj xpkr whmn',
+      user: 'altacoach1@gmail.com',
+      pass: 'rfuy eygx zdir vjbl',
     },
   });
 

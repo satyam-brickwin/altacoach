@@ -27,31 +27,34 @@ export default function ForgotPasswordPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateEmail()) {
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     try {
-      // In a real app, this would call your API to send a password reset email
-      // const response = await fetch('/api/auth/forgot-password', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({ email }),
-      // });
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // For demo purposes, we'll just set isSubmitted to true
+      // Send actual API request to your backend for password reset
+      const response = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to send reset email');
+      }
+
+      // Email is sent directly from the backend based on route.ts implementation
+      // Set submitted state to show success message
       setIsSubmitted(true);
     } catch (error) {
       console.error('Forgot password error:', error);
-      setError('An error occurred. Please try again.');
+      setError(error instanceof Error ? error.message : 'An error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -88,7 +91,10 @@ export default function ForgotPasswordPage() {
                   <h3 className="text-sm font-medium text-green-800">Password reset email sent</h3>
                   <div className="mt-2 text-sm text-green-700">
                     <p>
-                      If an account exists with the email {email}, you will receive a password reset link shortly.
+                      We've sent a password reset link to <strong>{email}</strong>. The link will expire in 24 hours.
+                    </p>
+                    <p className="mt-1">
+                      Please check your inbox and follow the instructions to set a new password. If you don't see the email, please check your spam folder.
                     </p>
                   </div>
                   <div className="mt-4">
@@ -109,7 +115,7 @@ export default function ForgotPasswordPage() {
                   Enter your email address and we'll send you a link to reset your password.
                 </p>
               </div>
-              
+
               <form className="space-y-6" onSubmit={handleSubmit}>
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -124,9 +130,8 @@ export default function ForgotPasswordPage() {
                       required
                       value={email}
                       onChange={handleChange}
-                      className={`appearance-none block w-full px-3 py-2 border ${
-                        error ? 'border-red-300' : 'border-gray-300'
-                      } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                      className={`appearance-none block w-full px-3 py-2 border ${error ? 'border-red-300' : 'border-gray-300'
+                        } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                     />
                     {error && (
                       <p className="mt-2 text-sm text-red-600">{error}</p>
@@ -150,4 +155,4 @@ export default function ForgotPasswordPage() {
       </div>
     </div>
   );
-} 
+}

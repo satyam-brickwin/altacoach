@@ -1,24 +1,49 @@
 import React, { useState } from 'react';
 import { useAuthProtection } from '@/contexts/AuthContext';
+import { useLanguage, SupportedLanguage } from '@/contexts/LanguageContext';
 
-interface UploadDocumentModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSuccess: () => void;
-  translate: (key: string) => string;
-  businessId: string | undefined;
-}
+// Format date to DD/MM/YYYY
+const formatDate = (dateString: string | Date): string => {
+  const date = new Date(dateString);
+  
+  // Check if date is valid
+  if (isNaN(date.getTime())) {
+    return 'N/A';
+  }
+  
+  // Get day, month, and year
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Month is 0-indexed
+  const year = date.getFullYear();
+  
+  // Return formatted date
+  return `${day}/${month}/${year}`;
+};
 
+// Language mapping functions
+const getFullLanguageName = (code: string): string => {
+  const languageMap: Record<string, string> = {
+    'en': 'English',
+    'fr': 'Français',
+    'de': 'Deutsch',
+    'es': 'Español',
+    'it': 'Italiano',
+    'pt': 'Português'
+  };
+  
+  // Handle both uppercase and lowercase codes
+  const normalizedCode = code.toLowerCase();
+  
+  // If it's already a full language name, return it as is
+  if (Object.values(languageMap).includes(code)) {
+    return code;
+  }
+  
+  // Return the full name or the original code if not found
+  return languageMap[normalizedCode] || code;
+};
 
-interface DocumentFormData {
-  title: string;
-  description: string;
-  type: string;
-  source: string;
-  file: File | null;
-}
-
-export default function UploadDocumentModal({ isOpen, onClose, onSuccess, translate,businessId }: UploadDocumentModalProps) {
+export default function UploadDocumentModal({ isOpen, onClose, onSuccess, translate, businessId }: UploadDocumentModalProps) {
   const [formDataState, setFormDataState] = useState<DocumentFormData>({
     title: '',
     description: '',
@@ -28,6 +53,7 @@ export default function UploadDocumentModal({ isOpen, onClose, onSuccess, transl
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const { language } = useLanguage();
 
   const { user } = useAuthProtection(['admin']);
   const [title, setTitle] = useState('');
@@ -37,8 +63,8 @@ export default function UploadDocumentModal({ isOpen, onClose, onSuccess, transl
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [contentLanguage, setContentLanguage] = useState(language);
   
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormDataState(prev => ({ ...prev, [name]: value }));
@@ -87,7 +113,11 @@ export default function UploadDocumentModal({ isOpen, onClose, onSuccess, transl
       formData.append('title', formDataState.title);
       formData.append('description', formDataState.description);
       formData.append('type', fileExtension);
-      formData.append('language', 'en');
+      
+      // Convert language code to full name before sending to server
+      const fullLanguageName = getFullLanguageName(contentLanguage);
+      formData.append('language', fullLanguageName);
+      
       formData.append('file', formDataState.file);
       formData.append('source', 'business');
       formData.append('doctype', formDataState.type);
@@ -190,10 +220,36 @@ export default function UploadDocumentModal({ isOpen, onClose, onSuccess, transl
                     onChange={handleInputChange}
                     className="mt-1 block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026]"
                   >
-                    <option value="business">{translate('business')}</option>
-                    <option value="admin">{translate('admin')}</option>
-                    {/* <option value="other">{translate('other')}</option> */}
+                    <option value="course">Course</option>
+                    <option value="guide">Guide</option>
+                    <option value="exercise">Exercise</option>
+                    <option value="faq">FAQ</option>
                   </select>
+                </div>
+
+                {/* Language Field - Updated to show full language names */}
+                <div>
+                  <label htmlFor="content-language" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Language <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    id="content-language"
+                    name="language"
+                    value={contentLanguage}
+                    onChange={(e) => setContentLanguage(e.target.value as SupportedLanguage)}
+                    className={`mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-[#C72026]`}
+                    disabled={uploading}
+                    required
+                  >
+                    <option value="en">English</option>
+                    <option value="fr">Français</option>
+                    <option value="de">Deutsch</option>
+                    <option value="es">Español</option>
+                    <option value="it">Italiano</option>
+                  </select>
+                  <div className="text-xs text-gray-500 mt-1">
+                    Will be saved as: {getFullLanguageName(contentLanguage)}
+                  </div>
                 </div>
 
                 <div>

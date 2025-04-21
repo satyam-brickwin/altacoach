@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { cn } from '../lib/utils';
-import { Edit, Check, X, Trash2, Lightbulb } from 'lucide-react'; // Add Lightbulb import
+import { Edit, Check, X, Trash2, Lightbulb } from 'lucide-react';
+import { SuggestionModal } from '../../../components/SuggestionModal';
 
 interface ChatMessageProps {
   message: {
@@ -12,19 +13,24 @@ interface ChatMessageProps {
   isLast: boolean;
   onEditMessage?: (id: string, content: string) => void;
   onDeleteMessage: (id: string) => void;
+  onSubmitSuggestion?: (suggestion: string) => void;
 }
 
 export const ChatMessage: React.FC<ChatMessageProps> = ({ 
   message, 
   isLast, 
   onEditMessage,
-  onDeleteMessage 
+  onDeleteMessage,
+  onSubmitSuggestion
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(message.text);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messageRef = useRef<HTMLDivElement>(null);
   const isUser = message.role === 'user';
+  
+  const [isSuggestionModalOpen, setIsSuggestionModalOpen] = useState(false);
+  const [suggestionInput, setSuggestionInput] = useState('');
 
   useEffect(() => {
     if (isEditing && textareaRef.current) {
@@ -67,8 +73,19 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
   };
 
   const handleInsight = () => {
-    // You can enhance this function later with more sophisticated analysis
-    alert("Key insights from this response:\n\n1. Main points\n2. Action items\n3. Follow-up questions");
+    setIsSuggestionModalOpen(true);
+  };
+
+  const handleSubmitSuggestion = (suggestion: string) => {
+    if (onSubmitSuggestion) {
+      onSubmitSuggestion(suggestion);
+    }
+    setSuggestionInput('');
+  };
+
+  const handleCloseModal = () => {
+    setIsSuggestionModalOpen(false);
+    setSuggestionInput('');
   };
 
   return (
@@ -93,7 +110,6 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
           <div className={cn(
             "mx-2 max-w-[80%] relative",
           )}>
-            {/* Timestamp shown above the message */}
             <div className={cn(
               "flex items-center mb-1 text-xs text-gray-600 dark:text-white",
               isUser ? "justify-end" : "justify-start"
@@ -103,13 +119,12 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
               </span>
             </div>
             
-            {/* The actual message bubble */}
             <div
               className={cn(
                 "px-4 py-3 rounded-2xl",
                 isUser
-                  ? "bg-[#C72026] text-white rounded-br-none" // User messages in red with white text
-                  : "bg-[#C72026]/10 dark:bg-[#C72026]/20 rounded-bl-none text-gray-900 dark:text-gray-100" // Assistant messages with light red bg
+                  ? "bg-[#C72026] text-white rounded-br-none" 
+                  : "bg-[#C72026]/10 dark:bg-[#C72026]/20 rounded-bl-none text-gray-900 dark:text-gray-100" 
               )}
             >
               {isEditing ? (
@@ -133,7 +148,6 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
               )}
             </div>
             
-            {/* Edit controls shown below the message when editing */}
             {isEditing && (
               <div className="flex items-center justify-end gap-2 mt-2">
                 <button
@@ -153,20 +167,18 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
               </div>
             )}
             
-            {/* Add bulb icon for assistant messages */}
             {!isUser && !isEditing && (
               <div className="opacity-0 group-hover:opacity-100 absolute bottom-0 right-0 transform translate-x-8 translate-y-1/2 transition-opacity duration-200">
                 <button
                   onClick={handleInsight}
                   className="p-2 rounded-full bg-yellow-100 hover:bg-yellow-200 transition-colors duration-200"
-                  aria-label="Show insights"
+                  aria-label="Submit suggestion"
                 >
                   <Lightbulb className="h-4 w-4 text-yellow-500 dark:text-yellow-400" />
                 </button>
               </div>
             )}
             
-            {/* Action buttons that appear on hover */}
             {isUser && !isEditing && (
               <div className="opacity-0 group-hover:opacity-100 absolute top-6 -left-10 flex flex-col gap-1 transition-opacity duration-200">
                 <button
@@ -194,6 +206,14 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
           )}
         </div>
       </div>
+
+      <SuggestionModal
+        isOpen={isSuggestionModalOpen}
+        onClose={handleCloseModal}
+        onSubmit={handleSubmitSuggestion}
+        suggestionInput={suggestionInput}
+        setSuggestionInput={setSuggestionInput}
+      />
     </div>
   );
 };
