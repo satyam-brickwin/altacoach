@@ -1,23 +1,36 @@
 import React, { useState } from 'react';
 
-interface SuggestionModalProps {
+interface NewSuggestionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (suggestion: string) => void;
+  onSubmit: (suggestion: string, userId: string) => void;
   suggestionInput: string;
   setSuggestionInput: (value: string) => void;
   language?: string;
+  userId: string;
 }
 
-export const SuggestionModal: React.FC<SuggestionModalProps> = ({
+export const NewSuggestionModal: React.FC<NewSuggestionModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
   suggestionInput,
   setSuggestionInput,
-  language = 'en'
+  language = 'en',
+  userId
 }) => {
   if (!isOpen) return null;
+
+  const handleSubmit = () => {
+    // Only perform basic validation on the suggestion text
+    // The userId validation will be handled by the parent component
+    if (!suggestionInput.trim()) {
+      return;
+    }
+    
+    onSubmit(suggestionInput, userId);
+    onClose();
+  };
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -55,10 +68,7 @@ export const SuggestionModal: React.FC<SuggestionModalProps> = ({
           <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
             <button
               type="button"
-              onClick={() => {
-                onSubmit(suggestionInput);
-                onClose();
-              }}
+              onClick={handleSubmit}
               className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#C72026] text-base font-medium text-white hover:bg-[#C72026]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026] sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={!suggestionInput.trim()}
             >
@@ -78,18 +88,22 @@ export const SuggestionModal: React.FC<SuggestionModalProps> = ({
   );
 };
 
-interface SuggestionButtonProps {
-  onSubmitSuggestion: (suggestion: string) => void;
+interface NewSuggestionButtonProps {
+  onSubmitSuggestion: (suggestion: string, userId: string) => void;
   language?: string;
   buttonText?: string;
   buttonClassName?: string;
+  iconOnly?: boolean;
+  userId: string;
 }
 
-export const SuggestionButton: React.FC<SuggestionButtonProps> = ({ 
+export const NewSuggestionButton: React.FC<NewSuggestionButtonProps> = ({ 
   onSubmitSuggestion,
   language,
   buttonText = "Submit Suggestion",
-  buttonClassName = "p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-[#C72026] text-[#C72026]"
+  buttonClassName = "p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-[#C72026] text-[#C72026]",
+  iconOnly = false,
+  userId
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [suggestionInput, setSuggestionInput] = useState('');
@@ -103,9 +117,9 @@ export const SuggestionButton: React.FC<SuggestionButtonProps> = ({
     setSuggestionInput(''); // Reset input when closing
   };
 
-  const handleSubmitSuggestion = (suggestion: string) => {
-    onSubmitSuggestion(suggestion);
-    setSuggestionInput(''); // Reset input after submission
+  const handleSubmitSuggestion = (suggestion: string, userId: string) => {
+    onSubmitSuggestion(suggestion, userId);
+    handleCloseModal();
   };
 
   return (
@@ -116,16 +130,32 @@ export const SuggestionButton: React.FC<SuggestionButtonProps> = ({
         aria-label="Submit suggestion"
         title="Submit suggestion"
       >
-        {buttonText}
+        {iconOnly ? (
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="2" 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            className="w-5 h-5"
+          >
+            <path d="M9 18h6M10 22h4M12 2v1M12 7v1M12 12v1M4.93 4.93l.7.7M18.36 4.93l-.7.7M3 12h1M20 12h1M6 16.66A6 6 0 1 1 18 16.66"></path>
+          </svg>
+        ) : (
+          buttonText
+        )}
       </button>
 
-      <SuggestionModal
+      <NewSuggestionModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onSubmit={handleSubmitSuggestion}
         suggestionInput={suggestionInput}
         setSuggestionInput={setSuggestionInput}
         language={language}
+        userId={userId}
       />
     </>
   );

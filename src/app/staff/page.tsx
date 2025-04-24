@@ -387,6 +387,8 @@ export default function StaffDashboard() {
   // Add state for password reset modal
   const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false);
 
+  const [businessAdminName, setBusinessAdminName] = useState('');
+
   // Toggle dropdown section function - MODIFIED HERE
   const toggleSection = (section: string) => {
     // Clear messages and reset UI when switching sections
@@ -492,6 +494,19 @@ export default function StaffDashboard() {
           setAvailableDocuments(data);
         })
         .catch(err => console.error('Failed to fetch user documents', err));
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      fetch(`/api/suggestions?userId=${user.id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.businessAdminName) {
+            setBusinessAdminName(data.businessAdminName);
+          }
+        })
+        .catch(err => console.error('Failed to fetch business admin name', err));
     }
   }, [user]);
 
@@ -997,11 +1012,76 @@ export default function StaffDashboard() {
   };
 
   // Handle suggestion submission
-  const handleSuggestionSubmit = (suggestion: string) => {
-    alert('Thank you for your suggestion: ' + suggestion);
-    setSuggestionInput('');
-    setIsSuggestionModalOpen(false);
+  const handleSuggestionSubmit = async (suggestion: string) => {
+    if (!suggestion.trim()) return;
+    
+    setIsLoading(true);
+    
+    try {
+      const response = await fetch('/api/suggestions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user?.id,
+          suggestionText: suggestion,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to submit suggestion');
+      }
+      
+      // Show success message
+      // alert(t.alerts.suggestionSuccess);
+      setSuggestionInput('');
+      setIsSuggestionModalOpen(false);
+    } catch (error) {
+      console.error('Error submitting suggestion:', error);
+      // alert(t.alerts.suggestionError);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const handleSaveBusinessAdmin = async () => {
+    if (!businessAdminName.trim()) return;
+    
+    setIsLoading(true);
+    
+    try {
+      const response = await fetch('/api/suggestions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user?.id,
+          suggestionText: `Update business admin name to: ${businessAdminName}`,
+          businessAdminName: businessAdminName
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to save business admin name');
+      }
+      
+      // Show success message
+      // alert(t.alerts.adminNameSaveSuccess);
+      setIsSuggestionModalOpen(false);
+    } catch (error) {
+      console.error('Error saving business admin name:', error);
+      // alert(t.alerts.adminNameSaveError);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
 
   // Enhanced custom input component
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -1622,6 +1702,8 @@ export default function StaffDashboard() {
                   <ChatMessage
                     key={message.id}
                     message={message}
+                    previousMessage={messages[index - 1]} 
+                    userId={user?.id || ''}
                     isLast={index === messages.length - 1}
                     onDeleteMessage={handleDeleteMessage}
                   />
@@ -1703,10 +1785,21 @@ export default function StaffDashboard() {
           setSuggestionInput('');
           setIsSuggestionModalOpen(false);
         }}
-        onSubmit={handleSuggestionSubmit}
+        onSubmit={(text) => {
+          if (text.startsWith('Update business admin name to:')) {
+            // Extract the admin name from the suggestion text
+            const adminName = text.replace('Update business admin name to:', '').trim();
+            setBusinessAdminName(adminName);
+            handleSaveBusinessAdmin();
+          } else {
+            // Handle normal suggestions
+            handleSuggestionSubmit(text);
+          }
+        }}
         suggestionInput={suggestionInput}
         setSuggestionInput={setSuggestionInput}
         language={language}
+        // isLoading={isLoading}
       />
 
       <style jsx global>{`

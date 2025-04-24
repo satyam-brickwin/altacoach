@@ -32,6 +32,8 @@ model User {
   businesses         BusinessUser[]
   businessDocuments  BusinessDocument[] @relation("AdminDocuments")
   createdBusinessUsers BusinessUser[]   @relation("BusinessUserCreator")
+  userSuggestions    Suggestion[]       @relation("UserSuggestions")
+  adminSuggestions   Suggestion[]       @relation("AdminSuggestions")
 }
 
 // Business model
@@ -50,6 +52,7 @@ model Business {
   createdById       String
   users             BusinessUser[]
   businessDocuments BusinessDocument[]
+  suggestions       Suggestion[] 
 }
 
 // Document model (previously Content)
@@ -97,6 +100,34 @@ model BusinessDocument {
   updatedAt   DateTime  @updatedAt
 
   @@id([businessId, documentId])
+
+    // Relation to suggestions
+  suggestions Suggestion[]
+}
+
+// Suggestion model for chat interactions
+model Suggestion {
+  id           String   @id @default(uuid())   // This acts as the unique ID for the whole chat turn
+  chatId       String                          // Used to group messages in a single chat session
+  questionId   String                          // Unique ID for the question in the chat
+  answerId     String?                         // Unique ID for the answer (nullable initially)
+  questionText String                          // Actual user question text
+  answerText   String?                         // Suggested answer text
+  suggestionText String?  
+  userId       String                          // User who asked the question
+  businessId   String                          // Business context
+  adminId      String                          // Admin associated with the business
+  documentId   String?                         // Related document (admin or business)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  user     User     @relation("UserSuggestions", fields: [userId], references: [id])
+  business Business @relation(fields: [businessId], references: [id])
+  admin    User     @relation("AdminSuggestions", fields: [adminId], references: [id])
+
+  // Optional linked document
+  businessDocument BusinessDocument? @relation(fields: [businessId, documentId], references: [businessId, documentId])
 }
 
 
