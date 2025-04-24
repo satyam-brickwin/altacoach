@@ -1238,6 +1238,11 @@ export default function AdminAnalytics() {
                   {t('settings')}
                 </Link>
               </li>
+              <li>
+                  <Link href="/admin/suggestion" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
+                    {translate('Suggestion')}
+                  </Link>
+              </li>
             </ul>
           </nav>
         </div>
