@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 
 interface NewSuggestionModalProps {
   isOpen: boolean;
@@ -10,6 +10,34 @@ interface NewSuggestionModalProps {
   userId: string;
 }
 
+// Translation object
+const translations = {
+  en: {
+    title: "Submit a Suggestion",
+    placeholder: "Your suggestion...",
+    submitButton: "Submit",
+    cancelButton: "Cancel"
+  },
+  it: {
+    title: "Enviar una Sugerencia",
+    placeholder: "Tu sugerencia...",
+    submitButton: "Enviar",
+    cancelButton: "Cancelar"
+  },
+  fr: {
+    title: "Soumettre une Suggestion",
+    placeholder: "Votre suggestion...",
+    submitButton: "Soumettre",
+    cancelButton: "Annuler"
+  },
+  de: {
+    title: "Einen Vorschlag einreichen",
+    placeholder: "Ihr Vorschlag...",
+    submitButton: "Einreichen",
+    cancelButton: "Abbrechen"
+  }
+};
+
 export const NewSuggestionModal: React.FC<NewSuggestionModalProps> = ({
   isOpen,
   onClose,
@@ -19,11 +47,25 @@ export const NewSuggestionModal: React.FC<NewSuggestionModalProps> = ({
   language = 'en',
   userId
 }) => {
+  // Track the language for debugging purposes
+  const [internalLanguage, setInternalLanguage] = useState(language);
+  
+  // Update internal state when language prop changes
+  useEffect(() => {
+    console.log(`Language prop changed to: ${language} (was: ${internalLanguage})`);
+    setInternalLanguage(language);
+  }, [language]);
+
+  // Use useMemo for translations to ensure it only recalculates when language changes
+  const t = useMemo(() => {
+    console.log(`Computing translations for language: ${language}`);
+    return translations[language as keyof typeof translations] || translations.en;
+  }, [language]);
+
   if (!isOpen) return null;
 
   const handleSubmit = () => {
     // Only perform basic validation on the suggestion text
-    // The userId validation will be handled by the parent component
     if (!suggestionInput.trim()) {
       return;
     }
@@ -31,6 +73,9 @@ export const NewSuggestionModal: React.FC<NewSuggestionModalProps> = ({
     onSubmit(suggestionInput, userId);
     onClose();
   };
+
+  console.log(`Rendering NewSuggestionModal with language: ${language}`);
+  console.log(`Current title text: ${t.title}`);
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -49,7 +94,7 @@ export const NewSuggestionModal: React.FC<NewSuggestionModalProps> = ({
             <div className="sm:flex sm:items-start">
               <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
                 <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-white">
-                  Submit a Suggestion
+                  {t.title}
                 </h3>
                 <div className="mt-2">
                   <textarea
@@ -57,7 +102,7 @@ export const NewSuggestionModal: React.FC<NewSuggestionModalProps> = ({
                     onChange={(e) => setSuggestionInput(e.target.value)}
                     rows={4}
                     className="w-full px-3 py-2 text-gray-700 dark:text-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C72026] focus:border-[#C72026] dark:bg-gray-700 dark:border-gray-600"
-                    placeholder="Your suggestion..."
+                    placeholder={t.placeholder}
                   />
                 </div>
               </div>
@@ -72,14 +117,14 @@ export const NewSuggestionModal: React.FC<NewSuggestionModalProps> = ({
               className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#C72026] text-base font-medium text-white hover:bg-[#C72026]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026] sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={!suggestionInput.trim()}
             >
-              Submit
+              {t.submitButton}
             </button>
             <button
               type="button"
               onClick={onClose}
               className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C72026] sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
             >
-              Cancel
+              {t.cancelButton}
             </button>
           </div>
         </div>
@@ -99,17 +144,42 @@ interface NewSuggestionButtonProps {
 
 export const NewSuggestionButton: React.FC<NewSuggestionButtonProps> = ({ 
   onSubmitSuggestion,
-  language,
-  buttonText = "Submit Suggestion",
+  language = 'en',
+  buttonText,
   buttonClassName = "p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-[#C72026] text-[#C72026]",
   iconOnly = false,
   userId
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [suggestionInput, setSuggestionInput] = useState('');
+  const [currentLanguage, setCurrentLanguage] = useState(language);
+  const [displayText, setDisplayText] = useState(buttonText);
+
+  // Update when language changes
+  useEffect(() => {
+    // Update the current language when it changes in the parent
+    if (language !== currentLanguage) {
+      setCurrentLanguage(language);
+    }
+    
+    // If no custom button text is provided, use the language-specific default
+    if (!buttonText && !iconOnly) {
+      const langText = {
+        en: "Submit Suggestion",
+        es: "Enviar Sugerencia",
+        fr: "Soumettre une Suggestion",
+        de: "Vorschlag einreichen"
+      };
+      setDisplayText(langText[language as keyof typeof langText] || langText.en);
+    } else {
+      setDisplayText(buttonText);
+    }
+  }, [language, buttonText, iconOnly, currentLanguage]);
 
   const handleOpenModal = () => {
     setIsModalOpen(true);
+    // Ensure latest language is used when modal opens
+    setCurrentLanguage(language);
   };
 
   const handleCloseModal = () => {
@@ -122,8 +192,9 @@ export const NewSuggestionButton: React.FC<NewSuggestionButtonProps> = ({
     handleCloseModal();
   };
 
+  // Use a key to force re-render of the button when language changes
   return (
-    <>
+    <React.Fragment key={`suggestion-button-${language}`}>
       <button
         onClick={handleOpenModal}
         className={buttonClassName}
@@ -144,7 +215,7 @@ export const NewSuggestionButton: React.FC<NewSuggestionButtonProps> = ({
             <path d="M9 18h6M10 22h4M12 2v1M12 7v1M12 12v1M4.93 4.93l.7.7M18.36 4.93l-.7.7M3 12h1M20 12h1M6 16.66A6 6 0 1 1 18 16.66"></path>
           </svg>
         ) : (
-          buttonText
+          displayText || "Submit Suggestion"
         )}
       </button>
 
@@ -154,9 +225,9 @@ export const NewSuggestionButton: React.FC<NewSuggestionButtonProps> = ({
         onSubmit={handleSubmitSuggestion}
         suggestionInput={suggestionInput}
         setSuggestionInput={setSuggestionInput}
-        language={language}
+        language={currentLanguage}
         userId={userId}
       />
-    </>
+    </React.Fragment>
   );
 };

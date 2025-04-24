@@ -57,14 +57,31 @@ const translations = {
       suggestions: 'Suggestions',
     },
     quizModeActive: 'Quiz Mode Active',
+    quiz: {
+      welcome: "Welcome to the quiz! I'll ask you a series of questions to test your knowledge.",
+      subjects: {
+        marketingFundamentals: "Marketing Fundamentals",
+        salesStrategy: "Sales Strategy", 
+        businessDevelopment: "Business Development",
+        customerRelationship: "Customer Relationship Management",
+        productFeatures: "Product Features",
+        servicesOverview: "Services Overview",
+        pricingModels: "Pricing Models",
+        technicalSpecs: "Technical Specifications",
+        marketTrends: "Market Trends",
+        competitorAnalysis: "Competitor Analysis",
+        industryRegulations: "Industry Regulations",
+        bestPractices: "Best Practices"
+      }
+    },
     categories: {
-      business: 'Business',
-      businessStrategy: 'Business Strategy',
-      marketing: 'Marketing',
-      customerSupport: 'Customer Support',
-      documentAnalysis: 'Document Analysis',
-      productKnowledge: 'Product Knowledge',
-      industryKnowledge: 'Industry Knowledge',
+      business: "Business",
+      businessStrategy: "Business Strategy", 
+      marketing: "Marketing",
+      customerSupport: "Customer Support",
+      documentAnalysis: "Document Analysis",
+      productKnowledge: "Product Knowledge",
+      industryKnowledge: "Industry Knowledge"
     },
     settings: {
       language: 'Language',
@@ -72,6 +89,9 @@ const translations = {
       account: 'Account Settings',
       darkMode: 'Dark Mode',
       logout: 'Logout',
+      resetPassword: 'Reset Password',
+      signOut: 'Sign out',
+      selectLanguage: 'Select Language',
     },
     empty: {
       title: 'How can I help you today?',
@@ -99,7 +119,61 @@ const translations = {
         }
       }
     },
+    cannedQuestions: {
+      businessGrowth: "What are effective strategies for small business growth?",
+      competitiveAnalysis: "How can I create a competitive analysis for my industry?",
+      businessMetrics: "What metrics should I track for my business performance?",
+      socialMedia: "How can I improve my social media marketing?",
+      marketingTrends: "What are the latest digital marketing trends?",
+      emailCampaign: "How to create an effective email marketing campaign?",
+      b2bStrategies: "What content marketing strategies work best for B2B companies?",
+      customerSatisfaction: "How to improve customer satisfaction scores?",
+      complaints: "What are best practices for handling customer complaints?",
+      aiSupport: "How can AI enhance our customer service operations?",
+      documentSummary: "Can you summarize this document for me?",
+      keyPoints: "What are the key points in this document?",
+      industryComparison: "How does this document compare to industry standards?"
+    },
+    alerts: {
+      suggestionSuccess: "Suggestion submitted successfully!",
+      suggestionError: "Failed to submit suggestion. Please try again.",
+      adminNameSaveSuccess: "Business admin name saved successfully!",
+      adminNameSaveError: "Failed to save business admin name. Please try again."
+    },
+    ui: {
+      clickToCopy: "Click to copy, double click to send",
+      chatHistory: "Chat History",
+      quickQuestions: "Quick Questions",
+      loading: "Loading...",
+      sendMessage: "Send message",
+      businessAdminName: "Business Admin Name"
+    },
+    modals: {
+      suggestions: {
+        title: "Submit a Suggestion",
+        description: "Share your ideas on how we can improve altacoach.",
+        placeholder: "Type your suggestion here...",
+        submit: "Submit Suggestion",
+        cancel: "Cancel"
+      },
+      resetPassword: {
+        title: "Reset Password",
+        currentPassword: "Current Password",
+        newPassword: "New Password",
+        confirmPassword: "Confirm New Password",
+        submit: "Reset Password",
+        cancel: "Cancel",
+        passwordMismatch: "New passwords don't match",
+        success: "Password reset successful",
+        error: "Failed to reset password"
+      }
+    },
     footerDisclaimer: 'altacoach is an AI and may make mistakes. Please verify any important information.',
+    logoText: {
+      alta: "alta",
+      c:"c",  
+      oach: "oach"
+    }
   },
   fr: {
     aiAssistant: 'AltaCoach',
@@ -115,14 +189,31 @@ const translations = {
       suggestions: 'Suggestions',
     },
     quizModeActive: 'Mode Quiz Actif',
+    quiz: {
+      welcome: "Bienvenue au quiz ! Je vais vous poser une série de questions pour tester vos connaissances.",
+      subjects: {
+        marketingFundamentals: "Fondamentaux du marketing",
+        salesStrategy: "Stratégie de vente",
+        businessDevelopment: "Développement des affaires",
+        customerRelationship: "Gestion de la relation client",
+        productFeatures: "Caractéristiques du produit",
+        servicesOverview: "Aperçu des services",
+        pricingModels: "Modèles de tarification",
+        technicalSpecs: "Spécifications techniques",
+        marketTrends: "Tendances du marché",
+        competitorAnalysis: "Analyse de la concurrence",
+        industryRegulations: "Réglementations industrielles",
+        bestPractices: "Meilleures pratiques"
+      }
+    },
     categories: {
-      business: 'Affaires',
-      businessStrategy: 'Stratégie d\'entreprise',
-      marketing: 'Marketing',
-      customerSupport: 'Service client',
-      documentAnalysis: 'Analyse de documents',
-      productKnowledge: 'Connaissance du produit',
-      industryKnowledge: 'Connaissance de l\'industrie',
+      business: "Affaires",
+      businessStrategy: "Stratégie d'entreprise",
+      marketing: "Marketing", 
+      customerSupport: "Service client",
+      documentAnalysis: "Analyse de documents",
+      productKnowledge: "Connaissance du produit",
+      industryKnowledge: "Connaissance de l'industrie"
     },
     settings: {
       language: 'Langue',
@@ -130,6 +221,9 @@ const translations = {
       account: 'Paramètres du compte',
       darkMode: 'Mode sombre',
       logout: 'Déconnexion',
+      resetPassword: 'Réinitialiser le mot de passe',
+      signOut: 'Se déconnecter',
+      selectLanguage: 'Sélectionner la langue',
     },
     empty: {
       title: 'Comment puis-je vous aider aujourd\'hui?',
@@ -157,7 +251,61 @@ const translations = {
         }
       }
     },
+    cannedQuestions: {
+      businessGrowth: "Quelles sont les stratégies efficaces pour la croissance des petites entreprises?",
+      competitiveAnalysis: "Comment puis-je créer une analyse concurrentielle pour mon secteur d'activité?",
+      businessMetrics: "Quels indicateurs devrais-je suivre pour évaluer la performance de mon entreprise?",
+      socialMedia: "Comment puis-je améliorer mon marketing sur les réseaux sociaux?",
+      marketingTrends: "Quelles sont les dernières tendances du marketing digital?",
+      emailCampaign: "Comment créer une campagne de marketing par e-mail efficace?",
+      b2bStrategies: "Quelles stratégies de marketing de contenu fonctionnent le mieux pour les entreprises B2B?",
+      customerSatisfaction: "Comment améliorer les scores de satisfaction client?",
+      complaints: "Quelles sont les meilleures pratiques pour gérer les réclamations des clients?",
+      aiSupport: "Comment l'IA peut-elle améliorer nos opérations de service client?",
+      documentSummary: "Pouvez-vous résumer ce document pour moi?",
+      keyPoints: "Quels sont les points clés de ce document?",
+      industryComparison: "Comment ce document se compare-t-il aux normes de l'industrie?"
+    },
+    alerts: {
+      suggestionSuccess: "Suggestion soumise avec succès !",
+      suggestionError: "Échec de l'envoi de la suggestion. Veuillez réessayer.",
+      adminNameSaveSuccess: "Nom d'administrateur d'entreprise enregistré avec succès !",
+      adminNameSaveError: "Échec de l'enregistrement du nom d'administrateur. Veuillez réessayer."
+    },
+    ui: {
+      clickToCopy: "Cliquez pour copier, double-cliquez pour envoyer",
+      chatHistory: "Historique des conversations",
+      quickQuestions: "Questions rapides",
+      loading: "Chargement...",
+      sendMessage: "Envoyer le message",
+      businessAdminName: "Nom d'administrateur d'entreprise"
+    },
+    modals: {
+      suggestions: {
+        title: "Soumettre une suggestion",
+        description: "Partagez vos idées sur la façon dont nous pouvons améliorer altacoach.",
+        placeholder: "Tapez votre suggestion ici...",
+        submit: "Soumettre la suggestion",
+        cancel: "Annuler"
+      },
+      resetPassword: {
+        title: "Réinitialiser le mot de passe",
+        currentPassword: "Mot de passe actuel",
+        newPassword: "Nouveau mot de passe",
+        confirmPassword: "Confirmer le nouveau mot de passe",
+        submit: "Réinitialiser le mot de passe",
+        cancel: "Annuler",
+        passwordMismatch: "Les nouveaux mots de passe ne correspondent pas",
+        success: "Réinitialisation du mot de passe réussie",
+        error: "Échec de la réinitialisation du mot de passe"
+      }
+    },
     footerDisclaimer: 'altacoach est une IA et peut faire des erreurs. Veuillez vérifier toute information importante.',
+    logoText: {
+      alta: "alta",
+      c:"c",  
+      oach: "oach"
+    }
   },
   de: {
     aiAssistant: 'AltaCoach',
@@ -173,14 +321,31 @@ const translations = {
       suggestions: 'Vorschläge',
     },
     quizModeActive: 'Quiz-Modus Aktiv',
+    quiz: {
+      welcome: "Willkommen zum Quiz! Ich werde Ihnen eine Reihe von Fragen stellen, um Ihr Wissen zu testen.",
+      subjects: {
+        marketingFundamentals: "Marketing-Grundlagen",
+        salesStrategy: "Verkaufsstrategie",
+        businessDevelopment: "Geschäftsentwicklung",
+        customerRelationship: "Kundenbeziehungsmanagement",
+        productFeatures: "Produktmerkmale",
+        servicesOverview: "Dienstleistungsübersicht",
+        pricingModels: "Preismodelle",
+        technicalSpecs: "Technische Spezifikationen",
+        marketTrends: "Markttrends",
+        competitorAnalysis: "Wettbewerbsanalyse",
+        industryRegulations: "Branchenvorschriften",
+        bestPractices: "Bewährte Praktiken"
+      }
+    },
     categories: {
-      business: 'Geschäft',
-      businessStrategy: 'Geschäftsstrategie',
-      marketing: 'Marketing',
-      customerSupport: 'Kundendienst',
-      documentAnalysis: 'Dokumentenanalyse',
-      productKnowledge: 'Produktwissen',
-      industryKnowledge: 'Branchenkenntnisse',
+      business: "Geschäft",
+      businessStrategy: "Geschäftsstrategie",
+      marketing: "Marketing",
+      customerSupport: "Kundendienst",
+      documentAnalysis: "Dokumentenanalyse",
+      productKnowledge: "Produktwissen",
+      industryKnowledge: "Branchenkenntnisse"
     },
     settings: {
       language: 'Sprache',
@@ -188,6 +353,9 @@ const translations = {
       account: 'Kontoeinstellungen',
       darkMode: 'Dunkelmodus',
       logout: 'Abmelden',
+      resetPassword: 'Passwort zurücksetzen',
+      signOut: 'Abmelden',
+      selectLanguage: 'Sprache auswählen',
     },
     empty: {
       title: 'Wie kann ich Ihnen heute helfen?',
@@ -215,7 +383,61 @@ const translations = {
         }
       }
     },
+    cannedQuestions: {
+      businessGrowth: "Was sind effektive Strategien für das Wachstum kleiner Unternehmen?",
+      competitiveAnalysis: "Wie kann ich eine Wettbewerbsanalyse für meine Branche erstellen?",
+      businessMetrics: "Welche Kennzahlen sollte ich für die Leistung meines Unternehmens verfolgen?",
+      socialMedia: "Wie kann ich mein Social-Media-Marketing verbessern?",
+      marketingTrends: "Was sind die neuesten Trends im digitalen Marketing?",
+      emailCampaign: "Wie erstelle ich eine effektive E-Mail-Marketingkampagne?",
+      b2bStrategies: "Welche Content-Marketing-Strategien funktionieren am besten für B2B-Unternehmen?",
+      customerSatisfaction: "Wie kann ich die Kundenzufriedenheitswerte verbessern?",
+      complaints: "Was sind bewährte Verfahren für den Umgang mit Kundenbeschwerden?",
+      aiSupport: "Wie kann KI unsere Kundendienstabläufe verbessern?",
+      documentSummary: "Können Sie dieses Dokument für mich zusammenfassen?",
+      keyPoints: "Was sind die wichtigsten Punkte in diesem Dokument?",
+      industryComparison: "Wie schneidet dieses Dokument im Vergleich zu Branchenstandards ab?"
+    },
+    alerts: {
+      suggestionSuccess: "Vorschlag erfolgreich eingereicht!",
+      suggestionError: "Fehler beim Einreichen des Vorschlags. Bitte versuchen Sie es erneut.",
+      adminNameSaveSuccess: "Name des Geschäftsadministrators erfolgreich gespeichert!",
+      adminNameSaveError: "Fehler beim Speichern des Administratornamens. Bitte versuchen Sie es erneut."
+    },
+    ui: {
+      clickToCopy: "Klicken zum Kopieren, Doppelklick zum Senden",
+      chatHistory: "Chat-Verlauf",
+      quickQuestions: "Schnellfragen",
+      loading: "Wird geladen...",
+      sendMessage: "Nachricht senden",
+      businessAdminName: "Name des Geschäftsadministrators"
+    },
+    modals: {
+      suggestions: {
+        title: "Vorschlag einreichen",
+        description: "Teilen Sie Ihre Ideen, wie wir altacoach verbessern können.",
+        placeholder: "Geben Sie hier Ihren Vorschlag ein...",
+        submit: "Vorschlag einreichen",
+        cancel: "Abbrechen"
+      },
+      resetPassword: {
+        title: "Passwort zurücksetzen",
+        currentPassword: "Aktuelles Passwort",
+        newPassword: "Neues Passwort",
+        confirmPassword: "Neues Passwort bestätigen",
+        submit: "Passwort zurücksetzen",
+        cancel: "Abbrechen",
+        passwordMismatch: "Neue Passwörter stimmen nicht überein",
+        success: "Passwort erfolgreich zurückgesetzt",
+        error: "Fehler beim Zurücksetzen des Passworts"
+      }
+    },
     footerDisclaimer: 'altacoach ist eine KI und kann Fehler machen. Bitte überprüfen Sie alle wichtigen Informationen.',
+    logoText: {
+      alta: "alta",
+      c:"c",  
+      oach: "oach"
+    }
   },
   it: {
     aiAssistant: 'AltaCoach',
@@ -231,14 +453,31 @@ const translations = {
       suggestions: 'Suggerimenti',
     },
     quizModeActive: 'Modalità Quiz Attiva',
+    quiz: {
+      welcome: "Benvenuto al quiz! Ti farò una serie di domande per testare le tue conoscenze.",
+      subjects: {
+        marketingFundamentals: "Fondamenti di marketing",
+        salesStrategy: "Strategia di vendita",
+        businessDevelopment: "Sviluppo aziendale",
+        customerRelationship: "Gestione delle relazioni con i clienti",
+        productFeatures: "Caratteristiche del prodotto",
+        servicesOverview: "Panoramica dei servizi",
+        pricingModels: "Modelli di prezzo",
+        technicalSpecs: "Specifiche tecniche",
+        marketTrends: "Tendenze di mercato",
+        competitorAnalysis: "Analisi della concorrenza",
+        industryRegulations: "Regolamenti del settore",
+        bestPractices: "Migliori pratiche"
+      }
+    },
     categories: {
-      business: 'Affari',
-      businessStrategy: 'Strategia aziendale',
-      marketing: 'Marketing',
-      customerSupport: 'Assistenza clienti',
-      documentAnalysis: 'Analisi documenti',
-      productKnowledge: 'Conoscenza del prodotto',
-      industryKnowledge: 'Conoscenza del settore',
+      business: "Affari",
+      businessStrategy: "Strategia aziendale",
+      marketing: "Marketing",
+      customerSupport: "Assistenza clienti",
+      documentAnalysis: "Analisi documenti",
+      productKnowledge: "Conoscenza del prodotto",
+      industryKnowledge: "Conoscenza del settore"
     },
     settings: {
       language: 'Lingua',
@@ -246,6 +485,9 @@ const translations = {
       account: 'Impostazioni account',
       darkMode: 'Modalità scura',
       logout: 'Esci',
+      resetPassword: 'Reimposta password',
+      signOut: 'Disconnetti',
+      selectLanguage: 'Seleziona lingua',
     },
     empty: {
       title: 'Come posso aiutarti oggi?',
@@ -273,7 +515,61 @@ const translations = {
         }
       }
     },
+    cannedQuestions: {
+      businessGrowth: "Quali sono le strategie efficaci per la crescita delle piccole imprese?",
+      competitiveAnalysis: "Come posso creare un'analisi competitiva per il mio settore?",
+      businessMetrics: "Quali metriche dovrei monitorare per le prestazioni della mia azienda?",
+      socialMedia: "Come posso migliorare il mio marketing sui social media?",
+      marketingTrends: "Quali sono le ultime tendenze del marketing digitale?",
+      emailCampaign: "Come creare una campagna di email marketing efficace?",
+      b2bStrategies: "Quali strategie di content marketing funzionano meglio per le aziende B2B?",
+      customerSatisfaction: "Come migliorare i punteggi di soddisfazione dei clienti?",
+      complaints: "Quali sono le migliori pratiche per gestire i reclami dei clienti?",
+      aiSupport: "Come può l'IA migliorare le nostre operazioni di assistenza clienti?",
+      documentSummary: "Puoi riassumere questo documento per me?",
+      keyPoints: "Quali sono i punti chiave di questo documento?",
+      industryComparison: "Come si confronta questo documento con gli standard del settore?"
+    },
+    alerts: {
+      suggestionSuccess: "Suggerimento inviato con successo!",
+      suggestionError: "Impossibile inviare il suggerimento. Riprova.",
+      adminNameSaveSuccess: "Nome amministratore aziendale salvato con successo!",
+      adminNameSaveError: "Impossibile salvare il nome dell'amministratore. Riprova."
+    },
+    ui: {
+      clickToCopy: "Clicca per copiare, doppio clic per inviare",
+      chatHistory: "Cronologia chat",
+      quickQuestions: "Domande rapide",
+      loading: "Caricamento...",
+      sendMessage: "Invia messaggio",
+      businessAdminName: "Nome amministratore aziendale"
+    },
+    modals: {
+      suggestions: {
+        title: "Invia un suggerimento",
+        description: "Condividi le tue idee su come possiamo migliorare altacoach.",
+        placeholder: "Scrivi qui il tuo suggerimento...",
+        submit: "Invia suggerimento",
+        cancel: "Annulla"
+      },
+      resetPassword: {
+        title: "Reimposta password",
+        currentPassword: "Password attuale",
+        newPassword: "Nuova password",
+        confirmPassword: "Conferma nuova password",
+        submit: "Reimposta password",
+        cancel: "Annulla",
+        passwordMismatch: "Le nuove password non corrispondono",
+        success: "Password reimpostata con successo",
+        error: "Impossibile reimpostare la password"
+      }
+    },
     footerDisclaimer: 'altacoach è un\'IA e può commettere errori. Verifica qualsiasi informazione importante.',
+    logoText: {
+      alta: "alta",
+      c:"c",  
+      oach: "oach"
+    }
   },
   es: {
     aiAssistant: 'AltaCoach',
@@ -289,14 +585,31 @@ const translations = {
       suggestions: 'Sugerencias',
     },
     quizModeActive: 'Modo Cuestionario Activo',
+    quiz: {
+      welcome: "¡Bienvenido al cuestionario! Te haré una serie de preguntas para evaluar tus conocimientos.",
+      subjects: {
+        marketingFundamentals: "Fundamentos de marketing",
+        salesStrategy: "Estrategia de ventas",
+        businessDevelopment: "Desarrollo de negocios",
+        customerRelationship: "Gestión de relaciones con clientes",
+        productFeatures: "Características del producto",
+        servicesOverview: "Descripción general de servicios",
+        pricingModels: "Modelos de precios",
+        technicalSpecs: "Especificaciones técnicas",
+        marketTrends: "Tendencias del mercado",
+        competitorAnalysis: "Análisis de competidores",
+        industryRegulations: "Regulaciones de la industria",
+        bestPractices: "Mejores prácticas"
+      }
+    },
     categories: {
-      business: 'Negocios',
-      businessStrategy: 'Estrategia de negocio',
-      marketing: 'Marketing',
-      customerSupport: 'Atención al cliente',
-      documentAnalysis: 'Análisis de documentos',
-      productKnowledge: 'Conocimiento del producto',
-      industryKnowledge: 'Conocimiento de la industria',
+      business: "Negocios",
+      businessStrategy: "Estrategia de negocio",
+      marketing: "Marketing",
+      customerSupport: "Atención al cliente",
+      documentAnalysis: "Análisis de documentos",
+      productKnowledge: "Conocimiento del producto",
+      industryKnowledge: "Conocimiento de la industria"
     },
     settings: {
       language: 'Idioma',
@@ -304,6 +617,9 @@ const translations = {
       account: 'Configuración de cuenta',
       darkMode: 'Modo oscuro',
       logout: 'Cerrar sesión',
+      resetPassword: 'Restablecer contraseña',
+      signOut: 'Cerrar sesión',
+      selectLanguage: 'Seleccionar idioma',
     },
     empty: {
       title: '¿Cómo puedo ayudarte hoy?',
@@ -331,7 +647,61 @@ const translations = {
         }
       }
     },
-    footerDisclaimer: 'altacoach è un\'IA e può commettere errori. Verifica qualsiasi informazione importante.',
+    cannedQuestions: {
+      businessGrowth: "¿Cuáles son las estrategias efectivas para el crecimiento de pequeñas empresas?",
+      competitiveAnalysis: "¿Cómo puedo crear un análisis competitivo para mi industria?",
+      businessMetrics: "¿Qué métricas debo seguir para el rendimiento de mi negocio?",
+      socialMedia: "¿Cómo puedo mejorar mi marketing en redes sociales?",
+      marketingTrends: "¿Cuáles son las últimas tendencias en marketing digital?",
+      emailCampaign: "¿Cómo crear una campaña de email marketing efectiva?",
+      b2bStrategies: "¿Qué estrategias de marketing de contenido funcionan mejor para las empresas B2B?",
+      customerSatisfaction: "¿Cómo mejorar las puntuaciones de satisfacción del cliente?",
+      complaints: "¿Cuáles son las mejores prácticas para manejar quejas de clientes?",
+      aiSupport: "¿Cómo puede la IA mejorar nuestras operaciones de servicio al cliente?",
+      documentSummary: "¿Puedes resumir este documento para mí?",
+      keyPoints: "¿Cuáles son los puntos clave de este documento?",
+      industryComparison: "¿Cómo se compara este documento con los estándares de la industria?"
+    },
+    alerts: {
+      suggestionSuccess: "¡Sugerencia enviada correctamente!",
+      suggestionError: "Error al enviar la sugerencia. Inténtalo de nuevo.",
+      adminNameSaveSuccess: "¡Nombre de administrador guardado correctamente!",
+      adminNameSaveError: "Error al guardar el nombre de administrador. Inténtalo de nuevo."
+    },
+    ui: {
+      clickToCopy: "Haz clic para copiar, doble clic para enviar",
+      chatHistory: "Historial de chat",
+      quickQuestions: "Preguntas rápidas",
+      loading: "Cargando...",
+      sendMessage: "Enviar mensaje",
+      businessAdminName: "Nombre del administrador de negocio"
+    },
+    modals: {
+      suggestions: {
+        title: "Enviar una sugerencia",
+        description: "Comparte tus ideas sobre cómo podemos mejorar altacoach.",
+        placeholder: "Escribe tu sugerencia aquí...",
+        submit: "Enviar sugerencia",
+        cancel: "Cancelar"
+      },
+      resetPassword: {
+        title: "Restablecer contraseña",
+        currentPassword: "Contraseña actual",
+        newPassword: "Nueva contraseña",
+        confirmPassword: "Confirmar nueva contraseña",
+        submit: "Restablecer contraseña",
+        cancel: "Cancelar",
+        passwordMismatch: "Las nuevas contraseñas no coinciden",
+        success: "Contraseña restablecida con éxito",
+        error: "Error al restablecer la contraseña"
+      }
+    },
+    footerDisclaimer: 'altacoach es una IA y puede cometer errores. Verifica cualquier información importante.',
+    logoText: {
+      alta: "alta",
+      c:"c",  
+      oach: "oach"
+    }
   }
 };
 
@@ -421,7 +791,7 @@ export default function StaffDashboard() {
     { code: 'fr', name: 'Français' },
     { code: 'de', name: 'Deutsch' },
     { code: 'it', name: 'Italiano' },
-    { code: 'es', name: 'Español' }
+    // { code: 'es', name: 'Español' }
   ];
 
   // Example questions for staff to choose from
@@ -543,37 +913,65 @@ export default function StaffDashboard() {
       setIsLoading(false);
       setQuizMode(false);
       setInputValue('');
+      setMenuOpen(false);
+      setSettingsOpen(false);
+      setIsLanguageDropdownOpen(false);
+      setIsSuggestionModalOpen(false);
+      setIsResetPasswordModalOpen(false);
+      setChatId(null);
     };
   }, []);
 
-  // Update useEffect for navigation after authentication
+  // Update the handleLogout function
+  // Removed duplicate handleLogout function
+
+  // Update the authentication check useEffect
   useEffect(() => {
-    if (isAuthenticated && !isLoading) {
-      if (user?.role === UserRole.SUPER_ADMIN) {
-        router.push('/superadmin');
-      } else if (user?.role === UserRole.ADMIN) {
-        router.push('/admin');
-      } else if (user?.role === UserRole.STAFF || user?.role === UserRole.USER) {
-        // Both Staff and User roles should stay on this page
-        return;
-      } else {
-        router.push('/');
+    const checkAuthAndNavigate = async () => {
+      if (!isAuthenticated && !isLoading) {
+        try {
+          // Clear states
+          setMessages([]);
+          setIsLoading(false);
+          setQuizMode(false);
+          setInputValue('');
+          setMenuOpen(false);
+          setSettingsOpen(false);
+          
+          // Navigate to login
+          router.push('/login');
+        } catch (error) {
+          console.error('Navigation error:', error);
+        }
+      } else if (isAuthenticated && !isLoading && user) {
+        if (user.role === UserRole.SUPER_ADMIN) {
+          router.push('/superadmin');
+        } else if (user.role === UserRole.ADMIN) {
+          router.push('/admin');
+        }
+        // Staff and User roles stay on this page
       }
-    }
+    };
+
+    checkAuthAndNavigate();
   }, [isAuthenticated, isLoading, user, router]);
 
-  // Add this useEffect to focus the input field on initial page load
+  // Add null checks for user-dependent operations
   useEffect(() => {
-    // Focus the input field when the component mounts
-    if (inputRef.current && activeView === 'chat') {
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 300); // Small delay to ensure the component is fully rendered
+    if (user?.id) {
+      fetch(`/api/chat-documents?userId=${user.id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data) {
+            setAvailableDocuments(data);
+          }
+        })
+        .catch(err => console.error('Failed to fetch user documents', err));
     }
-  }, [activeView]);
+  }, [user]);
 
   // Early return for loading
-  if (authLoading) {
+  if (authLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C72026]"></div>
@@ -977,9 +1375,28 @@ export default function StaffDashboard() {
   };
 
   // Handle logout
-  const handleLogout = () => {
-    logout();
-    router.push('/login');
+  const handleLogout = async () => {
+    try {
+      // Clear all states before logout
+      setMessages([]);
+      setIsLoading(false);
+      setQuizMode(false);
+      setInputValue('');
+      setMenuOpen(false);
+      setSettingsOpen(false);
+      setIsLanguageDropdownOpen(false);
+      setIsSuggestionModalOpen(false);
+      setIsResetPasswordModalOpen(false);
+      setChatId(null);
+      
+      // Perform logout
+      await logout();
+      
+      // Navigate to login page
+      router.push('/login');
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
   };
 
   // Function to handle password reset
@@ -1170,117 +1587,81 @@ export default function StaffDashboard() {
 
             {expandedSection === 'quizMode' && (
               <div className="pl-8 pr-3 pb-3 space-y-3 animate-fadeIn">
+                {/* Product Knowledge Section */}
                 <div>
                   <div className="text-xs font-medium text-[#C72026] dark:text-[#C72026] mb-2">
-                    Business
+                    {translations[language]?.categories.productKnowledge || "Product Knowledge"}
                   </div>
                   <button
                     className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
                     onClick={() => {
-                      handleStartQuiz("Marketing Fundamentals");
+                      handleStartQuiz(translations[language]?.quiz?.subjects?.productFeatures || "Product Features");
                     }}
                   >
-                    Marketing Fundamentals
+                    {translations[language]?.quiz?.subjects?.productFeatures || "Product Features"}
                   </button>
                   <button
                     className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
                     onClick={() => {
-                      handleStartQuiz("Sales Strategy");
+                      handleStartQuiz(translations[language]?.quiz?.subjects?.servicesOverview || "Services Overview");
                     }}
                   >
-                    Sales Strategy
+                    {translations[language]?.quiz?.subjects?.servicesOverview || "Services Overview"}
                   </button>
                   <button
                     className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
                     onClick={() => {
-                      handleStartQuiz("Business Development");
+                      handleStartQuiz(translations[language]?.quiz?.subjects?.pricingModels || "Pricing Models");
                     }}
                   >
-                    Business Development
+                    {translations[language]?.quiz?.subjects?.pricingModels || "Pricing Models"}
                   </button>
                   <button
                     className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
                     onClick={() => {
-                      handleStartQuiz("Customer Relationship Management");
+                      handleStartQuiz(translations[language]?.quiz?.subjects?.technicalSpecs || "Technical Specifications");
                     }}
                   >
-                    Customer Relationship Management
+                    {translations[language]?.quiz?.subjects?.technicalSpecs || "Technical Specifications"}
                   </button>
                 </div>
 
+                {/* Industry Knowledge Section */}
                 <div>
                   <div className="text-xs font-medium text-[#C72026] dark:text-[#C72026] mb-2">
-                    Product Knowledge
+                    {translations[language]?.categories.industryKnowledge || "Industry Knowledge"}
                   </div>
                   <button
                     className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
                     onClick={() => {
-                      handleStartQuiz("Product Features");
+                      handleStartQuiz(translations[language]?.quiz?.subjects?.marketTrends || "Market Trends");
                     }}
                   >
-                    Product Features
+                    {translations[language]?.quiz?.subjects?.marketTrends || "Market Trends"}
                   </button>
                   <button
                     className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
                     onClick={() => {
-                      handleStartQuiz("Services Overview");
+                      handleStartQuiz(translations[language]?.quiz?.subjects?.competitorAnalysis || "Competitor Analysis");
                     }}
                   >
-                    Services Overview
+                    {translations[language]?.quiz?.subjects?.competitorAnalysis || "Competitor Analysis"}
                   </button>
                   <button
                     className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
                     onClick={() => {
-                      handleStartQuiz("Pricing Models");
+                      handleStartQuiz(translations[language]?.quiz?.subjects?.industryRegulations || "Industry Regulations");
                     }}
                   >
-                    Pricing Models
+                    {translations[language]?.quiz?.subjects?.industryRegulations || "Industry Regulations"}
                   </button>
                   <button
                     className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
                     onClick={() => {
-                      handleStartQuiz("Technical Specifications");
+                      handleStartQuiz(translations[language]?.quiz?.subjects?.bestPractices || "Best Practices");
                     }}
                   >
-                    Technical Specifications
-                  </button>
-                </div>
-
-                <div>
-                  <div className="text-xs font-medium text-[#C72026] dark:text-[#C72026] mb-2">
-                    Industry Knowledge
-                  </div>
-                  <button
-                    className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
-                    onClick={() => {
-                      handleStartQuiz("Market Trends");
-                    }}
-                  >
-                    Market Trends
-                  </button>
-                  <button
-                    className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
-                    onClick={() => {
-                      handleStartQuiz("Competitor Analysis");
-                    }}
-                  >
-                    Competitor Analysis
-                  </button>
-                  <button
-                    className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
-                    onClick={() => {
-                      handleStartQuiz("Industry Regulations");
-                    }}
-                  >
-                    Industry Regulations
-                  </button>
-                  <button
-                    className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
-                    onClick={() => {
-                      handleStartQuiz("Best Practices");
-                    }}
-                  >
-                    Best Practices
+                    {translations[language]?.quiz?.subjects?.bestPractices || "Best Practices"}
                   </button>
                 </div>
               </div>
@@ -1312,94 +1693,94 @@ export default function StaffDashboard() {
 
             {expandedSection === 'cannedQuestions' && (
               <div className="pl-8 pr-3 pb-3 space-y-3 animate-fadeIn">
+                {/* Business Strategy Section */}
                 <div>
                   <div className="text-xs font-medium text-[#C72026] dark:text-[#C72026] mb-1.5">
                     {translations[language]?.categories.businessStrategy || 'Business Strategy'}
                   </div>
                   {[
-                    "What are effective strategies for small business growth?",
-                    "How can I create a competitive analysis for my industry?",
-                    "What metrics should I track for my business performance?"
+                    translations[language]?.cannedQuestions.businessGrowth || "What are effective strategies for small business growth?",
+                    translations[language]?.cannedQuestions.competitiveAnalysis || "How can I create a competitive analysis for my industry?",
+                    translations[language]?.cannedQuestions.businessMetrics || "What metrics should I track for my business performance?"
                   ].map((question, idx) => (
                     <button
                       key={`strategy-${idx}`}
                       className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1 relative group"
                       onClick={() => handleQuestionClick(question, `strategy-${idx}`)}
-                      title="Single click to copy, double click to send"
                     >
                       {question}
                       <span className="hidden group-hover:block absolute -top-8 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap">
-                        Click to copy, double click to send
+                        {translations[language]?.ui.clickToCopy || "Click to copy, double click to send"}
                       </span>
                     </button>
                   ))}
                 </div>
 
+                {/* Marketing Section */}
                 <div>
                   <div className="text-xs font-medium text-[#C72026] dark:text-[#C72026] mb-1.5">
                     {translations[language]?.categories.marketing || 'Marketing'}
                   </div>
                   {[
-                    "How can I improve my social media marketing?",
-                    "What are the latest digital marketing trends?",
-                    "How to create an effective email marketing campaign?",
-                    "What content marketing strategies work best for B2B companies?"
+                    translations[language]?.cannedQuestions.socialMedia || "How can I improve my social media marketing?",
+                    translations[language]?.cannedQuestions.marketingTrends || "What are the latest digital marketing trends?",
+                    translations[language]?.cannedQuestions.emailCampaign || "How to create an effective email marketing campaign?",
+                    translations[language]?.cannedQuestions.b2bStrategies || "What content marketing strategies work best for B2B companies?"
                   ].map((question, idx) => (
                     <button
                       key={`marketing-${idx}`}
                       className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1 relative group"
                       onClick={() => handleQuestionClick(question, `marketing-${idx}`)}
-                      title="Single click to copy, double click to send"
                     >
                       {question}
                       <span className="hidden group-hover:block absolute -top-8 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap">
-                        Click to copy, double click to send
+                        {translations[language]?.ui.clickToCopy || "Click to copy, double click to send"}
                       </span>
                     </button>
                   ))}
                 </div>
 
+                {/* Customer Support Section */}
                 <div>
                   <div className="text-xs font-medium text-[#C72026] dark:text-[#C72026] mb-1.5">
                     {translations[language]?.categories.customerSupport || 'Customer Support'}
                   </div>
                   {[
-                    "How to improve customer satisfaction scores?",
-                    "What are best practices for handling customer complaints?",
-                    "How can AI enhance our customer service operations?"
+                    translations[language]?.cannedQuestions.customerSatisfaction || "How to improve customer satisfaction scores?",
+                    translations[language]?.cannedQuestions.complaints || "What are best practices for handling customer complaints?",
+                    translations[language]?.cannedQuestions.aiSupport || "How can AI enhance our customer service operations?"
                   ].map((question, idx) => (
                     <button
                       key={`support-${idx}`}
                       className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1 relative group"
                       onClick={() => handleQuestionClick(question, `support-${idx}`)}
-                      title="Single click to copy, double click to send"
                     >
                       {question}
                       <span className="hidden group-hover:block absolute -top-8 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap">
-                        Click to copy, double click to send
+                        {translations[language]?.ui.clickToCopy || "Click to copy, double click to send"}
                       </span>
                     </button>
                   ))}
                 </div>
 
+                {/* Document Analysis Section */}
                 <div>
                   <div className="text-xs font-medium text-[#C72026] dark:text-[#C72026] mb-1.5">
                     {translations[language]?.categories.documentAnalysis || 'Document Analysis'}
                   </div>
                   {[
-                    "Can you summarize this document for me?",
-                    "What are the key points in this document?",
-                    "How does this document compare to industry standards?"
+                    translations[language]?.cannedQuestions.documentSummary || "Can you summarize this document for me?",
+                    translations[language]?.cannedQuestions.keyPoints || "What are the key points in this document?",
+                    translations[language]?.cannedQuestions.industryComparison || "How does this document compare to industry standards?"
                   ].map((question, idx) => (
                     <button
                       key={`document-${idx}`}
                       className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 mb-1 relative group"
                       onClick={() => handleQuestionClick(question, `document-${idx}`)}
-                      title="Single click to copy, double click to send"
                     >
                       {question}
                       <span className="hidden group-hover:block absolute -top-8 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap">
-                        Click to copy, double click to send
+                        {translations[language]?.ui.clickToCopy || "Click to copy, double click to send"}
                       </span>
                     </button>
                   ))}
@@ -1498,9 +1879,13 @@ export default function StaffDashboard() {
           {/* Center - Title */}
           <div className="absolute left-1/2 transform -translate-x-1/2">
             <h1 className="text-lg font-bold tracking-wider font-['Helvetica'] italic">
-              <span className="text-gray-900 dark:text-white tracking-[.15em]">alta</span>
+              <span className="text-gray-900 dark:text-white tracking-[.15em]">
+                {translations[language]?.logoText?.alta || "alta"}
+              </span>
               <span className="text-[#C72026] tracking-[.15em]">c</span>
-              <span className="text-gray-900 dark:text-white tracking-[.15em]">oach</span>
+              <span className="text-gray-900 dark:text-white tracking-[.15em]">
+                {translations[language]?.logoText?.oach || "oach"}
+              </span>
             </h1>
           </div>
 
@@ -1541,9 +1926,9 @@ export default function StaffDashboard() {
                   <div className="border-t dark:border-gray-700">
                     <div className="py-1 px-2">
                       <div className="mb-1 px-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Select Language
+                        {translations[language]?.settings.selectLanguage || 'Select Language'}
                       </div>
-                      <div className="grid grid-cols-2 gap-1">
+                      <div className="grid grid-cols-2 gap-1"> {/* Fixed: Changed gridcols-2 to grid-cols-2 */}
                         {languages.map((lang) => (
                           <button
                             key={lang.code}
@@ -1552,10 +1937,11 @@ export default function StaffDashboard() {
                               setIsLanguageDropdownOpen(false);
                               setSettingsOpen(false);
                             }}
-                            className={`flex items-center justify-center px-2 py-2 text-sm rounded-md ${language === lang.code
-                              ? 'bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] dark:text-[#C72026]'
-                              : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200'
-                              }`}
+                            className={`flex items-center justify-center px-2 py-2 text-sm rounded-md ${
+                              language === lang.code
+                                ? 'bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] dark:text-[#C72026]'
+                                : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200'
+                            }`}
                           >
                             <span>{lang.name}</span>
                             {language === lang.code && (
@@ -1580,7 +1966,7 @@ export default function StaffDashboard() {
                     </svg>
                   ) : (
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 008.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                     </svg>
                   )}
                   <span className="dark:text-white">{translations[language]?.settings.darkMode || 'Dark Mode'}</span>
@@ -1609,7 +1995,7 @@ export default function StaffDashboard() {
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
-                  Reset Password
+                  {translations[language]?.settings.resetPassword || 'Reset Password'}
                 </button>
                 <button
                   onClick={handleLogout}
@@ -1617,9 +2003,9 @@ export default function StaffDashboard() {
                   role="menuitem"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m0 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                   </svg>
-                  Sign out
+                  {translations[language]?.settings.signOut || 'Sign out'}
                 </button>
               </div>
             )}
@@ -1700,12 +2086,13 @@ export default function StaffDashboard() {
               <div className="space-y-4 pb-24">
                 {messages.map((message, index) => (
                   <ChatMessage
-                    key={message.id}
+                    key={`${message.id}-${language}`} // Add language to key to force re-render on language change
                     message={message}
                     previousMessage={messages[index - 1]} 
                     userId={user?.id || ''}
                     isLast={index === messages.length - 1}
                     onDeleteMessage={handleDeleteMessage}
+                    language={language} // Explicitly pass the language prop
                   />
                 ))}
                 {isLoading && <TypingIndicator />}
@@ -1780,6 +2167,7 @@ export default function StaffDashboard() {
       />
 
       <SuggestionModal
+        key={`suggestion-modal-${language}`} // Add a key based on language to force re-render
         isOpen={isSuggestionModalOpen}
         onClose={() => {
           setSuggestionInput('');
@@ -1799,7 +2187,6 @@ export default function StaffDashboard() {
         suggestionInput={suggestionInput}
         setSuggestionInput={setSuggestionInput}
         language={language}
-        // isLoading={isLoading}
       />
 
       <style jsx global>{`

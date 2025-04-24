@@ -7,6 +7,7 @@ import { useDarkMode } from '@/contexts/DarkModeContext';
 import { useAuthProtection, useAuth, UserRole } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { s } from 'framer-motion/dist/types.d-6pKw1mTI';
 
 // Add this helper function before your AdminSettings component
 const titleCase = (str: string): string => {
@@ -41,6 +42,10 @@ interface PromptFormData {
   content: string;
   isActive: boolean;
 }
+
+// Add these translations to your translation object
+
+
 
 const AdminSettings = () => {
   const router = useRouter();
@@ -638,7 +643,7 @@ const AdminSettings = () => {
                 </li>
                 <li>
                   <Link href="/admin/content" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
-                    {translate('altamedia Content')}
+                    {translate('altamediacontent')}
                   </Link>
                 </li>
                 {/* <li>
@@ -659,7 +664,7 @@ const AdminSettings = () => {
                 </li>
                 <li>
                   <Link href="/admin/suggestion" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
-                    {translate('Suggestion')}
+                    {translate('suggestion')}
                   </Link>
                 </li>
               </ul>
@@ -963,7 +968,7 @@ const AdminSettings = () => {
                         </p>
                         <ul className="space-y-1.5 mb-3">
                           {[
-                            "Minimum 8 characters long",
+                            (translate("Minimum 8 characters long")),
                             "At least one uppercase letter (A-Z)",
                             "At least one number (0-9)",
                             "At least one special character (!@#$%^&*)"

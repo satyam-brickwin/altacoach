@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
-import { useAuthProtection } from '@/contexts/AuthContext';
+
+// Define the DocumentFormData interface
+interface DocumentFormData {
+  title: string;
+  description: string;
+  type: string;
+  source: string;
+  file: File | null;
+}
+import { useAuthProtection, UserRole } from '@/contexts/AuthContext';
 import { useLanguage, SupportedLanguage } from '@/contexts/LanguageContext';
 
 // Format date to DD/MM/YYYY
@@ -43,11 +52,19 @@ const getFullLanguageName = (code: string): string => {
   return languageMap[normalizedCode] || code;
 };
 
+interface UploadDocumentModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+  translate: (key: string) => string;
+  businessId: string | null;
+}
+
 export default function UploadDocumentModal({ isOpen, onClose, onSuccess, translate, businessId }: UploadDocumentModalProps) {
   const [formDataState, setFormDataState] = useState<DocumentFormData>({
     title: '',
     description: '',
-    type: 'business',
+    type: 'course',
     source: 'business',
     file: null
   });
@@ -55,7 +72,7 @@ export default function UploadDocumentModal({ isOpen, onClose, onSuccess, transl
   const [dragActive, setDragActive] = useState(false);
   const { language } = useLanguage();
 
-  const { user } = useAuthProtection(['admin']);
+  const { user } = useAuthProtection(['admin' as UserRole]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState('course');
@@ -67,13 +84,13 @@ export default function UploadDocumentModal({ isOpen, onClose, onSuccess, transl
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormDataState(prev => ({ ...prev, [name]: value }));
+    setFormDataState((prev: any) => ({ ...prev, [name]: value }));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setFormDataState(prev => ({ ...prev, file }));
+      setFormDataState((prev: any) => ({ ...prev, file }));
     }
   };
 
@@ -94,7 +111,7 @@ export default function UploadDocumentModal({ isOpen, onClose, onSuccess, transl
     
     const file = e.dataTransfer.files?.[0];
     if (file) {
-      setFormDataState(prev => ({ ...prev, file }));
+      setFormDataState((prev: any) => ({ ...prev, file }));
     }
   };
 

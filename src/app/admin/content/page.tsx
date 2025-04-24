@@ -342,12 +342,17 @@ export default function AdminContent() {
     
     setIsLoading(true);
     try {
+      console.log('Sending delete request for ID:', id);
       const response = await fetch(`/api/admin/content/${id}`, {
         method: 'DELETE'
       });
       
+      const result = await response.json().catch(() => ({}));
+      console.log('Delete response status:', response.status);
+      console.log('Delete response data:', result);
+      
       if (!response.ok) {
-        throw new Error('Failed to delete content');
+        throw new Error(result.error || 'Failed to delete content');
       }
       
       // Remove the deleted content from the state
@@ -365,7 +370,7 @@ export default function AdminContent() {
       
     } catch (error) {
       console.error('Error deleting content:', error);
-      alert('Failed to delete content');
+      alert(error instanceof Error ? error.message : 'Failed to delete content');
     } finally {
       setIsLoading(false);
     }
@@ -608,7 +613,7 @@ export default function AdminContent() {
                   href="/admin/content" 
                   className="block px-4 py-2 rounded-md bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] dark:text-[#C72026] font-medium"
                 >
-                  {t('altamedia Content')}
+                  {t('altamediacontent')}
                 </Link>
               </li>
               {/* <li>
@@ -628,7 +633,7 @@ export default function AdminContent() {
               </li>
               <li>
                   <Link href="/admin/suggestion" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
-                    {translate('Suggestion')}
+                    {translate('suggestion')}
                   </Link>
               </li>
             </ul>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage, languageLabels, SupportedLanguage } from '@/contexts/LanguageContext';
@@ -124,6 +124,9 @@ interface Document {
 
 // Add this interface definition at the top of the file with other interfaces
 interface BusinessDocument {
+  language: ReactNode;
+  createdAt: string | number | Date;
+  contentType: ReactNode;
   id: string;
   title: string;
   description: string;
@@ -267,6 +270,10 @@ const adminTranslations = {
     addNewBusiness: 'Add New Business',
     filterByStatus: 'Filter by Status:',
     allBusinesses: 'All Businesses',
+    BusinessName: 'Business Name',
+    altamediacontent: 'altamedia Content',
+
+    analytics: 'Analytics',
     active: 'Active',
     pending: 'Pending',
     suspended: 'Suspended',
@@ -291,47 +298,51 @@ const adminTranslations = {
     error: 'An error occurred. Please try again.',
     EndDate: 'End Date',
     backToBusinesses: 'Back to Businesses',
+    businessDetails: 'Business Details',
     allDocuments: 'All Documents',
-    userAccounts: 'User Accounts',
     businessDocuments: 'Business Documents',
     adminDocuments: 'Admin Documents',
-    searchUsers: 'Search users...',
+    userAccounts: 'User Accounts',
     searchDocuments: 'Search documents...',
+    searchUsers: 'Search users...',
     addUser: 'Add User',
     uploadDocument: 'Upload Document',
-    downloadSampleTemplate: 'Download sample template',
-    duplicateUsersFound: 'Duplicate users found:',
-    successfullyImportedUsers: 'Successfully imported {count} users',
-    failedToImportUsers: 'Failed to import users. Please try again.',
+    documentTitle: 'Title',
+    documentType: 'Type',
+    documentLanguage: 'Language',
+    documentCreated: 'Created',
+    documentActions: 'Actions',
+    // view: 'View',
+    download: 'Download',
+    save: 'Save',
+    clearSelection: 'Clear selection',
+    documentsSelected: 'documents selected',
+    saveToUsers: 'Save to Users',
     userName: 'Name',
     userEmail: 'Email',
     userLanguage: 'Language',
     userStatus: 'Status',
     userCreatedBy: 'Created By',
     userActions: 'Actions',
-    editUser: 'Edit',
+    editUser: 'Edit User',
     deactivateUser: 'Deactivate',
     activateUser: 'Activate',
-    documentTitle: 'Title',
-    documentType: 'Type',
-    documentSource: 'Source',
-    documentCreated: 'Created',
-    documentActions: 'Actions',
-    viewDocument: 'View',
-    downloadDocument: 'Download',
-    selectDocumentsFirst: 'Please select documents first',
-    downloadingDocuments: 'Downloading {count} documents',
-    failedToDownloadDocument: 'Error downloading document. Please try again.',
+    loadingDocuments: 'Loading documents...',
+    noDocumentsFound: 'No documents found',
+    noUsersFound: 'No users found for this business'
   },
   fr: {
     dashboard: 'Tableau de Bord',
     businesses: 'Entreprises',
+    altamediacontent: 'Contenu Altamedia',
+    BusinessName: 'Nom de l\'entreprise',
     businessManagement: 'Gérer les entreprises et leurs détails',
     addNewBusiness: 'Ajouter une Nouvelle Entreprise',
     filterByStatus: 'Filtrer par Statut:',
     allBusinesses: 'Toutes les Entreprises',
     active: 'Actif',
     pending: 'En Attente',
+    analytics: 'analytique',
     suspended: 'Suspendu',
     searchBusinesses: 'Rechercher des entreprises...',
     loading: 'Chargement...',
@@ -354,18 +365,27 @@ const adminTranslations = {
     error: 'Une erreur est survenue. Veuillez réessayer.',
     EndDate: 'Date de Fin',
     backToBusinesses: 'Retour aux entreprises',
+    businessDetails: 'Détails de l\'entreprise',
     allDocuments: 'Tous les documents',
-    userAccounts: 'Comptes utilisateurs',
     businessDocuments: 'Documents d\'entreprise',
     adminDocuments: 'Documents administratifs',
-    searchUsers: 'Rechercher des utilisateurs...',
+    userAccounts: 'Comptes utilisateurs',
     searchDocuments: 'Rechercher des documents...',
+    searchUsers: 'Rechercher des utilisateurs...',
     addUser: 'Ajouter un utilisateur',
     uploadDocument: 'Télécharger un document',
-    downloadSampleTemplate: 'Télécharger un modèle d\'exemple',
-    duplicateUsersFound: 'Utilisateurs en double trouvés :',
-    successfullyImportedUsers: '{count} utilisateurs importés avec succès',
-    failedToImportUsers: 'Échec de l\'importation des utilisateurs. Veuillez réessayer.',
+    documentTitle: 'Titre',
+    documentType: 'Type',
+    documentLanguage: 'Langue',
+    documentCreated: 'Créé',
+    documentActions: 'Actions',
+    // view: 'Voir',
+    download: 'Télécharger',
+    save: 'Enregistrer',
+    Status: 'Statut',
+    clearSelection: 'Effacer la sélection',
+    documentsSelected: 'documents sélectionnés',
+    saveToUsers: 'Enregistrer pour les Utilisateurs',
     userName: 'Nom',
     userEmail: 'Email',
     userLanguage: 'Langue',
@@ -375,26 +395,24 @@ const adminTranslations = {
     editUser: 'Modifier',
     deactivateUser: 'Désactiver',
     activateUser: 'Activer',
-    documentTitle: 'Titre',
-    documentType: 'Type',
-    documentSource: 'Source',
-    documentCreated: 'Créé',
-    documentActions: 'Actions',
-    viewDocument: 'Voir',
-    downloadDocument: 'Télécharger',
-    selectDocumentsFirst: 'Veuillez d\'abord sélectionner des documents',
-    downloadingDocuments: 'Téléchargement de {count} documents',
-    failedToDownloadDocument: 'Erreur lors du téléchargement du document. Veuillez réessayer.',
+    loadingDocuments: 'Chargement des documents...',
+    noDocumentsFound: 'Aucun document trouvé',
+    noUsersFound: 'Aucun utilisateur trouvé pour cette entreprise'
   },
   de: {
     dashboard: 'Dashboard',
     businesses: 'Unternehmen',
+    altamediacontent: 'altamedia Inhalt',
+    BusinessName: 'Unternehmensname',
+    StartDate: 'Startdatum',
+    EndDate: 'Enddatum',
     businessManagement: 'Unternehmen und ihre Details verwalten',
     addNewBusiness: 'Neues Unternehmen hinzufügen',
     filterByStatus: 'Nach Status filtern:',
     allBusinesses: 'Alle Unternehmen',
     active: 'Aktiv',
     pending: 'Ausstehend',
+    analytics: 'Analytik',
     suspended: 'Gesperrt',
     searchBusinesses: 'Unternehmen suchen...',
     loading: 'Laden...',
@@ -402,7 +420,7 @@ const adminTranslations = {
     name: 'Name',
     userCount: 'Benutzer',
     status: 'Status',
-    StartDate: 'Startdatum',
+    // StartDate: 'Startdatum',
     createdBy: 'Erstellt Von',
     actions: 'Aktionen',
     view: 'Ansehen',
@@ -415,43 +433,51 @@ const adminTranslations = {
     add: 'Hinzufügen',
     cancel: 'Abbrechen',
     error: 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.',
-    EndDate: 'Enddatum',
-  },
-  it: {
-    dashboard: 'Dashboard',
-    businesses: 'Aziende',
-    businessManagement: 'Gestisci aziende e i loro dettagli',
-    addNewBusiness: 'Aggiungi Nuova Azienda',
-    filterByStatus: 'Filtra per Stato:',
-    allBusinesses: 'Tutte le Aziende',
-    active: 'Attivo',
-    pending: 'In Attesa',
-    suspended: 'Sospeso',
-    searchBusinesses: 'Cerca aziende...',
-    loading: 'Caricamento...',
-    noBusinessesFound: 'Nessuna azienda trovata',
-    name: 'Nome',
-    userCount: 'Utenti',
-    status: 'Stato',
-    StartDate: 'Data di Inizio',
-    createdBy: 'Creato Da',
-    actions: 'Azioni',
-    view: 'Visualizza',
-    edit: 'Modifica',
-    approve: 'Approva',
-    suspend: 'Sospendi',
-    deactivate: 'Disattiva',
-    activate: 'Attiva',
-    submitting: 'Inviando...',
-    add: 'Aggiungi',
-    cancel: 'Annulla',
-    error: 'Si è verificato un errore. Per favore riprova.',
-    EndDate: 'Data di Fine',
+    // EndDate: 'Enddatum',
+    backToBusinesses: 'Zurück zu Unternehmen',
+    businessDetails: 'Unternehmensdetails',
+    allDocuments: 'Alle Dokumente',
+    businessDocuments: 'Unternehmensdokumente',
+    adminDocuments: 'Verwaltungsdokumente',
+    userAccounts: 'Benutzerkonten',
+    searchDocuments: 'Dokumente suchen...',
+    searchUsers: 'Benutzer suchen...',
+    addUser: 'Benutzer hinzufügen',
+    uploadDocument: 'Dokument hochladen',
+    documentTitle: 'Titel',
+    documentType: 'Typ',
+    documentLanguage: 'Sprache',
+    documentCreated: 'Erstellt',
+    documentActions: 'Aktionen',
+    // view: 'Ansehen',
+    download: 'Herunterladen',
+    save: 'Speichern',
+    clearSelection: 'Auswahl löschen',
+    documentsSelected: 'Dokumente ausgewählt',
+    saveToUsers: 'Für Benutzer speichern',
+    userName: 'Name',
+    userEmail: 'E-Mail',
+    userLanguage: 'Sprache',
+    userStatus: 'Status',
+    userCreatedBy: 'Erstellt von',
+    userActions: 'Aktionen',
+    editUser: 'Bearbeiten',
+    deactivateUser: 'Deaktivieren',
+    Status: 'Status',
+    activateUser: 'Aktivieren',
+    loadingDocuments: 'Dokumente werden geladen...',
+    noDocumentsFound: 'Keine Dokumente gefunden',
+    noUsersFound: 'Keine Benutzer für dieses Unternehmen gefunden'
   },
   es: {
     adminDashboard: 'Panel de Administrador',
     dashboard: 'Panel',
+    altamediacontent: 'Contenido Altamedia',
     businesses: 'Empresas',
+    StartDate: 'Fecha de Inicio',
+    EndDate: 'Fecha de Fin',
+    Satus: 'Estado',
+    BusinessName: 'Nombre de la Empresa',
     content: 'Contenido',
     userAccounts: 'Cuentas de Usuario',
     settings: 'Configuración',
@@ -572,76 +598,12 @@ export default function AdminBusinesses() {
   const [viewMode, setViewMode] = useState<'list' | 'detail'>('list');
   const [initialSelectedDocuments, setInitialSelectedDocuments] = useState<{ [key: string]: boolean }>({});
 
-  // Move businessData here, after user is available
-  const businessData = [
-    {
-      id: '1',
-      name: 'Acme Corporation',
-      plan: 'Enterprise',
-      userCount: 45,
-      status: 'active',
-      joinedDate: '2023-05-15',
-      logo: '',
-      colorTheme: '#C72026',
-      isActive: true,
-      createdBy: user?.name || 'Admin' // Set current admin's name
-    },
-    {
-      id: '2',
-      name: 'Globex Industries',
-      plan: 'Business',
-      userCount: 28,
-      status: 'active',
-      joinedDate: '2023-06-22',
-      logo: '',
-      colorTheme: '#10B981',
-      isActive: true,
-      createdBy: 'Sarah Johnson'
-    },
-    {
-      id: '3',
-      name: 'Stark Enterprises',
-      plan: 'Enterprise',
-      userCount: 120,
-      status: 'active',
-      joinedDate: '2023-04-10',
-      logo: '',
-      colorTheme: '#F59E0B',
-      isActive: true,
-      createdBy: 'Michael Chen'
-    },
-    {
-      id: '4',
-      name: 'Wayne Industries',
-      plan: 'Business',
-      userCount: 35,
-      status: 'pending',
-      joinedDate: '2023-08-05',
-      logo: '',
-      colorTheme: '#3B82F6',
-      isActive: false,
-      createdBy: 'Emily Wilson'
-    },
-    {
-      id: '5',
-      name: 'Umbrella Corp',
-      plan: 'Starter',
-      userCount: 12,
-      status: 'suspended',
-      joinedDate: '2023-07-18',
-      logo: '',
-      colorTheme: '#EC4899',
-      isActive: false,
-      createdBy: 'Carlos Rodriguez'
-    }
-  ];
-
   // State for loading and error handling
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
   // State for businesses data
-  const [businesses, setBusinesses] = useState<Business[]>(businessData);
+  const [businesses, setBusinesses] = useState<Business[]>([]);
 
   // State for filtering and search
   const [statusFilter, setStatusFilter] = useState('all');
@@ -1971,7 +1933,7 @@ export default function AdminBusinesses() {
                   </svg>
                 ) : (
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 9 9 11-18 0 9 9 0 0012 21a9.003 9.003 9 0 008.354-5.646z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 9 9 11-18 0 9 9 0 0012 21a9.003 9.003 0 0 08.354-5.646z" />
                   </svg>
                 )}
               </button>
@@ -2071,32 +2033,32 @@ export default function AdminBusinesses() {
             <ul className="space-y-2">
               <li>
                 <Link href="/admin" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
-                  {t('Dashboard')}
+                  {t('dashboard')}
                 </Link>
               </li>
               <li>
                 <Link href="/admin/businesses" className="block px-4 py-2 rounded-md bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] dark:text-[#C72026]">
-                  {t('Businesses')}
+                  {t('businesses')}
                 </Link>
               </li>
               <li>
                 <Link href="/admin/content" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
-                  {t('altamedia Content')}
+                  {t('altamediacontent')}
                 </Link>
               </li>
               <li>
                 <Link href="/admin/analytics" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
-                  {t('Analytics')}
+                  {t('analytics')}
                 </Link>
               </li>
               <li>
                 <Link href="/admin/settings" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
-                  {t('Settings')}
+                  {t('settings')}
                 </Link>
               </li>
               <li>
                   <Link href="/admin/suggestion" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
-                    {translate('Suggestion')}
+                    {translate('suggestion')}
                   </Link>
               </li>
             </ul>
@@ -2184,7 +2146,7 @@ export default function AdminBusinesses() {
                             {t('status')}
                           </th>
                           <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            {t('Start Date')} {/* Changed from t('joined') to t('Start Date') */}
+                            {t('Start Date')}
                           </th>
                           <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             {t('createdBy')}
@@ -2283,9 +2245,9 @@ export default function AdminBusinesses() {
                       className="flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                     >
                       <svg className="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 01-1.414 1.414l-4-4a6 6 6 6 0 01-8.89-3.476z" clipRule="evenodd" />
+                        <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a6 6 6 6 0 01-8.89-3.476z" clipRule="evenodd" />
                       </svg>
-                      Back to Businesses
+                      {t('backToBusinesses')}
                     </button>
                     <h2 className="ml-4 text-xl font-bold text-gray-900 dark:text-white">
                       {selectedBusinessView?.name}
@@ -2301,13 +2263,14 @@ export default function AdminBusinesses() {
                         key={filter}
                         onClick={() => setActiveFilter(filter)}
                         className={`${activeFilter === filter
-                          ? 'border-[#C72026] text-[#C72026] dark:text-[#C72026]' // Changed from blue to purple
+                          ? 'border-[#C72026] text-[#C72026]'
                           : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                           } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm capitalize`}
                       >
-                        {filter === 'all' ? 'All Documents' :
-                          filter === 'users' ? 'User Accounts' :
-                            `${filter} Documents`}
+                        {filter === 'all' ? t('allDocuments') :
+                          filter === 'users' ? t('userAccounts') :
+                            filter === 'business' ? t('businessDocuments') :
+                              t('adminDocuments')}
                       </button>
                     ))}
                   </nav>
@@ -2317,117 +2280,27 @@ export default function AdminBusinesses() {
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                      {activeFilter === 'users' ? 'User Accounts' :
-                        activeFilter === 'all' ? 'All Documents' :
-                          `${activeFilter.charAt(0).toUpperCase() + activeFilter.slice(1)} Documents`}
+                      {activeFilter === 'users' ? t('userAccounts') :
+                        activeFilter === 'all' ? t('allDocuments') :
+                          activeFilter === 'business' ? t('businessDocuments') :
+                            t('adminDocuments')}
                     </h3>
 
-                    {/* Add appropriate action button based on active filter */}
+                    {/* Action buttons */}
                     {activeFilter === 'users' ? (
-                      <div>
-                        <div className="flex space-x-2">
-                          <div className="flex flex-col">
-                            <UserDataActions
-                              users={users}
-                              onImportUsers={async (importedUsers) => {
-                                try {
-                                  // Check if we have a valid business ID first
-                                  if (!selectedBusinessView?.id) {
-                                    showToast('No business selected for importing users', 'error');
-                                    return;
-                                  }
-
-                                  console.log('Imported users to process:', importedUsers);
-
-                                  // First, validate for duplicates
-                                  const duplicates = importedUsers.filter(newUser =>
-                                    isDuplicateUser(newUser, users, selectedBusinessView.id)
-                                  );
-
-                                  if (duplicates.length > 0) {
-                                    showToast(`Duplicate users found: ${duplicates.map(d => d.email).join(', ')}`, 'warning');
-                                    return;
-                                  }
-
-                                  // Add business ID and other required fields to each imported user
-                                  const enrichedUsers = importedUsers.map(user => ({
-                                    ...user,
-                                    businessId: selectedBusinessView.id,
-                                    password: 'DefaultPass123!', // Add a default password that will be changed on first login
-                                    status: user.status || 'ACTIVE'
-                                  }));
-
-                                  console.log('Sending enriched users to API:', enrichedUsers);
-
-                                  // Make API call to bulk create users
-                                  const response = await fetch('/api/admin/users/bulk', {
-                                    method: 'POST',
-                                    headers: {
-                                      'Content-Type': 'application/json',
-                                    },
-                                    body: JSON.stringify({
-                                      users: enrichedUsers,
-                                      businessId: selectedBusinessView.id
-                                    }),
-                                  });
-
-                                  const data = await response.json();
-
-                                  if (!data.success) {
-                                    throw new Error(data.error || 'Failed to import users');
-                                  }
-
-                                  // Update the UI with the new users
-                                  setUsers(prevUsers => [...data.users, ...prevUsers]);
-
-                                  // Show success message
-                                  showToast(`Successfully imported ${data.users.length} users`, 'success');
-
-                                  // Refresh the users list to ensure everything is up to date
-                                  loadUsersForBusiness(selectedBusinessView.id);
-
-                                } catch (error) {
-                                  console.error('Error importing users:', error);
-                                  showToast(`Failed to import users: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
-                                }
-                              }}
-                              businessId={selectedBusinessView?.id}
-                            />
-                            <ImportTemplateLink />
-                          </div>
-                          <button
-                            onClick={handleAddUser}
-                            className="h-[36px] inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#C72026] hover:bg-[#C72026]/90"
-                          >
-                            Add User
-                          </button>
-                        </div>
-                      </div>
+                      <button
+                        onClick={handleAddUser}
+                        className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#C72026] hover:bg-[#C72026]/90"
+                      >
+                        {t('addUser')}
+                      </button>
                     ) : (
-                      <div className="flex space-x-2">
-                        {/* Add Save to Business button - only show when documents are selected and we're in admin documents tab */}
-                        {activeFilter === 'admin' &&
-                          selectedBusinessView &&
-                          hasChanged &&
-                          (
-                            <button
-                              onClick={handleSaveDocumentChanges}
-                              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700"
-                              title={`Save selected documents to all users in ${selectedBusinessView.name}`}
-                            >
-                              <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                              Save
-                            </button>
-                          )}
-                        <button
-                          onClick={handleUploadDocument}
-                          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#C72026] hover:bg-[#C72026]/90"
-                        >
-                          Upload Document
-                        </button>
-                      </div>
+                      <button
+                        onClick={handleUploadDocument}
+                        className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#C72026] hover:bg-[#C72026]/90"
+                      >
+                        {t('uploadDocument')}
+                      </button>
                     )}
                   </div>
 
@@ -2449,7 +2322,12 @@ export default function AdminBusinesses() {
                     <div className="mb-2 flex items-center text-sm text-gray-600 dark:text-gray-400">
                       <span className="inline-flex items-center pr-2">
                         <svg className="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 9 11-18 0 9 9 0 0118 0z" />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13 16h-1v-4h-1m-1-4h.01M21 12a9 9 9 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         {Object.values(selectedDocuments).filter(Boolean).length} documents selected
                       </span>
@@ -2623,80 +2501,82 @@ export default function AdminBusinesses() {
                                 </div>
                               </td>
                             </tr>
-                          ) : content.length === 0 ? (
-                            <tr>
-                              <td colSpan={activeFilter === 'admin' ? 7 : 6} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
-                                No documents found
-                              </td>
-                            </tr>
                           ) : (
-                            content.map((document) => (
-                              <tr key={document.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                                {/* Checkbox cell for admin documents */}
-                                {activeFilter === 'admin' && (
-                                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                                    <input
-                                      type="checkbox"
-                                      checked={selectedDocuments[document.id] || false}
-                                      onChange={() => handleDocumentSelection(document.id, activeFilter as 'all' | 'admin' | 'business')}
-                                      className="h-4 w-4 text-[#C72026] border-gray-300 rounded focus:ring-[#C72026] focus:ring-offset-0"
-                                    />
-                                  </td>
-                                )}
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="text-sm font-medium text-gray-900 dark:text-white">{document.title}</div>
-                                  <div className="text-sm text-gray-500 dark:text-gray-400">{document.description}</div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
-                                    {document.type}
-                                  </span>
-                                </td>
-                                {/* <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="text-sm text-gray-500 dark:text-gray-400 capitalize">{document.contentType}</div>
-                                </td> */}
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="text-sm text-gray-500 dark:text-gray-400">
-                                    {document.language}
-                                  </div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                  {new Date(document.createdAt).toLocaleDateString()}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="flex space-x-3">
-                                    <button
-                                      className="text-[#C72026] hover:text-[#C72026]/80"
-                                      onClick={() => {
-                                        setSelectedDocument(document);
-                                        setIsViewDocumentModalOpen(true);
-                                      }}
-                                    >
-                                      View
-                                    </button>
-                                    <button
-                                      className="text-[#C72026] hover:text-[#C72026]/80 inline-flex items-center"
-                                      onClick={() => handleDownload(document)}
-                                    >
-                                      <svg
-                                        className="w-4 h-4 mr-1"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                      >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          strokeWidth={2}
-                                          d="M4 16v1a3 3 3 0 003 3h10a3 3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                                        />
-                                      </svg>
-                                      Download
-                                    </button>
-                                  </div>
+                            content.length === 0 ? (
+                              <tr>
+                                <td colSpan={activeFilter === 'admin' ? 7 : 6} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                                  No documents found
                                 </td>
                               </tr>
-                            ))
+                            ) : (
+                              content.map((document) => (
+                                <tr key={document.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                  {/* Checkbox cell for admin documents */}
+                                  {activeFilter === 'admin' && (
+                                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                                      <input
+                                        type="checkbox"
+                                        checked={selectedDocuments[document.id] || false}
+                                        onChange={() => handleDocumentSelection(document.id, activeFilter as 'all' | 'admin' | 'business')}
+                                        className="h-4 w-4 text-[#C72026] border-gray-300 rounded focus:ring-[#C72026] focus:ring-offset-0"
+                                      />
+                                    </td>
+                                  )}
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <div className="text-sm font-medium text-gray-900 dark:text-white">{document.title}</div>
+                                    <div className="text-sm text-gray-500 dark:text-gray-400">{document.description}</div>
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                                      {document.type}
+                                    </span>
+                                  </td>
+                                  {/* <td className="px-6 py-4 whitespace-nowrap">
+                                    <div className="text-sm text-gray-500 dark:text-gray-400 capitalize">{document.contentType}</div>
+                                  </td> */}
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                                      {document.language}
+                                    </div>
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                    {new Date(document.createdAt).toLocaleDateString()}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <div className="flex space-x-3">
+                                      <button
+                                        className="text-[#C72026] hover:text-[#C72026]/80"
+                                        onClick={() => {
+                                          setSelectedDocument(document);
+                                          setIsViewDocumentModalOpen(true);
+                                        }}
+                                      >
+                                        View
+                                      </button>
+                                      <button
+                                        className="text-[#C72026] hover:text-[#C72026]/80 inline-flex items-center"
+                                        onClick={() => handleDownload(document)}
+                                      >
+                                        <svg
+                                          className="w-4 h-4 mr-1"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          viewBox="0 0 24 24"
+                                        >
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M4 16v1a3 3 3 0 003 3h10a3 3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                                          />
+                                        </svg>
+                                        Download
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))
+                            )
                           )}
                         </tbody>
                       </table>
@@ -2772,7 +2652,7 @@ export default function AdminBusinesses() {
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
-                                    {document.contentType}
+                                    {document.type}
                                   </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
@@ -2842,7 +2722,7 @@ export default function AdminBusinesses() {
                 <form onSubmit={handleSubmit} className="mt-4 space-y-4">
                   <div>
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {t('Business Name')}
+                      {t('BusinessName')}
                     </label>
                     <input
                       type="text"
@@ -2857,7 +2737,7 @@ export default function AdminBusinesses() {
 
                   <div>
                     <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {t('Start Date')}
+                      {t('StartDate')}
                     </label>
                     <input
                       type="date"
@@ -2871,7 +2751,7 @@ export default function AdminBusinesses() {
 
                   <div>
                     <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {t('End Date')}
+                      {t('EndDate')}
                     </label>
                     <input
                       type="date"
@@ -2885,7 +2765,7 @@ export default function AdminBusinesses() {
 
                   <div>
                     <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {t('status')}
+                      {t('Status')}
                     </label>
                     <select
                       name="status"

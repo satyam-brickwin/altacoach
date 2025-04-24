@@ -320,7 +320,7 @@ const AdminSuggestionPage = () => {
                 </li>
                 <li>
                   <Link href="/admin/content" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
-                    {translate ? translate('altamedia Content') : 'Content'}
+                    {translate ? translate('altamediacontent') : 'Content'}
                   </Link>
                 </li>
                 <li>
@@ -335,7 +335,7 @@ const AdminSuggestionPage = () => {
                 </li>
                 <li>
                   <Link href="/admin/suggestion" className="block px-4 py-2 rounded-md bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] dark:text-[#C72026] font-medium">
-                    {translate ? translate('Suggestion') : 'Suggestion'}
+                    {translate ? translate('suggestion') : 'Suggestion'}
                   </Link>
                 </li>
               </ul>
@@ -346,7 +346,7 @@ const AdminSuggestionPage = () => {
         <div className="flex-1 p-4 md:p-8">
           <div className="max-w-7xl mx-auto">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-              Suggestions
+              {translate ? translate('suggestion') : 'Suggestion'}
             </h1>
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
               <SuggestionsTable />

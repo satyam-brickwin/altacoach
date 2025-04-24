@@ -113,7 +113,7 @@ const saveMessageToDatabase = async (message: {
   }
 };
 
-// Update the ChatMessageProps interface to include previous message ID
+// Update the ChatMessageProps interface to include a properly typed translations prop
 interface ChatMessageProps {
   message: {
     id: string;
@@ -121,8 +121,8 @@ interface ChatMessageProps {
     text: string;
     timestamp: string;
   };
-  previousMessage?: {  // Add this to track the previous message
-    id: string; // Ensure previous message has an ID
+  previousMessage?: {
+    id: string;
     role: 'user' | 'assistant';
     text: string;
     timestamp: string;
@@ -131,7 +131,25 @@ interface ChatMessageProps {
   isLast: boolean;
   onEditMessage?: (id: string, content: string) => void;
   onDeleteMessage: (id: string) => void;
-  onSubmitSuggestion?: (suggestion: string) => void; // Keep this if needed elsewhere, though internal handling is updated
+  onSubmitSuggestion?: (suggestion: string) => void;
+  language?: string;
+  translations?: {
+    [key: string]: {
+      modals?: {
+        suggestions?: {
+          title?: string;
+          description?: string;
+          placeholder?: string;
+          submit?: string;
+          cancel?: string;
+        };
+      };
+      ui?: {
+        clickToCopy?: string;
+        you?: string; // Add the 'you' property to the type definition
+      };
+    };
+  };
 }
 
 export const ChatMessage: React.FC<ChatMessageProps> = ({
@@ -141,6 +159,8 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
   userId,
   onEditMessage,
   onDeleteMessage,
+  language = 'en', // Add default value
+  translations = {}, 
   // onSubmitSuggestion // This prop might become redundant if only used internally now
 }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -193,8 +213,20 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
   };
 
   const handleInsight = () => {
-    console.log('Bulb clicked, opening modal');  // Add logging
-    setSuggestionInput(''); // Clear any previous input
+    // When suggesting in a different language, we can add language-specific default text
+    const defaultSuggestionPlaceholders = {
+      en: "I have a suggestion about this response...",
+      fr: "J'ai une suggestion à propos de cette réponse...",
+      de: "Ich habe einen Vorschlag zu dieser Antwort...",
+      it: "Ho un suggerimento riguardo questa risposta...",
+      es: "Tengo una sugerencia sobre esta respuesta..."
+    };
+    
+    // Set initial placeholder text based on language
+    const placeholderText = defaultSuggestionPlaceholders[language as keyof typeof defaultSuggestionPlaceholders] || 
+                            defaultSuggestionPlaceholders.en;
+    
+    setSuggestionInput(placeholderText);
     setIsSuggestionModalOpen(true); 
   };
 
@@ -227,17 +259,17 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
       console.log('Sending message with suggestion:', message);
       console.log('Previous message context:', previousMessage);
 
-      // Submit the suggestion with the message and previous message data
+      // Make sure to pass userId here
       await submitSuggestionAPI(
         suggestion,
-        message.id, // Pass the ID of the message being suggested on
-        userId,
-        { // Pass the full message object including id
+        message.id,
+        userId, // Explicitly pass userId
+        {
           id: message.id,
           text: message.text,
           role: message.role
         },
-        previousMessage ? { // Pass the full previous message object including id
+        previousMessage ? {
           id: previousMessage.id,
           text: previousMessage.text,
           role: previousMessage.role
@@ -373,7 +405,9 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
           
           {isUser && (
             <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-[#C72026] text-white mt-1">
-              <span className="text-xs font-medium">You</span>
+              <span className="text-xs font-medium">
+                {translations?.[language]?.ui?.you || "You"}
+              </span>
             </div>
           )}
         </div>
@@ -382,10 +416,12 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
       <NewSuggestionModal
         isOpen={isSuggestionModalOpen}
         onClose={handleCloseModal}
-        onSubmit={handleSubmitSuggestion}
+        onSubmit={(suggestion) => handleSubmitSuggestion(suggestion)} // Make sure suggestion is properly passed
         suggestionInput={suggestionInput}
         setSuggestionInput={setSuggestionInput}
-        userId={userId} // Add the userId prop here
+        userId={userId} // Make sure userId is properly passed
+        language={language || 'en'} // Ensure language has a fallback
+        // translations={translations} // Pass the translations object
       />
     </div>
   );

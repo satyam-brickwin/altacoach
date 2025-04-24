@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { useLanguage, SupportedLanguage } from '@/contexts/LanguageContext';
-import { useAuthProtection } from '@/contexts/AuthContext';
+import { useAuthProtection, UserRole } from '@/contexts/AuthContext';
 
 // Add color constants at the top of the file
 const colors = {
@@ -24,13 +24,25 @@ export default function UploadContentForm({ onUploadSuccess, onCancel }: UploadC
   const { language, translate } = useLanguage();
   
   // Protect component - only for admin users
-  const { user } = useAuthProtection(['admin']);
+  const { user } = useAuthProtection(['admin' as UserRole]);
   
   // State for form fields
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState('course');
-  const [contentLanguage, setContentLanguage] = useState(language);
+  // Add a helper function to convert language code to full name
+  const getFullLanguageName = (code: string): string => {
+    const languageMap: Record<string, string> = {
+      'en': 'English',
+      'fr': 'Français',
+      'de': 'Deutsch',
+      'es': 'Español',
+      'it': 'Italiano'
+    };
+    return languageMap[code] || code;
+  };
+  // Initialize with full language name instead of code
+  const [contentLanguage, setContentLanguage] = useState(getFullLanguageName(language));
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -108,7 +120,7 @@ export default function UploadContentForm({ onUploadSuccess, onCancel }: UploadC
     
     try {
       // Create form data
-      const fileExtension = file.name.split('.').pop()?.toLowerCase() || 'unknown';
+      const fileExtension = file ? file.name.split('.').pop()?.toLowerCase() || 'unknown' : 'unknown';
       const formData = new FormData();
       formData.append('title', title);
       formData.append('description', description);
