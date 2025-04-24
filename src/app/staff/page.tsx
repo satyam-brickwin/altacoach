@@ -99,6 +99,7 @@ const translations = {
         }
       }
     },
+    footerDisclaimer: 'altacoach is an AI and may make mistakes. Please verify any important information.',
   },
   fr: {
     aiAssistant: 'AltaCoach',
@@ -156,6 +157,7 @@ const translations = {
         }
       }
     },
+    footerDisclaimer: 'altacoach est une IA et peut faire des erreurs. Veuillez vérifier toute information importante.',
   },
   de: {
     aiAssistant: 'AltaCoach',
@@ -213,6 +215,7 @@ const translations = {
         }
       }
     },
+    footerDisclaimer: 'altacoach ist eine KI und kann Fehler machen. Bitte überprüfen Sie alle wichtigen Informationen.',
   },
   it: {
     aiAssistant: 'AltaCoach',
@@ -270,6 +273,7 @@ const translations = {
         }
       }
     },
+    footerDisclaimer: 'altacoach è un\'IA e può commettere errori. Verifica qualsiasi informazione importante.',
   },
   es: {
     aiAssistant: 'AltaCoach',
@@ -327,6 +331,7 @@ const translations = {
         }
       }
     },
+    footerDisclaimer: 'altacoach è un\'IA e può commettere errori. Verifica qualsiasi informazione importante.',
   }
 };
 
@@ -355,6 +360,7 @@ export default function StaffDashboard() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const heightRef = useRef<string>(''); // Define heightRef to track textarea height
 
   // Menu state
   const [menuOpen, setMenuOpen] = useState(false);
@@ -399,7 +405,7 @@ export default function StaffDashboard() {
 
       // If on mobile, close the menu
       if (window.innerWidth < 1024) {
-        setMenuOpen(false);
+        setMenuOpen(true);
       }
     } else {
       // Toggle off current section
@@ -469,6 +475,14 @@ export default function StaffDashboard() {
   ]);
 
   useEffect(() => {
+    if (user?.language) {
+      // Map the user's language to the corresponding SupportedLanguage code
+      const mappedLanguage = languages.find(lang => lang.name === user.language)?.code || 'en'; // Default to 'en' if not found
+      setLanguage(mappedLanguage as SupportedLanguage);
+    }
+  }, [user, setLanguage]);
+
+  useEffect(() => {
     console.log('[DEBUG] user:', user); // Is user defined?
     if (user) {
       fetch(`/api/chat-documents?userId=${user.id}`)
@@ -532,6 +546,16 @@ export default function StaffDashboard() {
       }
     }
   }, [isAuthenticated, isLoading, user, router]);
+
+  // Add this useEffect to focus the input field on initial page load
+  useEffect(() => {
+    // Focus the input field when the component mounts
+    if (inputRef.current && activeView === 'chat') {
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 300); // Small delay to ensure the component is fully rendered
+    }
+  }, [activeView]);
 
   // Early return for loading
   if (authLoading) {
@@ -664,10 +688,11 @@ export default function StaffDashboard() {
           ? `/api/chat/${chatId}/ask`
           : `/api/chat/create`;
 
-        const payload = chatId
-          ? { question: content, file_ids: fileIds }
-          : { name: 'New Chat', user_id: user.id, question: content, file_ids: fileIds };
+        const mappedLanguageCode = languages.find(lang => lang.code === language)?.code || 'en'; // Default to 'en' if not found
 
+        const payload = chatId
+          ? { question: content, file_ids: fileIds, language_code: mappedLanguageCode }
+          : { name: 'New Chat', user_id: user.id, question: content, file_ids: fileIds, language_code: mappedLanguageCode };
         const response = await fetch(endpoint, {
           method: 'POST',
           headers: {
@@ -744,6 +769,10 @@ export default function StaffDashboard() {
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
+
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
     }
   };
 
@@ -866,6 +895,13 @@ export default function StaffDashboard() {
     }
   };
 
+  useEffect(() => {
+    console.log('[DEBUG] user:', user); // Is user defined?
+    if (user) {
+      console.log('[USER OBJECT]', JSON.stringify(user, null, 2)); // Print user object with all values
+    }
+  }, [user]);
+
   // Function to clear all chat history
   const handleClearHistory = () => {
     alert('This would clear all chat history in a real app.');
@@ -894,9 +930,35 @@ export default function StaffDashboard() {
   };
 
   // Handle language change
-  const handleLanguageChange = (langCode: string) => {
-    setLanguage(langCode as SupportedLanguage);
-    setSettingsOpen(false);
+  const handleLanguageChange = async (langCode: string, langName: string) => {
+    try {
+      // Update the language in the database for the current user
+      const response = await fetch('/api/user/update-language', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user?.id, // Pass the current user's ID
+          language: langName, // Pass the selected language code
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update language in the database');
+      }
+
+      // Update the language in the frontend state
+      setLanguage(langCode as SupportedLanguage);
+      if (user) {
+        user.language = langName; // Update the language property of the user object
+        console.log('[DEBUG] Updated user object:', user);
+      }
+      setSettingsOpen(false);
+    } catch (error) {
+      console.error('Error updating language:', error);
+      alert('Failed to update language. Please try again.');
+    }
   };
 
   // Handle logout
@@ -942,95 +1004,45 @@ export default function StaffDashboard() {
   };
 
   // Enhanced custom input component
-  const EnhancedInput = () => {
-    const heightRef = useRef('auto');
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInputValue(e.target.value);
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setInputValue(e.target.value);
-      const selectionStart = e.target.selectionStart;
-      const selectionEnd = e.target.selectionEnd;
+    const selectionStart = e.target.selectionStart;
+    const selectionEnd = e.target.selectionEnd;
 
-      setTimeout(() => {
-        if (inputRef.current) {
-          const clone = document.createElement('textarea');
-          const styles = window.getComputedStyle(inputRef.current);
+    requestAnimationFrame(() => {
+      if (inputRef.current) {
+        const clone = document.createElement('textarea');
+        const styles = window.getComputedStyle(inputRef.current);
 
-          Array.from(styles).forEach(key => {
-            clone.style.setProperty(key, styles.getPropertyValue(key));
-          });
+        Array.from(styles).forEach(key => {
+          clone.style.setProperty(key, styles.getPropertyValue(key));
+        });
 
-          clone.value = e.target.value;
-          clone.style.position = 'absolute';
-          clone.style.visibility = 'hidden';
-          clone.style.height = 'auto';
-          document.body.appendChild(clone);
+        clone.value = e.target.value;
+        clone.style.position = 'absolute';
+        clone.style.visibility = 'hidden';
+        clone.style.height = 'auto';
+        document.body.appendChild(clone);
 
-          const newHeight = `${Math.min(clone.scrollHeight, 100)}px`;
-          document.body.removeChild(clone);
+        const newHeight = `${Math.min(clone.scrollHeight, 100)}px`;
+        document.body.removeChild(clone);
 
-          if (heightRef.current !== newHeight) {
-            heightRef.current = newHeight;
-            inputRef.current.style.height = 'auto';
-            inputRef.current.style.height = newHeight;
-          }
-
-          inputRef.current.focus();
-          inputRef.current.setSelectionRange(selectionStart, selectionEnd);
-        }
-      }, 0);
-    };
-
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        handleSubmit();
-      }
-    };
-
-    const handleSubmit = () => {
-      if (inputValue.trim() && !isLoading) {
-        handleSendMessage(inputValue);
-        setInputValue('');
-
-        heightRef.current = 'auto';
-        if (inputRef.current) {
+        if (heightRef.current !== newHeight) {
+          heightRef.current = newHeight;
           inputRef.current.style.height = 'auto';
+          inputRef.current.style.height = newHeight;
+        }
+
+        // Only restore cursor on desktop devices
+        const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+        if (!isMobile) {
+          setTimeout(() => {
+            inputRef.current?.setSelectionRange(selectionStart, selectionEnd);
+          }, 10);
         }
       }
-    };
-
-    return (
-      <div className="p-2 sm:p-3 border dark:border-gray-700 bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-lg w-full">
-        <div className="flex items-end gap-1 sm:gap-2">
-          <div className="flex-1 relative">
-            <textarea
-              ref={inputRef}
-              value={inputValue}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-              placeholder={quizMode
-                ? translations[language]?.typeYourAnswer || 'Type your answer...'
-                : translations[language]?.askQuestion || 'Ask a question...'}
-              disabled={isLoading}
-              className="enhanced-input w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base resize-none overflow-y-auto max-h-[80px] sm:max-h-[100px] rounded-xl border-0 focus:outline-none focus:ring-0 bg-transparent text-gray-800 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400"
-              rows={1}
-            />
-          </div>
-
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={!inputValue.trim() || isLoading}
-            className={`p-1.5 sm:p-2 rounded-full transition-colors ${!inputValue.trim() || isLoading
-              ? 'text-gray-400 dark:text-gray-600'
-              : 'text-[#C72026] dark:text-[#C72026] hover:bg-[#C72026]/10 dark:hover:bg-[#C72026]/30'
-              }`}
-          >
-            <Send size={16} className="sm:w-[18px] sm:h-[18px]" />
-          </button>
-        </div>
-      </div>
-    );
+    });
   };
 
   return (
@@ -1373,8 +1385,7 @@ export default function StaffDashboard() {
       </div>
 
       <div className={`flex-1 flex flex-col ${menuOpen ? "lg:ml-[260px]" : "ml-0"} transition-all duration-300`}>
-        <header className="h-14 flex items-center justify-between px-4 backdrop-blur-md bg-white/0 dark:bg-gray-900/0">
-          {/* Left - Menu Button and Logo */}
+        <header className="relative z-20 h-14 flex items-center justify-between px-4 backdrop-blur-md bg-white/0 dark:bg-gray-900/0">          {/* Left - Menu Button and Logo */}
           <div className="flex items-center space-x-3">
             <button
               className="p-2 hover:bg-gray-100/60 dark:hover:bg-gray-700/60 rounded-md"
@@ -1416,14 +1427,16 @@ export default function StaffDashboard() {
           {/* Right - Settings */}
           <div className="relative">
             <button
-              className="p-2 hover:bg-gray-100/60 dark:hover:bg-gray-700/60 rounded-md settings-trigger"
+              className="p-2 bg-gray-100 dark:bg-gray-700 rounded-md settings-trigger"
               onClick={() => setSettingsOpen(!settingsOpen)}
             >
               <MoreVertical size={20} className="text-gray-700 dark:text-white" />
             </button>
 
             {settingsOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border dark:border-gray-700 z-50 settings-dropdown">
+              <div
+                className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border dark:border-gray-700 z-[1050] settings-dropdown"
+              >
                 <button
                   onClick={() => {
                     setIsLanguageDropdownOpen(!isLanguageDropdownOpen);
@@ -1455,7 +1468,7 @@ export default function StaffDashboard() {
                           <button
                             key={lang.code}
                             onClick={() => {
-                              handleLanguageChange(lang.code);
+                              handleLanguageChange(lang.code, lang.name);
                               setIsLanguageDropdownOpen(false);
                               setSettingsOpen(false);
                             }}
@@ -1624,10 +1637,45 @@ export default function StaffDashboard() {
           <div className={`fixed bottom-0 z-10 bg-gradient-to-t from-white dark:from-gray-900 pt-6 pb-4 ${menuOpen ? "lg:left-[260px]" : "left-0"
             } right-0 transition-all duration-300`}>
             <div className="max-w-3xl mx-auto px-4">
-              <EnhancedInput />
+              <div className="relative">
+                <textarea
+                  ref={inputRef}
+                  value={inputValue}
+                  onChange={handleInputChange}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey && !isLoading && inputValue.trim()) {
+                      e.preventDefault(); // Prevent default newline behavior
+                      handleSendMessage(inputValue);
+                      setInputValue(''); // Clear input after sending
+                    }
+                  }}
+                  placeholder="Ask Question"
+                  // Added padding-right to make space for the button
+                  className="w-full p-3 pr-12 border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-[#C72026] dark:bg-gray-800 dark:text-white"
+                  rows={1}
+                  style={{ maxHeight: '100px', overflowY: 'auto' }} // Added maxHeight and overflow
+                />
+                {/* Send Button - Positioned absolutely inside the relative container */}
+                <button
+                  onClick={() => {
+                    if (!isLoading && inputValue.trim()) {
+                      handleSendMessage(inputValue);
+                      setInputValue(''); // Clear input after sending
+                    }
+                  }}
+                  disabled={isLoading || !inputValue.trim()}
+                  // Positioned absolutely at the bottom right
+                  className={`absolute bottom-2 right-2 p-2 rounded-md text-white transition-colors ${isLoading || !inputValue.trim()
+                    ? 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed'
+                    : 'bg-[#C72026] hover:bg-[#A31A1F]'
+                    }`}
+                >
+                  <Send size={18} /> {/* Slightly smaller icon might fit better */}
+                </button>
+              </div>
               <div className="mt-2 text-center text-xs text-gray-500 dark:text-gray-400">
                 <p className="italic">
-                  altacoach is an AI and may make mistakes. Please verify any important information.
+                  {translations[language]?.footerDisclaimer}
                 </p>
               </div>
             </div>

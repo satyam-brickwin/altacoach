@@ -17,14 +17,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: false, message: 'Invalid password' }, { status: 401 });
   }
 
-  return NextResponse.json({
+  const responseData = {
     success: true,
     user: {
       id: user.id,
       name: user.name,
       email: user.email,
       role: user.role,
-      businessId: user.businessId,
+      language: user.language,
     },
-  });
+  };
+
+  console.log('Response data:', responseData); // Log response
+  return NextResponse.json(responseData);
 }

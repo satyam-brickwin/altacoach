@@ -98,3 +98,13 @@ model BusinessDocument {
 
   @@id([businessId, documentId])
 }
+
+
+model PromptTable {
+  id           String   @id @default(uuid())
+  languageCode String   @db.VarChar(20)
+  systemPrompt String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now())
+
+}

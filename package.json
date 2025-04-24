@@ -12,9 +12,6 @@
     "prisma:studio": "prisma studio",
     "prisma:seed": "ts-node prisma/seed.ts"
   },
-  "prisma": {
-    "seed": "ts-node prisma/seed.ts"
-  },
   "dependencies": {
     "@chakra-ui/icons": "^2.2.4",
     "@chakra-ui/react": "^2.10.7",
@@ -62,6 +59,7 @@
     "openai": "^4.86.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-markdown": "^10.1.0",
     "sonner": "^1.5.0",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",

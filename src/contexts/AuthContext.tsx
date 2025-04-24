@@ -89,8 +89,9 @@ interface User {
   id: string;
   name?: string;
   email: string;
+  language?: string;
   role: UserRole;
-  businessId?: string;
+  // businessId?: string;
 }
 
 // Define auth context type
@@ -190,11 +191,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       console.log('Response status:', res.status);
       const data = await res.json();
+      console.log('Response data:', data);
 
       if (res.ok && data.success) {
         const loggedInUser = {
           id: data.user.id,
           name: data.user.name,
+          language: data.user.language,
           email: data.user.email,
           role: data.user.role,
           businessId: data.user.businessId,

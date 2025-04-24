@@ -10,20 +10,17 @@ import { useRouter } from 'next/navigation';
 
 interface AIPrompt {
   id: string;
-  name: string;
-  description?: string;
-  content: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  language_code: string;
+  system_prompt: string;
+  created_at: string;
+  updated_at: string;
 }
 
 interface PromptFormData {
-  name: string;
-  description: string;
-  content: string;
-  isActive: boolean;
+  language_code: string;
+  system_prompt: string;
 }
+
 
 const SuperAdminSettings = () => {
   const router = useRouter();
@@ -36,14 +33,14 @@ const SuperAdminSettings = () => {
   const handleLogout = async () => {
     try {
       setIsProfileOpen(false); // Close the dropdown immediately
-      
+
       // Step 1: Disable any auto-redirect in your app by setting a flag in session storage
       sessionStorage.setItem('manual_logout', 'true');
-      
+
       // Step 2: First clear client-side storage immediately
       localStorage.clear();
       sessionStorage.clear();
-      
+
       // Step 3: Clear all cookies 
       document.cookie.split(";").forEach((c) => {
         const cookieName = c.trim().split("=")[0];
@@ -61,7 +58,7 @@ const SuperAdminSettings = () => {
       } catch (e) {
         console.warn("Super admin logout failed, continuing...");
       }
-      
+
       try {
         // Also try the regular logout
         await fetch('/api/auth/logout', {
@@ -85,27 +82,25 @@ const SuperAdminSettings = () => {
 
   // Use useMemo for stable reference to allowed roles
   const allowedRoles = [UserRole.SUPER_ADMIN];
-  
+
   // Protect this page - only allow admin users
   const { isLoading: authLoading } = useAuthProtection(allowedRoles);
-  
+
   const [activeTab, setActiveTab] = useState('general');
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
   const [apiKey, setApiKey] = useState('');
-  const [apiKeyStatus, setApiKeyStatus] = useState<{message: string, type: 'success' | 'error'} | null>(null);
+  const [apiKeyStatus, setApiKeyStatus] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Prompts state
   const [prompts, setPrompts] = useState<AIPrompt[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [showPromptModal, setShowPromptModal] = useState(false);
   const [promptData, setPromptData] = useState<PromptFormData>({
-    name: '',
-    description: '',
-    content: '',
-    isActive: false
+    language_code: 'en',
+    system_prompt: ''
   });
-  const [promptStatus, setPromptStatus] = useState<{message: string, type: 'success' | 'error'} | null>(null);
+  const [promptStatus, setPromptStatus] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
 
   // Password state
   const [currentPassword, setCurrentPassword] = useState('');
@@ -115,7 +110,8 @@ const SuperAdminSettings = () => {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
   const [isPasswordSubmitting, setIsPasswordSubmitting] = useState(false);
-  
+  const [editingPrompt, setEditingPrompt] = useState<AIPrompt | null>(null);
+
   // Handler for language change
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setLanguage(e.target.value as SupportedLanguage);
@@ -132,7 +128,7 @@ const SuperAdminSettings = () => {
     setApiKeyStatus(null);
     setShowApiKeyModal(true);
   };
-  
+
   const closeApiKeyModal = () => {
     setShowApiKeyModal(false);
     // Reset form state
@@ -140,10 +136,10 @@ const SuperAdminSettings = () => {
     setApiKeyStatus(null);
     setIsSubmitting(false);
   };
-  
+
   const submitApiKey = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!apiKey.trim()) {
       setApiKeyStatus({
         message: translate('apiKeyCannotBeEmpty'),
@@ -151,24 +147,24 @@ const SuperAdminSettings = () => {
       });
       return;
     }
-    
+
     setIsSubmitting(true);
-    
+
     try {
       // Mock API call - replace with actual API call in production
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       // Simulate success response
       setApiKeyStatus({
         message: translate('apiKeySetSuccess'),
         type: 'success'
       });
-      
+
       // In a real implementation you would:
       // - Send the apiKey to your backend
       // - Update the API key in your database
       // - Return success/failure
-      
+
       // Don't automatically close the modal on success so user can see confirmation
     } catch (error) {
       console.error('Error setting API key:', error);
@@ -180,24 +176,30 @@ const SuperAdminSettings = () => {
       setIsSubmitting(false);
     }
   };
-  
-  const handleAddNewPrompt = () => {
-    setPromptData({ name: '', description: '', content: '', isActive: false });
+
+
+  const handleEditPrompt = (prompt: AIPrompt) => {
+    setPromptData({
+      language_code: prompt.language_code,
+      system_prompt: prompt.system_prompt,
+    });
+    setEditingPrompt(prompt); // add this new state below
     setPromptStatus(null);
     setShowPromptModal(true);
   };
-  
+
   const closePromptModal = () => {
     setShowPromptModal(false);
-    // Reset form state
-    setPromptData({ name: '', description: '', content: '', isActive: false });
+    setPromptData({ language_code: 'en', system_prompt: '' });
     setPromptStatus(null);
     setIsSubmitting(false);
+    setEditingPrompt(null);
   };
-  
+  ;
+
   const handlePromptFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
-    
+
     if (type === 'checkbox') {
       setPromptData({
         ...promptData,
@@ -211,171 +213,93 @@ const SuperAdminSettings = () => {
       });
     }
   };
-  
+
   const submitPrompt = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!promptData.name.trim()) {
-      setPromptStatus({
-        message: translate('promptNameRequired'),
-        type: 'error'
-      });
-      return;
-    }
-    
-    if (!promptData.content.trim()) {
-      setPromptStatus({
-        message: translate('promptContentRequired'),
-        type: 'error'
-      });
-      return;
-    }
-    
+
+    if (!editingPrompt) return;
+
     setIsSubmitting(true);
-    
     try {
-      const response = await fetch('/apisuper/superadmin/prompts', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(promptData),
+      const res = await fetch(`/apisuper/superadmin/prompts/${editingPrompt.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ system_prompt: promptData.system_prompt, language_code: promptData.language_code }),
       });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || translate('failedToCreatePrompt'));
-      }
-      
-      const newPrompt = await response.json();
-      
-      // Update prompts list
-      setPrompts(prev => [...prev, newPrompt]);
-      
-      setPromptStatus({
-        message: translate('promptCreatedSuccess'),
-        type: 'success'
-      });
-      
-      // Close the modal after a brief delay to show the success message
+
+      if (!res.ok) throw new Error('Failed to update prompt.');
+      const updatedPrompt = await res.json();
+
+      // Map the updated prompt to match the frontend structure
+      const mappedUpdatedPrompt = {
+        id: updatedPrompt.id,
+        language_code: updatedPrompt.languageCode, // Map `languageCode` to `language_code`
+        system_prompt: updatedPrompt.systemPrompt, // Map `systemPrompt` to `system_prompt`
+        created_at: updatedPrompt.createdAt, // Map `createdAt` to `created_at`
+        updated_at: updatedPrompt.updatedAt, // Map `updatedAt` to `updated_at`
+      };
+
+      // Update the prompt in the table
+      setPrompts(prev => prev.map(p => (p.id === mappedUpdatedPrompt.id ? mappedUpdatedPrompt : p)));
+      setPromptStatus({ message: 'Prompt updated successfully!', type: 'success' });
+
       setTimeout(() => {
         closePromptModal();
-      }, 1500);
-      
-    } catch (error: any) {
-      console.error('Error creating prompt:', error);
-      setPromptStatus({
-        message: error.message || translate('failedToCreatePrompt'),
-        type: 'error'
-      });
+      }, 1000);
+    } catch (err: any) {
+      setPromptStatus({ message: err.message, type: 'error' });
     } finally {
       setIsSubmitting(false);
     }
   };
-  
+
   const fetchPrompts = async () => {
     try {
-      const response = await fetch('/apisuper/superadmin/prompts');
-      
-      if (!response.ok) {
-        throw new Error(translate('failedToFetchPrompts'));
-      }
-      
+      const response = await fetch('/apisuper/superadmin/prompts', {
+        method: 'GET',
+        credentials: 'include', // 🔥 IMPORTANT
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch prompts');
+
       const data = await response.json();
-      setPrompts(data);
-      setError(null);
-    } catch (error: any) {
-      console.error('Error fetching prompts:', error);
-      setError(translate('failedToLoadPrompts'));
-    }
-  };
-  
-  const deletePrompt = async (id: string) => {
-    if (!confirm(translate('confirmDeletePrompt'))) {
-      return;
-    }
-    
-    try {
-      const response = await fetch(`/apisuper/superadmin/prompts/${id}`, {
-        method: 'DELETE',
-      });
-      
-      if (!response.ok) {
-        throw new Error(translate('failedToDeletePrompt'));
-      }
-      
-      // Remove the deleted prompt from the state
-      setPrompts(prev => prev.filter(prompt => prompt.id !== id));
-      
-    } catch (error: any) {
-      console.error('Error deleting prompt:', error);
-      setError(error.message || translate('failedToDeletePrompt'));
-    }
-  };
-  
-  const togglePromptActive = async (id: string, isCurrentlyActive: boolean) => {
-    // If it's already active, confirm deactivation
-    if (isCurrentlyActive) {
-      if (!confirm(translate('confirmDeactivatePrompt'))) {
-        return;
-      }
-    } else {
-      // If activating, confirm as it will deactivate others
-      if (!confirm(translate('confirmActivatePrompt'))) {
-        return;
-      }
-    }
-    
-    try {
-      const response = await fetch(`/apisuper/superadmin/prompts/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ isActive: !isCurrentlyActive }),
-      });
-      
-      if (!response.ok) {
-        throw new Error(translate('failedToUpdatePrompt'));
-      }
-      
-      const updatedPrompt = await response.json();
-      
-      // Update the prompts state
-      setPrompts(prev => prev.map(prompt => {
-        // Update the target prompt
-        if (prompt.id === id) {
-          return updatedPrompt;
-        }
-        // If activating one prompt, deactivate all others
-        if (!isCurrentlyActive && updatedPrompt.isActive && prompt.isActive) {
-          return { ...prompt, isActive: false };
-        }
-        return prompt;
+
+      // Map the API response to match the UI structure
+      const mappedPrompts = data.map((prompt: any) => ({
+        id: prompt.id,
+        language_code: prompt.languageCode, // Map `languageCode` to `language_code`
+        system_prompt: prompt.systemPrompt, // Map `systemPrompt` to `system_prompt`
+        created_at: prompt.createdAt, // Map `createdAt` to `created_at`
+        updated_at: prompt.updatedAt, // Map `updatedAt` to `updated_at`
       }));
-      
-    } catch (error: any) {
-      console.error('Error updating prompt:', error);
-      setError(error.message || translate('failedToUpdatePrompt'));
+
+      setPrompts(mappedPrompts); // Set the transformed data in state
+      setError(null);
+    } catch (err: any) {
+      console.error('Error fetching prompts:', err);
+      setError('Failed to load prompts');
     }
   };
-  
+
+
+
+
   // Password strength checker function
   const checkPasswordStrength = (password: string): number => {
     let strength = 0;
-    
+
     if (password.length >= 8) strength += 1;
     if (password.match(/[A-Z]/)) strength += 1;
     if (password.match(/[0-9]/)) strength += 1;
     if (password.match(/[^A-Za-z0-9]/)) strength += 1;
-    
+
     return strength;
   };
 
   // Handle password changes
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    
+
     if (name === 'current-password') {
       setCurrentPassword(value);
     } else if (name === 'new-password') {
@@ -384,7 +308,7 @@ const SuperAdminSettings = () => {
     } else if (name === 'confirm-password') {
       setConfirmPassword(value);
     }
-    
+
     // Clear any previous errors/success when user types
     setPasswordError(null);
     setPasswordSuccess(null);
@@ -393,43 +317,43 @@ const SuperAdminSettings = () => {
   // Handle password form submission
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Reset states
     setPasswordError(null);
     setPasswordSuccess(null);
-    
+
     // Validate passwords
     if (!currentPassword) {
       setPasswordError(translate('currentPasswordRequired'));
       return;
     }
-    
+
     if (!newPassword) {
       setPasswordError(translate('newPasswordRequired'));
       return;
     }
-    
+
     if (passwordStrength < 3) {
       setPasswordError(translate('passwordNotStrongEnough'));
       return;
     }
-    
+
     if (newPassword !== confirmPassword) {
       setPasswordError(translate('passwordsDontMatch'));
       return;
     }
-    
+
     // Ensure we have a user ID
     if (!user?.id) {
       setPasswordError(translate('notAuthenticated'));
       return;
     }
-    
+
     setIsPasswordSubmitting(true);
-    
+
     try {
       console.log("Attempting password reset for user:", user?.id);
-      
+
       // Call your API to update the password
       const response = await fetch('/apisuper/superadmin/reset-password', {
         method: 'POST',
@@ -444,14 +368,14 @@ const SuperAdminSettings = () => {
           userId: user?.id // Make sure to include user ID
         }),
       });
-      
+
       // Log the full response for debugging
       console.log("Password reset response status:", response.status);
-      
+
       // First get the response as text
       const responseText = await response.text();
       console.log("Response text:", responseText);
-      
+
       // Try to parse as JSON if possible
       let data;
       try {
@@ -459,18 +383,18 @@ const SuperAdminSettings = () => {
       } catch (e) {
         console.error("Failed to parse response as JSON:", e);
       }
-      
+
       if (!response.ok) {
         throw new Error(data?.message || `Error: ${response.status} - ${response.statusText}`);
       }
-      
+
       // Clear form on success
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
       setPasswordStrength(0);
       setPasswordSuccess(translate('passwordUpdateSuccess'));
-      
+
     } catch (error: any) {
       console.error('Error updating password:', error);
       setPasswordError(error.message || translate('failedToUpdatePassword'));
@@ -496,7 +420,7 @@ const SuperAdminSettings = () => {
   const formatTabName = (str: string): string => {
     // First, handle camelCase by adding spaces before capital letters
     const spacedString = str.replace(/([A-Z])/g, ' $1').trim();
-    
+
     // Then apply title case to ensure first letters are capitalized
     return titleCase(spacedString);
   };
@@ -664,10 +588,10 @@ const SuperAdminSettings = () => {
                   </Link>
                 </li>
                 <li>
-                <Link href="/superadmin/permissions" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
-                  {translate('Permissions')}
-                </Link>
-              </li>
+                  <Link href="/superadmin/permissions" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
+                    {translate('Permissions')}
+                  </Link>
+                </li>
               </ul>
             </nav>
           </div>
@@ -692,7 +616,7 @@ const SuperAdminSettings = () => {
                 </select>
               </div> */}
             </div>
-            
+
             <p className="text-gray-600 dark:text-gray-400 mb-8">
               {translate('settingsDescription')}
             </p>
@@ -701,47 +625,43 @@ const SuperAdminSettings = () => {
               <nav className="flex space-x-8">
                 <button
                   onClick={() => setActiveTab('general')}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === 'general'
-                      ? 'border-[#C72026] text-[#C72026] dark:text-[#C72026]'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-                  }`}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'general'
+                    ? 'border-[#C72026] text-[#C72026] dark:text-[#C72026]'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                    }`}
                 >
                   {translate('general')}
                 </button>
                 <button
                   onClick={() => setActiveTab('prompts')}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === 'prompts'
-                      ? 'border-[#C72026] text-[#C72026] dark:text-[#C72026]'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-                  }`}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'prompts'
+                    ? 'border-[#C72026] text-[#C72026] dark:text-[#C72026]'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                    }`}
                 >
                   {translate('aiPrompts')}
                 </button>
                 <button
                   onClick={() => setActiveTab('api')}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === 'api'
-                      ? 'border-[#C72026] text-[#C72026] dark:text-[#C72026]'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-                  }`}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'api'
+                    ? 'border-[#C72026] text-[#C72026] dark:text-[#C72026]'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                    }`}
                 >
                   {translate('apiKeys')}
                 </button>
                 <button
                   onClick={() => setActiveTab('resetPassword')}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === 'resetPassword'
-                      ? 'border-[#C72026] text-[#C72026] dark:text-[#C72026]'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-                  }`}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'resetPassword'
+                    ? 'border-[#C72026] text-[#C72026] dark:text-[#C72026]'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                    }`}
                 >
                   {formatTabName(translate('resetPassword'))}
                 </button>
               </nav>
             </div>
-            
+
             {/* General Settings Tab */}
             {activeTab === 'general' && (
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mt-6">
@@ -751,7 +671,7 @@ const SuperAdminSettings = () => {
                 <p className="text-gray-600 dark:text-gray-400 mb-4">
                   {translate('configureGeneralSettings')}
                 </p>
-                
+
                 {/* Placeholder for general settings - can be expanded later */}
                 <div className="border dark:border-gray-700 rounded-lg p-6 bg-gray-50 dark:bg-gray-700">
                   <p className="text-gray-500 dark:text-gray-300">
@@ -760,91 +680,52 @@ const SuperAdminSettings = () => {
                 </div>
               </div>
             )}
-            
+
             {/* AI Prompts Tab */}
             {activeTab === 'prompts' && (
               <div className="mt-6">
                 {/* Header with Add button */}
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{translate('aiPromptsManagement')}</h2>
-                  <button
-                    onClick={handleAddNewPrompt}
-                    className="bg-[#C72026] hover:bg-[#C72026]/90 text-white font-semibold py-2 px-4 rounded flex items-center"
-                  >
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    {translate('addNewPrompt')}
-                  </button>
                 </div>
-                
+
                 {/* Error message */}
                 {error && (
                   <div className="mb-6 p-4 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-md">
                     {error}
                   </div>
                 )}
-                
+
                 {/* Prompts list */}
                 {prompts.length > 0 ? (
                   <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
                     <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                      <thead className="bg-gray-50 dark:bg-gray-700">
+                      <thead>
                         <tr>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            {translate('name')}
-                          </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            {translate('description')}
-                          </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            {translate('status')}
-                          </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            {translate('lastUpdated')}
-                          </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            {translate('actions')}
-                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Language</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prompt</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Updated</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                       </thead>
-                      <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                      <tbody>
                         {prompts.map((prompt) => (
-                          <tr key={prompt.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm font-medium text-gray-900 dark:text-white">{prompt.name}</div>
+                          <tr key={prompt.id}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {prompt.language_code}
                             </td>
-                            <td className="px-6 py-4">
-                              <div className="text-sm text-gray-500 dark:text-gray-400">{prompt.description || translate('noDescription')}</div>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 max-w-xs truncate">
+                              {prompt.system_prompt}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                prompt.isActive 
-                                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200' 
-                                  : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                              }`}>
-                                {prompt.isActive ? translate('active') : translate('inactive')}
-                              </span>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                              {new Date(prompt.updated_at).toLocaleString()}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                              {new Date(prompt.updatedAt).toLocaleString()}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                              <button 
-                                onClick={() => togglePromptActive(prompt.id, prompt.isActive)}
-                                className={`mr-3 ${
-                                  prompt.isActive 
-                                    ? 'text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-300' 
-                                    : 'text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300'
-                                }`}
+                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                              <button
+                                onClick={() => handleEditPrompt(prompt)} // Pass the prompt to the handler
+                                className="text-blue-600 hover:text-blue-800"
                               >
-                                {prompt.isActive ? translate('deactivate') : translate('activate')}
-                              </button>
-                              <button 
-                                onClick={() => deletePrompt(prompt.id)}
-                                className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-                              >
-                                {translate('delete')}
+                                Edit
                               </button>
                             </td>
                           </tr>
@@ -859,7 +740,7 @@ const SuperAdminSettings = () => {
                 ) : null}
               </div>
             )}
-            
+
             {/* API Keys Tab */}
             {activeTab === 'api' && (
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mt-6">
@@ -867,7 +748,7 @@ const SuperAdminSettings = () => {
                 <p className="text-gray-600 dark:text-gray-400 mb-6">
                   {translate('configureApiKeys')}
                 </p>
-                
+
                 <div className="space-y-6">
                   <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
                     <h3 className="text-md font-medium text-gray-900 dark:text-white">{translate('openaiApiKey')}</h3>
@@ -883,7 +764,7 @@ const SuperAdminSettings = () => {
                       </button>
                     </div>
                   </div>
-                  
+
                   {/* Additional API integrations can be added here */}
                   <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700">
                     <h3 className="text-md font-medium text-gray-900 dark:text-white">{translate('additionalIntegrations')}</h3>
@@ -894,13 +775,13 @@ const SuperAdminSettings = () => {
                 </div>
               </div>
             )}
-            
+
             {/* API Key Modal */}
             {showApiKeyModal && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                 <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">{translate('configureOpenaiApiKey')}</h3>
-                  
+
                   <form onSubmit={submitApiKey}>
                     <div className="mb-4">
                       <label htmlFor="api-key" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -918,17 +799,16 @@ const SuperAdminSettings = () => {
                         {translate('enterApiKeySecure')}
                       </p>
                     </div>
-                    
+
                     {apiKeyStatus && (
-                      <div className={`mb-4 p-3 rounded-md ${
-                        apiKeyStatus.type === 'success' 
-                          ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200' 
-                          : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200'
-                      }`}>
+                      <div className={`mb-4 p-3 rounded-md ${apiKeyStatus.type === 'success'
+                        ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200'
+                        : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200'
+                        }`}>
                         {apiKeyStatus.message}
                       </div>
                     )}
-                    
+
                     <div className="flex justify-end space-x-3">
                       <button
                         type="button"
@@ -958,120 +838,49 @@ const SuperAdminSettings = () => {
                 </div>
               </div>
             )}
-            
+
             {/* Add Prompt Modal */}
             {showPromptModal && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                 <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">{translate('createNewAiPrompt')}</h3>
-                  
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Edit Prompt</h3>
                   <form onSubmit={submitPrompt}>
+
                     <div className="mb-4">
-                      <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        {translate('promptName')}
-                      </label>
-                      <input
-                        type="text"
-                        id="name"
-                        name="name"
-                        value={promptData.name}
-                        onChange={handlePromptFormChange}
-                        className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
-                        placeholder={translate('systemInstructions')}
-                      />
-                    </div>
-                    
-                    <div className="mb-4">
-                      <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        {translate('descriptionOptional')}
-                      </label>
-                      <input
-                        type="text"
-                        id="description"
-                        name="description"
-                        value={promptData.description}
-                        onChange={handlePromptFormChange}
-                        className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
-                        placeholder={translate('briefDescriptionPrompt')}
-                      />
-                    </div>
-                    
-                    <div className="mb-4">
-                      <label htmlFor="content" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        {translate('promptContent')}
-                      </label>
+                      <label htmlFor="system_prompt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">System Prompt</label>
                       <textarea
-                        id="content"
-                        name="content"
-                        rows={10}
-                        value={promptData.content}
-                        onChange={handlePromptFormChange}
-                        className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:ring-[#C72026] focus:border-[#C72026] sm:text-sm"
-                        placeholder={translate('promptPlaceholder')}
-                      ></textarea>
-                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        {translate('systemPromptGuide')}
-                      </p>
+                        id="system_prompt"
+                        name="system_prompt"
+                        rows={8}
+                        value={promptData.system_prompt} // Bind to state
+                        onChange={handlePromptFormChange} // Update state on change
+                        className="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm sm:text-sm"
+                        placeholder="e.g. You are a helpful assistant that..."
+                      />
                     </div>
-                    
-                    <div className="mb-6">
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          id="isActive"
-                          name="isActive"
-                          checked={promptData.isActive}
-                          onChange={handlePromptFormChange}
-                          className="h-4 w-4 text-[#C72026] focus:ring-[#C72026] border-gray-300 rounded"
-                        />
-                        <label htmlFor="isActive" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
-                          {translate('setAsActivePrompt')}
-                        </label>
-                      </div>
-                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        {translate('oneActivePromptWarning')}
-                      </p>
-                    </div>
-                    
+
                     {promptStatus && (
-                      <div className={`mb-4 p-3 rounded-md ${
-                        promptStatus.type === 'success' 
-                          ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200' 
-                          : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200'
-                      }`}>
+                      <div className={`mb-4 p-3 rounded-md ${promptStatus.type === 'success'
+                        ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200'
+                        : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200'
+                        }`}>
                         {promptStatus.message}
                       </div>
                     )}
-                    
+
                     <div className="flex justify-end space-x-3">
-                      <button
-                        type="button"
-                        onClick={closePromptModal}
-                        className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition"
-                        disabled={isSubmitting}
-                      >
-                        {translate('cancel')}
+                      <button type="button" onClick={closePromptModal} className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+                        Cancel
                       </button>
-                      <button
-                        type="submit"
-                        className="bg-[#C72026] text-white px-4 py-2 rounded-md hover:bg-[#C72026]/90 transition flex items-center"
-                        disabled={isSubmitting}
-                      >
-                        {isSubmitting ? (
-                          <>
-                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            {translate('creating')}
-                          </>
-                        ) : translate('createPrompt')}
+                      <button type="submit" className="bg-[#C72026] text-white px-4 py-2 rounded-md hover:bg-[#C72026]/90 transition">
+                        {isSubmitting ? 'Saving...' : 'Save Prompt'}
                       </button>
                     </div>
                   </form>
                 </div>
               </div>
             )}
+
 
             {/* Reset Password Tab */}
             {activeTab === 'resetPassword' && (
@@ -1082,19 +891,19 @@ const SuperAdminSettings = () => {
                 <p className="text-gray-600 dark:text-gray-400 mb-4">
                   {formatTabName(translate('updateYourPasswordRegularly'))}
                 </p>
-                
+
                 {passwordSuccess && (
                   <div className="mb-4 p-3 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-md text-green-800 dark:text-green-200">
                     {formatTabName(passwordSuccess)}
                   </div>
                 )}
-                
+
                 {passwordError && (
                   <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-md text-red-800 dark:text-red-200">
                     {formatTabName(passwordError)}
                   </div>
                 )}
-                
+
                 <form onSubmit={handlePasswordSubmit} className="mt-8 space-y-6 max-w-2xl mx-auto">
                   <div className="bg-gray-50 dark:bg-gray-700/50 p-6 rounded-lg border border-gray-100 dark:border-gray-700">
                     <div className="mb-5">
@@ -1113,7 +922,7 @@ const SuperAdminSettings = () => {
                         />
                       </div>
                     </div>
-                    
+
                     <div className="mb-5">
                       <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         {formatTabName(translate('newPassword'))}
@@ -1130,13 +939,12 @@ const SuperAdminSettings = () => {
                         />
                         <div className="mt-2 flex space-x-1">
                           {[1, 2, 3, 4].map((index) => (
-                            <span 
-                              key={index} 
-                              className={`h-1 flex-1 rounded-full ${
-                                passwordStrength >= index 
-                                  ? 'bg-[#C72026]' 
-                                  : 'bg-gray-300 dark:bg-gray-600'
-                              }`}
+                            <span
+                              key={index}
+                              className={`h-1 flex-1 rounded-full ${passwordStrength >= index
+                                ? 'bg-[#C72026]'
+                                : 'bg-gray-300 dark:bg-gray-600'
+                                }`}
                             ></span>
                           ))}
                         </div>
@@ -1166,7 +974,7 @@ const SuperAdminSettings = () => {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="mb-5">
                       <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         {formatTabName(translate('confirmNewPassword'))}
@@ -1182,7 +990,7 @@ const SuperAdminSettings = () => {
                       />
                     </div>
                   </div>
-                  
+
                   <div className="flex justify-end">
                     <button
                       type="submit"

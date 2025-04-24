@@ -5,7 +5,7 @@ export async function POST(req: NextRequest, { params }: { params: { chatId: str
         const chatId = params.chatId;
         const body = await req.json();
 
-        const { question, file_ids } = body;
+        const { question, file_ids, language_code } = body;
 
         if (!question || !chatId) {
             return NextResponse.json({ error: 'Missing chat ID or question' }, { status: 400 });
@@ -16,7 +16,7 @@ export async function POST(req: NextRequest, { params }: { params: { chatId: str
         const response = await fetch(fastapiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ question, file_ids }),
+            body: JSON.stringify({ question, file_ids, language_code }),
         });
 
         const data = await response.json();

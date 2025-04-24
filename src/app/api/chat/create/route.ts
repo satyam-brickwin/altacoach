@@ -4,13 +4,13 @@ export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
 
-        const { name, user_id, question, file_ids } = body;
+        const { name, user_id, question, file_ids, language_code } = body;
 
         if (!name || !user_id || !question) {
             return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
         }
 
-        const fastapiUrl = `${process.env.FASTAPI_BASE_URL || 'http://localhost:8000'}/chat/create`;
+        const fastapiUrl = `${process.env.FASTAPI_BASE_URL || 'http://localhost:8002'}/chat/create`;
 
         const response = await fetch(fastapiUrl, {
             method: 'POST',
@@ -19,7 +19,8 @@ export async function POST(req: NextRequest) {
                 name,
                 user_id,
                 question,
-                file_ids
+                file_ids,
+                language_code,
             }),
         });
 

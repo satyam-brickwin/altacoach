@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { cn } from '../lib/utils';
 import { Edit, Check, X, Trash2, Lightbulb } from 'lucide-react';
 import { SuggestionModal } from '../../../components/SuggestionModal';
+import ReactMarkdown from 'react-markdown';
 
 interface ChatMessageProps {
   message: {
@@ -16,9 +17,9 @@ interface ChatMessageProps {
   onSubmitSuggestion?: (suggestion: string) => void;
 }
 
-export const ChatMessage: React.FC<ChatMessageProps> = ({ 
-  message, 
-  isLast, 
+export const ChatMessage: React.FC<ChatMessageProps> = ({
+  message,
+  isLast,
   onEditMessage,
   onDeleteMessage,
   onSubmitSuggestion
@@ -28,7 +29,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messageRef = useRef<HTMLDivElement>(null);
   const isUser = message.role === 'user';
-  
+
   const [isSuggestionModalOpen, setIsSuggestionModalOpen] = useState(false);
   const [suggestionInput, setSuggestionInput] = useState('');
 
@@ -106,7 +107,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
               <span className="text-xs font-medium">AC</span>
             </div>
           )}
-          
+
           <div className={cn(
             "mx-2 max-w-[80%] relative",
           )}>
@@ -118,13 +119,13 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                 {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
             </div>
-            
+
             <div
               className={cn(
                 "px-4 py-3 rounded-2xl",
                 isUser
-                  ? "bg-[#C72026] text-white rounded-br-none" 
-                  : "bg-[#C72026]/10 dark:bg-[#C72026]/20 rounded-bl-none text-gray-900 dark:text-gray-100" 
+                  ? "bg-[#C72026] text-white rounded-br-none"
+                  : "bg-[#C72026]/10 dark:bg-[#C72026]/20 rounded-bl-none text-gray-900 dark:text-gray-100"
               )}
             >
               {isEditing ? (
@@ -143,11 +144,19 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                     isUser ? "text-white dark:text-white" : "text-gray-900 dark:chat-text-dark"
                   )}
                 >
-                  {message.text}
+                  <ReactMarkdown
+                    components={{
+                      ul: ({ children }) => <ul className="list-disc list-inside">{children}</ul>,
+                      ol: ({ children }) => <ol className="list-decimal list-inside">{children}</ol>,
+                      li: ({ children }) => <li className="mb-1">{children}</li>,
+                    }}
+                  >
+                    {message.text}
+                  </ReactMarkdown>
                 </div>
               )}
             </div>
-            
+
             {isEditing && (
               <div className="flex items-center justify-end gap-2 mt-2">
                 <button
@@ -166,7 +175,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                 </button>
               </div>
             )}
-            
+
             {!isUser && !isEditing && (
               <div className="opacity-0 group-hover:opacity-100 absolute bottom-0 right-0 transform translate-x-8 translate-y-1/2 transition-opacity duration-200">
                 <button
@@ -178,7 +187,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                 </button>
               </div>
             )}
-            
+
             {isUser && !isEditing && (
               <div className="opacity-0 group-hover:opacity-100 absolute top-6 -left-10 flex flex-col gap-1 transition-opacity duration-200">
                 <button
@@ -198,7 +207,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
               </div>
             )}
           </div>
-          
+
           {isUser && (
             <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-[#C72026] text-white mt-1">
               <span className="text-xs font-medium">You</span>
