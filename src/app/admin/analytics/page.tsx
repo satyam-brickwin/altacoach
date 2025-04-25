@@ -11,6 +11,23 @@ import Image from 'next/image';
 // import DatePicker from 'react-datepicker'; // You need to install react-datepicker
 // import 'react-datepicker/dist/react-datepicker.css';
 
+// Define chat duration data type
+interface ChatDurationData {
+  success?: boolean;
+  totalChats?: number;
+  totalDurationMinutes?: number;
+  averageDurationMinutes?: number;
+  businessChatStats?: Array<{
+    businessId: string;
+    businessName: string;
+    totalChats: number;
+    totalMessages: number;
+    totalDurationMinutes: number;
+    averageDurationMinutes: number;
+    usersCount: number;
+  }>;
+}
+
 // Sample analytics data for fallback
 const sampleAnalyticsData = {
   userStats: {
@@ -370,7 +387,8 @@ export default function AdminAnalytics() {
     sessionCount: 4850,
     sessionDuration: 18,
     businessBreakdown: [] as { id: string, name: string, activeUserCount: number, percent: number }[],
-    languageBreakdown: [] as { language: string, activeUserCount: number, percent: number }[]
+    languageBreakdown: [] as { language: string, activeUserCount: number, percent: number }[],
+    chatStats: [] as ChatDurationData['businessChatStats']
   });
 
   // Fetch business list on mount
@@ -531,6 +549,27 @@ export default function AdminAnalytics() {
         const data = await response.json();
         console.log('Fetched analytics data:', data);
         
+        // Also fetch chat duration data
+        let chatDurationData: ChatDurationData = {};
+        try {
+          const chatResponse = await fetch(`/api/admin/chat-duration?${queryParams.toString()}`, {
+            cache: 'no-store',
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0'
+            }
+          });
+          
+          if (chatResponse.ok) {
+            chatDurationData = await chatResponse.json();
+            console.log('Fetched chat duration data:', chatDurationData);
+          }
+        } catch (chatError) {
+          console.error('Error fetching chat duration:', chatError);
+          // Don't fail the whole process, just log the error
+        }
+        
         if (data.success) {
           // Get regular users (non-admin) data from the API response
           const regularUsers = data.stats?.users?.regular || 0;
@@ -550,13 +589,20 @@ export default function AdminAnalytics() {
           // Set the percentage for use in the UI
           setAvgUsersPerBusinessPercent(activeUserPercent);
           
+          // Get average session duration from chat data if available
+          let sessionDuration = Math.max(8, Math.min(25, Math.round(regularUsers / 50))); // Default
+          if (chatDurationData.success && chatDurationData.averageDurationMinutes) {
+            sessionDuration = Math.round(chatDurationData.averageDurationMinutes);
+          }
+          
           // Update usage statistics with business and language breakdown
           setUsageStats(prev => ({
             ...prev,
             businessBreakdown: data.businessActiveUserStats || [],
             languageBreakdown: data.languageActiveUserStats || [],
-            sessionCount: Math.round(regularUsers * 3.5), // Estimate based on user count
-            sessionDuration: Math.max(8, Math.min(25, Math.round(regularUsers / 50))) // Realistic session time
+            sessionCount: chatDurationData.totalChats || Math.round(regularUsers * 3.5), // Use actual chat count when available
+            sessionDuration: sessionDuration, // Use chat duration if available
+            chatStats: chatDurationData.businessChatStats || [] // Add chat stats by business
           }));
           
           // Update only the specific stats we want from real data
@@ -567,7 +613,7 @@ export default function AdminAnalytics() {
               totalUsers: regularUsers, // Use regular users (non-admin) count
               activeUsers: activeRegularUsers, // Use the direct filtered active count
               newUsersThisMonth: data.stats?.users?.newThisPeriod || prev.userStats.newUsersThisMonth,
-              averageSessionTime: `${Math.max(5, Math.min(25, Math.round(regularUsers / 50)))} minutes` // More realistic session time
+              averageSessionTime: `${sessionDuration} minutes` // More realistic session time from chat data
             },
             businessStats: {
               ...prev.businessStats,
@@ -1054,11 +1100,11 @@ export default function AdminAnalytics() {
                   </tr>
                   <tr>
                     <td>New Users This Month</td>
-                    <td className="value-column">${analyticsData.userStats.newUsersThisMonth}</td>
+                    <td class="value-column">${analyticsData.userStats.newUsersThisMonth}</td>
                   </tr>
                   <tr>
                     <td>Average Session Time</td>
-                    <td className="value-column">${analyticsData.userStats.averageSessionTime}</td>
+                    <td class="value-column">${analyticsData.userStats.averageSessionTime}</td>
                   </tr>
                 </tbody>
               </table>
@@ -1153,19 +1199,26 @@ export default function AdminAnalytics() {
                 </tbody>
               </table>
             </section>
-            
+
+
+            {/* Last Updated */}
+            <div className="text-sm text-gray-500 dark:text-gray-400 text-right">
+              {t('lastUpdated')}: {currentTime}
+            </div>
+
             <div class="meta-info">
-              <div>
-                <p>Report generated on ${new Date().toLocaleString()}</p>
-                <p>Time Range: ${t(timeRange)}</p>
-              </div>
-              <div>
-                <button onclick="window.print()" class="print-button">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                  </svg>
-                  Print Report
-                </button>
+                <div>
+                  <p>Report generated on ${new Date().toLocaleString()}</p>
+                  <p>Time Range: ${t(timeRange)}</p>
+                </div>
+                <div>
+                  <button onclick="window.print()" class="print-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                    </svg>
+                    Print Report
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1396,11 +1449,6 @@ export default function AdminAnalytics() {
                   {t('altamedia Content')}
                 </Link>
               </li>
-              {/* <li>
-                <Link href="/admin/users" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
-                  {t('userAccounts')}
-                </Link>
-              </li> */}
               <li>
                 <Link href="/admin/analytics" 
                   className="block px-4 py-2 rounded-md bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] dark:text-[#C72026] font-medium">
@@ -1732,7 +1780,7 @@ export default function AdminAnalytics() {
                     <div className="relative w-40 h-40">
                       <svg viewBox="0 0 36 36" className="w-full h-full">
                         <path
-                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1            0 -31.831"
                           fill="none"
                           stroke="#eee"
                           strokeWidth="3"
@@ -1765,13 +1813,17 @@ export default function AdminAnalytics() {
                   <div className="flex items-center">
                     <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mr-4">
                       <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2h2a2 2 0 012 2z"></path>
                       </svg>
                     </div>
                     <div>
-                      <p className="text-3xl font-semibold text-gray-900 dark:text-white">
-                        {usageStats.sessionCount.toLocaleString()}
-                      </p>
+                      {isLoading ? (
+                        <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                      ) : (
+                        <p className="text-3xl font-semibold text-gray-900 dark:text-white">
+                          {usageStats.sessionCount.toLocaleString()}
+                        </p>
+                      )}
                       <p className="text-sm text-gray-500 dark:text-gray-400">
                         {periodType === 'month' ? 'This Month' : 
                           periodType === 'year' ? 'This Year' : 
@@ -1792,9 +1844,13 @@ export default function AdminAnalytics() {
                       </svg>
                     </div>
                     <div>
-                      <p className="text-3xl font-semibold text-gray-900 dark:text-white">
-                        {usageStats.sessionDuration} <span className="text-xl">min</span>
-                      </p>
+                      {isLoading ? (
+                        <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                      ) : (
+                        <p className="text-3xl font-semibold text-gray-900 dark:text-white">
+                          {usageStats.sessionDuration} <span className="text-xl">min</span>
+                        </p>
+                      )}
                       <p className="text-sm text-gray-500 dark:text-gray-400">
                         Average Duration
                       </p>
@@ -1905,7 +1961,7 @@ export default function AdminAnalytics() {
                   <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-center">
                     <div className="w-12 h-12 bg-indigo-500 rounded-full flex items-center justify-center mx-auto mb-3">
                       <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H9a2 2 0 00-2 2v14a2 2 0 002 2h2a2 2 0 012 2z"></path>
                       </svg>
                     </div>
                     <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
@@ -1933,7 +1989,7 @@ export default function AdminAnalytics() {
                   <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-center">
                     <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-3">
                       <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2h2a2 2 0 012 2z"></path>
                       </svg>
                     </div>
                     <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
@@ -1947,7 +2003,7 @@ export default function AdminAnalytics() {
                   <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-center">
                     <div className="w-12 h-12 bg-gray-500 rounded-full flex items-center justify-center mx-auto mb-3">
                       <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.25 21.165a7.5 7.5 0 006.5-14.165A7.5 7.5 0 009.25 21.165z"></path>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2h2a2 2 0 012 2z"></path>
                       </svg>
                     </div>
                     <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
@@ -1961,115 +2017,166 @@ export default function AdminAnalytics() {
               </div>
             </section>
 
-            {/* Business Statistics */}
+            {/* Chat Statistics Section */}
             <section className="mb-8">
               <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
-                {t('businessStatistics')}
+                Chat Interaction Statistics
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard 
-                  icon={<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>}
-                  title={t('totalBusinesses')}
-                  value={analyticsData.businessStats.totalBusinesses}
-                  isLoading={isLoading}
-                  iconBackground="bg-[#C72026]"
-                />
-                <StatCard 
-                  icon={<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>}
-                  title={t('activeBusinesses')}
-                  value={analyticsData.businessStats.activeBusinesses}
-                  isLoading={isLoading}
-                  iconBackground="bg-green-500"
-                />
-                <StatCard 
-                  icon={<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>}
-                  title={t('averageUsersPerBusiness')}
-                  value={analyticsData.businessStats.averageUsersPerBusiness}
-                  iconBackground="bg-[#C72026]"
-                />
-                <StatCard 
-                  icon={<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>}
-                  title={t('newBusinessesThisMonth')}
-                  value={analyticsData.businessStats.newBusinessesThisMonth}
-                  isLoading={isLoading}
-                  iconBackground="bg-indigo-500"
-                />
+              
+              {/* Description */}
+              <div className="mb-6 bg-white dark:bg-gray-800 p-5 rounded-lg shadow-sm">
+                <p className="text-gray-600 dark:text-gray-400">
+                  Chat statistics show how users are engaging with the platform through conversations. Session duration is calculated based on chat activity timing.
+                </p>
               </div>
+              
+              {/* Chat Stats Overview */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                    Total Chat Sessions
+                  </h3>
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mr-4">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+                      </svg>
+                    </div>
+                    <div>
+                      {isLoading ? (
+                        <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                      ) : (
+                        <p className="text-3xl font-semibold text-gray-900 dark:text-white">
+                          {usageStats.chatStats && usageStats.chatStats.reduce((sum, stat) => sum + stat.totalChats, 0) || 0}
+                        </p>
+                      )}
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Chat Conversations
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                    Average Session Time
+                  </h3>
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center mr-4">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                      </svg>
+                    </div>
+                    <div>
+                      {isLoading ? (
+                        <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                      ) : (
+                        <p className="text-3xl font-semibold text-gray-900 dark:text-white">
+                          {usageStats.sessionDuration} <span className="text-xl">min</span>
+                        </p>
+                      )}
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Per Chat Session
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                    Active Chat Users
+                  </h3>
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mr-4">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                      </svg>
+                    </div>
+                    <div>
+                      {isLoading ? (
+                        <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                      ) : (
+                        <p className="text-3xl font-semibold text-gray-900 dark:text-white">
+                          {usageStats.chatStats?.reduce((sum, stat) => sum + stat.usersCount, 0) || 0}
+                        </p>
+                      )}
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Unique Users
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Chat Stats By Business */}
+              {usageStats.chatStats && usageStats.chatStats.length > 0 && (
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                    Chat Activity by Business
+                  </h3>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                      <thead>
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Business
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Users
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Chats
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Messages
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Avg Duration
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                        {usageStats.chatStats.map((stat, index) => (
+                          <tr key={stat.businessId} className={index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700'}>
+                            <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
+                              {stat.businessName}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                              {stat.usersCount}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                              {stat.totalChats}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                              {stat.totalMessages}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                              {Math.round(stat.averageDurationMinutes)} min
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </section>
-
-            {/* Content Statistics */}
-            {/* <section className="mb-8">
-              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
-                {t('contentStatistics')}
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard 
-                  icon={<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>}
-                  title={t('totalContent')}
-                  value={analyticsData.contentStats.totalContent}
-                  isLoading={isLoading}
-                  iconBackground="bg-[#C72026]"
-                />
-                <StatCard 
-                  icon={<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>}
-                  title={t('contentViews')}
-                  value={analyticsData.contentStats.contentViews}
-                  isLoading={isLoading}
-                  iconBackground="bg-teal-500"
-                />
-                <StatCard 
-                  icon={<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>}
-                  title={t('mostPopularContentType')}
-                  value={analyticsData.contentStats.mostPopularContentType}
-                  isLoading={isLoading}
-                  iconBackground="bg-orange-500"
-                />
-                <StatCard 
-                  icon={<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>}
-                  title={t('averageCompletionRate')}
-                  value={analyticsData.contentStats.averageCompletionRate}
-                  isLoading={isLoading}
-                  iconBackground="bg-green-500"
-                />
-              </div>
-            </section> */}
-
-            {/* AI Statistics */}
-            {/* <section className="mb-8">
-              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
-                {t('aiStatistics')}
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard 
-                  icon={<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>}
-                  title={t('totalInteractions')}
-                  value={analyticsData.aiStats.totalInteractions}
-                  isLoading={isLoading}
-                  iconBackground="bg-[#C72026]"
-                />
-                <StatCard 
-                  icon={<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>}
-                  title={t('averageResponseTime')}
-                  value={analyticsData.aiStats.averageResponseTime}
-                  isLoading={isLoading}
-                  iconBackground="bg-green-500"
-                />
-                <StatCard 
-                  icon={<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>}
-                  title={t('satisfactionRate')}
-                  value={analyticsData.aiStats.satisfactionRate}
-                  isLoading={isLoading}
-                  iconBackground="bg-green-500"
-                />
-                <StatCard 
-                  icon={<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>}
-                  title={t('mostCommonQueries')}
-                  value={analyticsData.aiStats.mostCommonQueries}
-                  isLoading={isLoading}
-                  iconBackground="bg-[#C72026]"
-                />
-              </div>
-            </section> */}
+            
+            {/* Action buttons */}
+            <div className="flex justify-end space-x-4 mb-8">
+              <button 
+                className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                onClick={handleViewDetailedReport}
+              >
+                {t('viewDetailedReport')}
+              </button>
+              <button 
+                className="px-4 py-2 bg-[#C72026] text-white rounded hover:bg-[#a51a1f] transition-colors"
+                onClick={handleExportData}
+              >
+                {t('exportData')}
+              </button>
+            </div>
 
             {/* Last Updated */}
             <div className="text-sm text-gray-500 dark:text-gray-400 text-right">
