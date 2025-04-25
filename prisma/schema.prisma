@@ -139,3 +139,23 @@ model PromptTable {
   updatedAt    DateTime @default(now())
 
 }
+
+model chats {
+  id         String        @id @default(uuid())
+  name       String?
+  user_id    String?
+  created_at DateTime      @default(now())
+
+  chat_history chat_history[] @relation("ChatToHistory")
+}
+
+model chat_history {
+  id         String   @id @default(uuid())
+  chat_id    String
+  question   String?
+  answer     String?
+  file_ids   Json?
+  created_at DateTime @default(now())
+
+  chats chats @relation("ChatToHistory", fields: [chat_id], references: [id], onDelete: Cascade)
+}

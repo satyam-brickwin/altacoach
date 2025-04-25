@@ -10,46 +10,79 @@ export async function GET() {
       try {
         console.log('--- Raw Database Query Results ---');
         
-        // Check all user roles in the database
-        const allUserRoles = await prisma.user.findMany({
-          select: {
-            id: true,
-            name: true,
-            role: true
-          }
-        });
-        console.log('All users with roles:', allUserRoles);
+        // Check all user roles in the database - use try/catch for each query
+        try {
+          const allUserRoles = await prisma.user.findMany({
+            select: {
+              id: true,
+              name: true,
+              role: true,
+              email: true,
+              status: true
+            }
+          });
+          console.log(`All users with roles (${allUserRoles.length}):`, 
+            allUserRoles.map(u => ({ id: u.id, role: u.role, status: u.status })));
+        } catch (err) {
+          console.error('Error querying users:', err);
+        }
         
         // Check all business statuses - get detailed view with safer field selection
-        const allBusinesses = await prisma.business.findMany({
-          select: {
-            id: true,
-            name: true,
-            status: true,
-            createdAt: true
-            // Removed startDate as it might not exist in all schemas
+        try {
+          const allBusinesses = await prisma.business.findMany({
+            select: {
+              id: true,
+              name: true,
+              status: true,
+              createdAt: true,
+              _count: {
+                select: { users: true }
+              }
+            }
+          });
+          
+          // Log all business statuses for debugging
+          console.log(`All businesses (${allBusinesses.length}):`, 
+            allBusinesses.map(b => ({ id: b.id, name: b.name, status: b.status })));
+          
+          // Count businesses by status
+          const businessStatusCounts: Record<string, number> = {};
+          allBusinesses.forEach(business => {
+            const status = business.status || 'unknown';
+            businessStatusCounts[status] = (businessStatusCounts[status] || 0) + 1;
+          });
+          console.log('Business counts by status:', businessStatusCounts);
+          
+          // Check if any businesses have pending or suspended status with any case variation
+          const pendingBusinesses = allBusinesses.filter(b => 
+            typeof b.status === 'string' && b.status.toLowerCase().includes('pend'));
+          console.log(`Businesses with "pending" in status (${pendingBusinesses.length}):`, 
+            pendingBusinesses.map(b => ({ id: b.id, status: b.status })));
+          
+          const suspendedBusinesses = allBusinesses.filter(b => 
+            typeof b.status === 'string' && b.status.toLowerCase().includes('suspend'));
+          console.log(`Businesses with "suspended" in status (${suspendedBusinesses.length}):`, 
+            suspendedBusinesses.map(b => ({ id: b.id, status: b.status })));
+        } catch (err) {
+          console.error('Error querying businesses:', err);
+        }
+        
+        // Check content types and counts
+        try {
+          // First check if content table exists by attempting a count
+          const contentCount = await prisma.content.count();
+          console.log('Total content count:', contentCount);
+          
+          if (contentCount > 0) {
+            const contentTypes = await prisma.content.groupBy({
+              by: ['type'],
+              _count: true
+            });
+            console.log('Content types distribution:', contentTypes);
           }
-        });
-        
-        // Log all business statuses for debugging
-        console.log('All businesses with full details:', allBusinesses);
-        
-        // Count businesses by status
-        const businessStatusCounts: Record<string, number> = {};
-        allBusinesses.forEach(business => {
-          const status = business.status || 'null';
-          businessStatusCounts[status] = (businessStatusCounts[status] || 0) + 1;
-        });
-        console.log('Business counts by status:', businessStatusCounts);
-        
-        // Check if any businesses have pending or suspended status with any case variation
-        const pendingBusinesses = allBusinesses.filter(b => 
-          b.status?.toLowerCase().includes('pend'));
-        console.log('Businesses with "pending" in status:', pendingBusinesses);
-        
-        const suspendedBusinesses = allBusinesses.filter(b => 
-          b.status?.toLowerCase().includes('suspend'));
-        console.log('Businesses with "suspended" in status:', suspendedBusinesses);
+        } catch (err) {
+          console.error('Error querying content (table may not exist):', err);
+        }
       } catch (err) {
         console.error('Error in logRawResults:', err);
         // Continue execution even if this debug function fails
@@ -388,12 +421,81 @@ export async function GET() {
       console.error('Full error details:', err instanceof Error ? err.stack : String(err));
     }
     
+    // --- Business active user percentage ---
+    let businessActiveUserStats: Array<{ id: string, name: string, activeUserCount: number, percent: number }> = [];
+    let languageActiveUserStats: Array<{ language: string, activeUserCount: number, percent: number }> = [];
+
+    try {
+      // Get all businesses with their users and user status/language
+      const allBusinessesWithUsers = await prisma.business.findMany({
+        select: {
+          id: true,
+          name: true,
+          users: {
+            select: {
+              user: {
+                select: {
+                  id: true,
+                  status: true,
+                  language: true,
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // Calculate active user counts per business and total
+      let totalActiveUsers = 0;
+      businessActiveUserStats = allBusinessesWithUsers.map(biz => {
+        const activeUserCount = biz.users.filter(bu =>
+          bu.user.status && bu.user.status.toLowerCase() === 'active'
+        ).length;
+        totalActiveUsers += activeUserCount;
+        return {
+          id: biz.id,
+          name: biz.name,
+          activeUserCount,
+          percent: 0 // will fill below
+        };
+      });
+
+      // Now fill in the percent for each business
+      businessActiveUserStats = businessActiveUserStats.map(biz => ({
+        ...biz,
+        percent: totalActiveUsers > 0 ? Math.round((biz.activeUserCount / totalActiveUsers) * 100) : 0
+      }));
+
+      // --- Language active user percentage ---
+      // Aggregate active users by language
+      const languageCounts: Record<string, number> = {};
+      allBusinessesWithUsers.forEach(biz => {
+        biz.users.forEach(bu => {
+          if (bu.user.status && bu.user.status.toLowerCase() === 'active') {
+            const lang = bu.user.language || 'Unknown';
+            languageCounts[lang] = (languageCounts[lang] || 0) + 1;
+          }
+        });
+      });
+      const totalActiveLangUsers = Object.values(languageCounts).reduce((a, b) => a + b, 0);
+      languageActiveUserStats = Object.entries(languageCounts).map(([language, activeUserCount]) => ({
+        language,
+        activeUserCount,
+        percent: totalActiveLangUsers > 0 ? Math.round((activeUserCount / totalActiveLangUsers) * 100) : 0
+      }));
+
+    } catch (err) {
+      console.error('Error calculating business/language active user stats:', err);
+    }
+    
     console.log('Stats calculated - returning response');
     
     return NextResponse.json({
       success: true,
       stats,
-      recentBusinessRegistrations
+      recentBusinessRegistrations,
+      businessActiveUserStats,
+      languageActiveUserStats
     });
   } catch (error) {
     console.error('Error fetching dashboard stats:', error);

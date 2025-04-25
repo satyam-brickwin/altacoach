@@ -141,7 +141,7 @@ export default function Navbar() {
                         ? '/business'
                         : user?.role?.toLowerCase() === 'staff'
                           ? '/staff'
-                          : '/dashboard'
+                          : '/staff'
                   }
                   className="text-gray-700 hover:text-purple-600 dark:text-gray-300 dark:hover:text-purple-400"
                 >

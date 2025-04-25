@@ -668,10 +668,10 @@ const AdminDashboard = () => {
                     <span className="text-sm text-gray-700 dark:text-gray-300">{translate('regularUsers')}</span>
                     <span className="text-sm font-medium text-[#C72026] dark:text-[#C72026]">{userStats.regularUsers}</span>
                   </div> */}
-                  <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex justify-between items-center">
+                  {/* <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex justify-between items-center">
                     <span className="text-sm text-gray-700 dark:text-gray-300">{translate('businessUsers')}</span>
                     <span className="text-sm font-medium text-[#C72026] dark:text-[#C72026]">{userStats.businessUsers}</span>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>
