@@ -8,6 +8,7 @@ import { useAuthProtection, UserRole } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Image from 'next/image';
+import { jsPDF } from "jspdf"; // ✨ Import at top
 // import DatePicker from 'react-datepicker'; // You need to install react-datepicker
 // import 'react-datepicker/dist/react-datepicker.css';
 
@@ -60,7 +61,28 @@ const sampleAnalyticsData = {
 const adminTranslations = {
   en: {
     adminDashboard: 'Admin Dashboard',
+    ChatInteractionStatistics: 'Chat Interaction Statistics',
+    TotalChatSessions: 'Total Chat Sessions',
+    ChatConversations: 'Chat Conversations',
+    AverageSessionTime: 'Average Session Time',
+    PerChatSession: 'Per Chat Session',
+    ActiveChatUsers: 'Active Chat Users',
+    UniqueUsers: 'Unique Users',
+    ChatActivitybyBusiness: 'Chat Activity by Business',
+    Business: 'Business',
+    Users: 'Users',
+    Chats: 'Chats',
+    Messages: 'Messages',
+    AvgDuration: 'Avg Duration',
+    AverageDuration: 'Average Duration',
+    Ok: 'OK',
+    Year: 'Year',
+    SignOut: 'Sign Out',
+    Admin: 'Admin',
+    Retry: 'Retry',
+    Active: 'Active',
     dashboard: 'Dashboard',
+    activeUserPercentage: 'Active User Percentage',
     businesses: 'Businesses',
     content: 'Content',
     userAccounts: 'User Accounts',
@@ -116,6 +138,29 @@ const adminTranslations = {
   },
   fr: {
     adminDashboard: 'Tableau de Bord Admin',
+    ChatInteractionStatistics: 'Statistiques d\'Interaction de Chat',
+    TotalChatSessions: 'Total des Sessions de Chat',
+    ChatConversations: 'Conversations de chat',
+    AverageSessionTime: 'Durée moyenne de session',
+    Active: 'Actif',
+    PerChatSession: 'Par session de chat',
+    ActiveChatUsers: 'Utilisateurs de chat actifs',
+    UniqueUsers: 'Utilisateurs uniques',
+    ChatActivitybyBusiness: 'Activité de chat par entreprise',
+    Business: 'Entreprise',
+    Users: 'Utilisateurs',
+    Chats: 'Chats',
+    Messages: 'Messages',
+    AvgDuration: 'Durée moyenne',
+    AverageDuration: 'Durée moyenne',
+    Ok: 'OK',
+    Year: 'Année',
+    SignOut: 'Se déconnecter',
+    Admin: 'Admin',
+    Retry: 'Réessayer',
+    min: 'min',
+
+    activeUserPercentage: 'Pourcentage d\'Utilisateurs Actifs',
     dashboard: 'Tableau de Bord',
     businesses: 'Entreprises',
     content: 'Contenu',
@@ -172,6 +217,29 @@ const adminTranslations = {
   },
   de: {
     adminDashboard: 'Admin-Dashboard',
+    activeUserPercentage: 'Prozentsatz aktiver Benutzer',
+    ChatInteractionStatistics: 'Chat-Interaktionsstatistiken',
+    ChatConversations: 'Chatgesprekken',
+    AverageSessionTime: 'Gemiddelde sessieduur',
+    Active: 'Aktiv',
+    PerChatSession: 'Per chatsessie',
+    ActiveChatUsers: 'Actieve chatgebruikers',
+    UniqueUsers: 'Unieke gebruikers',
+    ChatActivitybyBusiness: 'Chatactiviteit per bedrijf',
+    Business: 'Bedrijf',
+    Users: 'Gebruikers',
+    Chats: 'Chats',
+    Messages: 'Berichten',
+    AvgDuration: 'Gemiddelde duur',
+    AverageDuration: 'Gemiddelde duur',
+    Ok: 'OK',
+    Year: 'Jaar',
+    SignOut: 'Afmelden',
+    Admin: 'Beheerder',
+    Retry: 'Opnieuw proberen',
+    min: 'min',
+
+    TotalChatSessions: 'Gesamtzahl der Chatsitzungen',
     dashboard: 'Dashboard',
     businesses: 'Unternehmen',
     content: 'Inhalt',
@@ -228,6 +296,29 @@ const adminTranslations = {
   },
   it: {
     adminDashboard: 'Dashboard Admin',
+    activeUserPercentage: 'Percentuale Utenti Attivi',
+    ChatInteractionStatistics: 'Statistiche Interazione Chat',
+    Active: 'Attivo',
+    TotalChatSessions: 'Totale Sessioni Chat',
+    ChatConversations: 'Conversazioni in chat',
+    AverageSessionTime: 'Durata media della sessione',
+    PerChatSession: 'Per sessione di chat',
+    ActiveChatUsers: 'Utenti attivi in chat',
+    UniqueUsers: 'Utenti unici',
+    ChatActivitybyBusiness: 'Attività di chat per azienda',
+    Business: 'Azienda',
+    Users: 'Utenti',
+    Chats: 'Chat',
+    Messages: 'Messaggi',
+    AvgDuration: 'Durata media',
+    AverageDuration: 'Durata media',
+    Ok: 'OK',
+    Year: 'Anno',
+    SignOut: 'Disconnettersi',
+    Admin: 'Amministratore',
+    Retry: 'Riprova',
+    min: 'min',
+
     dashboard: 'Dashboard',
     businesses: 'Aziende',
     content: 'Contenuto',
@@ -461,12 +552,11 @@ export default function AdminAnalytics() {
 
       // Add report metadata
       csvContent += `Report Date,${date.toLocaleString()}\n`;
-      csvContent += `Time Period,${
-        periodType === 'year' ? `Year ${selectedYear}` :
+      csvContent += `Time Period,${periodType === 'year' ? `Year ${selectedYear}` :
         periodType === 'month' ? `${new Date(0, selectedMonth - 1).toLocaleString(language, { month: 'long' })} ${selectedYear}` :
-        periodType === 'range' && dateFrom && dateTo ? `${dateFrom.toISOString().split('T')[0]} to ${dateTo.toISOString().split('T')[0]}` :
-        'All Time'
-      }\n\n`;
+          periodType === 'range' && dateFrom && dateTo ? `${dateFrom.toISOString().split('T')[0]} to ${dateTo.toISOString().split('T')[0]}` :
+            'All Time'
+        }\n\n`;
 
       // Add user statistics with clear section header
       csvContent += '======== USER STATISTICS ========\n';
@@ -658,12 +748,6 @@ export default function AdminAnalytics() {
             sessionDuration = Math.round(chatDurationData.averageDurationMinutes);
           }
 
-            // Get average session duration from chat data if available
-            let sessionDuration1 = Math.max(8, Math.min(25, Math.round(regularUsers / 50))); // Default
-            if (chatDurationData.success && chatDurationData.averageDurationMinutes) {
-              sessionDuration = Math.round(chatDurationData.averageDurationMinutes);
-            }
-
           // Update usage statistics with business and language breakdown
           setUsageStats(prev => ({
             ...prev,
@@ -770,6 +854,90 @@ export default function AdminAnalytics() {
     }
   }, [isAuthenticated, authLoading, periodType, selectedYear, selectedMonth, dateFrom, dateTo, selectedBusinesses]);
 
+
+
+  const handleExportChatHistory = async () => {
+    try {
+      let businessesToExport = selectedBusinesses;
+
+      if (businessesToExport.length === 0) {
+        const res = await fetch('/api/admin/businesses');
+        const data = await res.json();
+        businessesToExport = (data.businesses || []).map((b: any) => b.id);
+      }
+
+      const response = await fetch('/api/admin/export-chat-history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ selectedBusinesses: businessesToExport }),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to export chat history');
+      }
+
+      const doc = new jsPDF();
+      let y = 10; // start position
+
+      data.data.forEach((chat: any, index: number) => {
+        if (index > 0) {
+          doc.addPage();
+          y = 10; // Reset after new page
+        }
+
+        doc.setFontSize(16);
+        doc.text(`Chat: ${chat.name || 'Untitled Chat'}`, 10, y);
+        y += 10;
+        doc.setFontSize(12);
+        doc.text(`User ID: ${chat.user_id}`, 10, y);
+        y += 7;
+        doc.text(`Created At: ${chat.created_at}`, 10, y);
+        y += 10;
+        doc.setFontSize(14);
+        doc.text('--- Conversation ---', 10, y);
+        y += 10;
+
+        if (chat.chat_history.length === 0) {
+          doc.text('(No messages)', 10, y);
+          y += 10;
+        } else {
+          chat.chat_history.forEach((entry: any) => {
+            // Add question
+            doc.setFontSize(12);
+            const questionLines = doc.splitTextToSize(`Q: ${entry.question}`, 180);
+            questionLines.forEach((line: string) => {
+              doc.text(line, 10, y);
+              y += 7;
+            });
+
+            // Add answer
+            const answerLines = doc.splitTextToSize(`A: ${entry.answer}`, 180);
+            answerLines.forEach((line: string) => {
+              doc.text(line, 10, y);
+              y += 7;
+            });
+
+            y += 5; // Gap between Q&A pairs
+
+            // If page bottom is reached, add new page
+            if (y > 270) {
+              doc.addPage();
+              y = 10;
+            }
+          });
+        }
+      });
+
+      doc.save(`altacoach-chat-history-${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (err) {
+      console.error('Export Chat History PDF error:', err);
+      alert('Failed to export chat history. Please try again.');
+    }
+  };
+
+
   // Enhance the error display with option to retry
   const handleRetry = () => {
     setError(null);
@@ -872,10 +1040,10 @@ export default function AdminAnalytics() {
 
   // Function to handle detailed report view
   // Function to handle detailed report view
-const handleViewDetailedReport = () => {
-  try {
-    // Create a more beautiful HTML representation of the data
-    let htmlContent = `
+  const handleViewDetailedReport = () => {
+    try {
+      // Create a more beautiful HTML representation of the data
+      let htmlContent = `
       <!DOCTYPE html>
       <html lang="${language}">
       <head>
@@ -1250,12 +1418,11 @@ const handleViewDetailedReport = () => {
         <div class="container">
           <div class="report-header">
             <h1>altacoach Analytics - Detailed Report</h1>
-            <p>A comprehensive view of platform performance metrics and insights for ${
-              periodType === 'year' ? `Year ${selectedYear}` :
-              periodType === 'month' ? `${new Date(0, selectedMonth - 1).toLocaleString(language, { month: 'long' })} ${selectedYear}` :
-              periodType === 'range' && dateFrom && dateTo ? `${dateFrom.toISOString().split('T')[0]} to ${dateTo.toISOString().split('T')[0]}` :
+            <p>A comprehensive view of platform performance metrics and insights for ${periodType === 'year' ? `Year ${selectedYear}` :
+          periodType === 'month' ? `${new Date(0, selectedMonth - 1).toLocaleString(language, { month: 'long' })} ${selectedYear}` :
+            periodType === 'range' && dateFrom && dateTo ? `${dateFrom.toISOString().split('T')[0]} to ${dateTo.toISOString().split('T')[0]}` :
               'All Time'
-            }</p>
+        }</p>
           </div>
           
           <!-- User Statistics Section -->
@@ -1549,12 +1716,11 @@ const handleViewDetailedReport = () => {
           <div class="meta-info">
             <div>
               <p>Report generated on ${new Date().toLocaleString()}</p>
-              <p>Time Period: ${
-                periodType === 'year' ? `Year ${selectedYear}` :
-                periodType === 'month' ? `${new Date(0, selectedMonth - 1).toLocaleString(language, { month: 'long' })} ${selectedYear}` :
-                periodType === 'range' && dateFrom && dateTo ? `${dateFrom.toISOString().split('T')[0]} to ${dateTo.toISOString().split('T')[0]}` :
-                'All Time'
-              }</p>
+              <p>Time Period: ${periodType === 'year' ? `Year ${selectedYear}` :
+          periodType === 'month' ? `${new Date(0, selectedMonth - 1).toLocaleString(language, { month: 'long' })} ${selectedYear}` :
+            periodType === 'range' && dateFrom && dateTo ? `${dateFrom.toISOString().split('T')[0]} to ${dateTo.toISOString().split('T')[0]}` :
+              'All Time'
+        }</p>
             </div>
             <div>
               <button onclick="window.print()" class="print-button">
@@ -1577,18 +1743,18 @@ const handleViewDetailedReport = () => {
       </html>
     `;
 
-    // Create a blob and open in a new tab
-    const blob = new Blob([htmlContent], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    window.open(url, '_blank');
+      // Create a blob and open in a new tab
+      const blob = new Blob([htmlContent], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
 
-    // Clean up URL object after the tab is opened
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  } catch (err) {
-    console.error('Error generating detailed report:', err);
-    alert('Failed to generate report. Please try again.');
-  }
-};
+      // Clean up URL object after the tab is opened
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      console.error('Error generating detailed report:', err);
+      alert('Failed to generate report. Please try again.');
+    }
+  };
 
   // Function to handle logout
   const handleLogout = async () => {
@@ -1616,7 +1782,7 @@ const handleViewDetailedReport = () => {
           onClick={handleRetry}
           className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
         >
-          Retry
+          {t('Retry')}
         </button>
       </div>
     </div>
@@ -1657,7 +1823,7 @@ const handleViewDetailedReport = () => {
                   <span className="text-gray-900 dark:text-white tracking-[.10em]">oach</span>
                 </span>
                 <span className="ml-2 px-2 py-1 bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] text-sm font-medium rounded">
-                  Admin
+                  {t('Admin')}
                 </span>
               </div>
             </div>
@@ -1759,7 +1925,7 @@ const handleViewDetailedReport = () => {
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                       </svg>
-                      Sign out
+                      {t('SignOut')}
                     </button>
                   </div>
                 )}
@@ -1934,7 +2100,7 @@ const handleViewDetailedReport = () => {
                           onChange={() => setPeriodType('year')}
                           className="mr-2"
                         />
-                        Year
+                        {t('Year')}
                       </label>
                       {periodType === 'year' && (
                         <input
@@ -1955,7 +2121,7 @@ const handleViewDetailedReport = () => {
                           onChange={() => setPeriodType('month')}
                           className="mr-2"
                         />
-                        Month
+                        {t('Month')}
                       </label>
                       {periodType === 'month' && (
                         <div className="flex gap-2 mt-1">
@@ -2051,7 +2217,7 @@ const handleViewDetailedReport = () => {
                       className="mt-4 w-full bg-[#C72026] text-white py-1 rounded"
                       onClick={() => setIsFilterDropdownOpen(false)}
                     >
-                      OK
+                      {t('Ok')}
                     </button>
                   </div>
                 </>
@@ -2114,8 +2280,8 @@ const handleViewDetailedReport = () => {
                   <div className="flex justify-center">
                     <div className="relative w-40 h-40">
                       <svg viewBox="0 0 36 36" className="w-full h-full">
-                       ```html
-<path
+                        ```html
+                        <path
                           d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1            0 -31.831"
                           fill="none"
                           stroke="#eee"
@@ -2135,7 +2301,7 @@ const handleViewDetailedReport = () => {
                           {avgUsersPerBusinessPercent}%
                         </div>
                         <div className="text-sm text-gray-500 dark:text-gray-400">
-                          Active
+                          {t('Active')}
                         </div>
                       </div>
                     </div>
@@ -2184,11 +2350,11 @@ const handleViewDetailedReport = () => {
                         <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
                       ) : (
                         <p className="text-3xl font-semibold text-gray-900 dark:text-white">
-                          {usageStats.sessionDuration} <span className="text-xl">min</span>
+                          {usageStats.sessionDuration} <span className="text-xl">{t('min')}</span>
                         </p>
                       )}
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Average Duration
+                        {t('AverageDuration')}
                       </p>
                     </div>
                   </div>
@@ -2240,7 +2406,7 @@ const handleViewDetailedReport = () => {
                     </div>
                   ) : (
                     <p className="text-gray-500 dark:text-gray-400 text-center py-6">
-                      No business data available for the selected period.
+                      {t('NoLanguageDataAvailableForTheSelectedPeriod.')}
                     </p>
                   )}
                 </div>
@@ -2282,9 +2448,74 @@ const handleViewDetailedReport = () => {
                     </div>
                   ) : (
                     <p className="text-gray-500 dark:text-gray-400 text-center py-6">
-                      No language data available for the selected period.
+                      {t('NoLanguageDataAvailableForTheSelectedPeriod.')}
                     </p>
                   )}
+                </div>
+              </div>
+            </section>
+            {/* Device Breakdown */}
+            <section>
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                  {t('device')}
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-center">
+                    <div className="w-12 h-12 bg-indigo-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H9a2 2 0 00-2 2v14a2 2 0 002 2h2a2 2 0 012 2z"></path>
+                      </svg>
+                    </div>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      {t('mobile')}
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {deviceStats.mobile}%
+                    </p>
+                  </div>
+
+                  <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-center">
+                    <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                      </svg>
+                    </div>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      {t('desktop')}
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {deviceStats.desktop}%
+                    </p>
+                  </div>
+
+                  <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-center">
+                    <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2h2a2 2 0 012 2z"></path>
+                      </svg>
+                    </div>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      {t('tablet')}
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {deviceStats.tablet}%
+                    </p>
+                  </div>
+
+                  <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-center">
+                    <div className="w-12 h-12 bg-gray-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2h2a2 2 0 012 2z"></path>
+                      </svg>
+                    </div>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      {t('other')}
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {deviceStats.other}%
+                    </p>
+                  </div>
                 </div>
               </div>
             </section>
@@ -2292,7 +2523,7 @@ const handleViewDetailedReport = () => {
             {/* Chat Statistics Section */}
             <section className="mb-8">
               <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
-                Chat Interaction Statistics
+                {t('ChatInteractionStatistics')}
               </h2>
 
               {/* Description */}
@@ -2301,7 +2532,7 @@ const handleViewDetailedReport = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                    Total Chat Sessions
+                    {t('TotalChatSessions')}
                   </h3>
                   <div className="flex items-center">
                     <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mr-4">
@@ -2318,7 +2549,7 @@ const handleViewDetailedReport = () => {
                         </p>
                       )}
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Chat Conversations
+                        {t('ChatConversations')}
                       </p>
                     </div>
                   </div>
@@ -2326,7 +2557,7 @@ const handleViewDetailedReport = () => {
 
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                    Average Session Time
+                    {t('AverageSessionTime')}
                   </h3>
                   <div className="flex items-center">
                     <div className="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center mr-4">
@@ -2343,42 +2574,16 @@ const handleViewDetailedReport = () => {
                         </p>
                       )}
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Per Chat Session
+                        {t('PerChatSession')}
                       </p>
                     </div>
                   </div>
                 </div>
 
 
-
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                    Session Time
-                  </h3>
-                  <div className="flex items-center">
-                    <div className="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center mr-4">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                      </svg>
-                    </div>
-                    <div>
-                      {isLoading ? (
-                        <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                      ) : (
-                        <p className="text-3xl font-semibold text-gray-900 dark:text-white">
-                          {usageStats.sessionDuration} <span className="text-xl">min</span>
-                        </p>
-                      )}
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Per Chat Session
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                    Active Chat Users
+                    {t('ActiveChatUsers')}
                   </h3>
                   <div className="flex items-center">
                     <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mr-4">
@@ -2395,7 +2600,7 @@ const handleViewDetailedReport = () => {
                         </p>
                       )}
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Unique Users
+                        {t('UniqueUsers')}
                       </p>
                     </div>
                   </div>
@@ -2406,26 +2611,26 @@ const handleViewDetailedReport = () => {
               {usageStats.chatStats && usageStats.chatStats.length > 0 && (
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                    Chat Activity by Business
+                    {t('ChatActivitybyBusiness')}
                   </h3>
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                       <thead>
                         <tr>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Business
+                            {t('Business')}
                           </th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Users
+                            {t('Users')}
                           </th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Chats
+                            {t('Chats')}
                           </th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Messages
+                            {t('Messages')}
                           </th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Avg Duration
+                            {t('AvgDuration')}
                           </th>
                         </tr>
                       </thead>
@@ -2445,7 +2650,7 @@ const handleViewDetailedReport = () => {
                               {stat.totalMessages}
                             </td>
                             <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
-                              {Math.round(stat.averageDurationMinutes)} min
+                              {Math.round(stat.averageDurationMinutes)} {t('min')}
                             </td>
                           </tr>
                         ))}
@@ -2470,6 +2675,13 @@ const handleViewDetailedReport = () => {
               >
                 {t('exportData')}
               </button>
+              <button
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                onClick={handleExportChatHistory}
+              >
+                Export Chat History
+              </button>
+
             </div>
 
             {/* Last Updated */}
@@ -2479,6 +2691,6 @@ const handleViewDetailedReport = () => {
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
