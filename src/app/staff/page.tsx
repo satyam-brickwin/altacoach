@@ -55,6 +55,7 @@ const translations = {
       cannedQuestions: 'Canned Questions',
       history: 'History',
       suggestions: 'Suggestions',
+      AskQuestion: 'Ask Question',
     },
     quizModeActive: 'Quiz Mode Active',
     quiz: {
@@ -187,6 +188,7 @@ const translations = {
       cannedQuestions: 'Questions prédéfinies',
       history: 'Historique',
       suggestions: 'Suggestions',
+      AskQuestion: 'Poser une question',
     },
     quizModeActive: 'Mode Quiz Actif',
     quiz: {
@@ -209,7 +211,7 @@ const translations = {
     categories: {
       business: "Affaires",
       businessStrategy: "Stratégie d'entreprise",
-      marketing: "Marketing",
+      marketing: "Commercialisation",
       customerSupport: "Service client",
       documentAnalysis: "Analyse de documents",
       productKnowledge: "Connaissance du produit",
@@ -319,6 +321,7 @@ const translations = {
       cannedQuestions: 'Vorgefertigte Fragen',
       history: 'Verlauf',
       suggestions: 'Vorschläge',
+      AskQuestion: 'Frage stellen',
     },
     quizModeActive: 'Quiz-Modus Aktiv',
     quiz: {
@@ -451,6 +454,7 @@ const translations = {
       cannedQuestions: 'Domande predefinite',
       history: 'Cronologia',
       suggestions: 'Suggerimenti',
+      AskQuestion: 'Fai una domanda',
     },
     quizModeActive: 'Modalità Quiz Attiva',
     quiz: {
@@ -831,7 +835,6 @@ export default function StaffDashboard() {
     date: string;
   }>>([]);
 
-
   useEffect(() => {
     if (user?.id) {
       fetch(`/api/chat/list/${user.id}`)
@@ -848,16 +851,6 @@ export default function StaffDashboard() {
         .catch(err => console.error('Failed to load chat history:', err));
     }
   }, [user]);
-
-
-  useEffect(() => {
-    if (user?.language) {
-      // Map the user's language to the corresponding SupportedLanguage code
-      const mappedLanguage = languages.find(lang => lang.name === user.language)?.code || 'en'; // Default to 'en' if not found
-      setLanguage(mappedLanguage as SupportedLanguage);
-    }
-  }, [user, setLanguage]);
-
 
   useEffect(() => {
     if (user?.language) {
@@ -1602,6 +1595,104 @@ export default function StaffDashboard() {
     });
   };
 
+  // Add utility functions for device detection
+  const getDeviceType = () => {
+    const ua = navigator.userAgent;
+    if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
+      return "Tablet";
+    }
+    else if (/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(ua)) {
+      return "Mobile";
+    }
+    return "Desktop";
+  };
+
+  const getBrowserInfo = () => {
+    const ua = navigator.userAgent;
+    let browser = "Unknown";
+    
+    if (ua.includes("Chrome") && !ua.includes("Edg")) browser = "Chrome";
+    else if (ua.includes("Firefox")) browser = "Firefox";
+    else if (ua.includes("Safari") && !ua.includes("Chrome")) browser = "Safari";
+    else if (ua.includes("Edg")) browser = "Edge";
+    else if (ua.includes("MSIE") || ua.includes("Trident/")) browser = "Internet Explorer";
+    
+    return browser;
+  };
+
+  const getOSInfo = () => {
+    const ua = navigator.userAgent;
+    let os = "Unknown";
+    
+    if (ua.includes("Windows")) os = "Windows";
+    else if (ua.includes("Mac OS")) os = "MacOS";
+    else if (ua.includes("Linux")) os = "Linux";
+    else if (ua.includes("Android")) os = "Android";
+    else if (ua.includes("iPhone") || ua.includes("iPad")) os = "iOS";
+    
+    return os;
+  };
+
+  // Function to collect and send device info
+  const collectDeviceInfo = async (userId: string) => {
+    try {
+      // Get device information
+      const deviceData = {
+        userAgent: navigator.userAgent,
+        platform: navigator.platform,
+        language: navigator.language,
+        screenSize: `${window.screen.width}x${window.screen.height}`,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        deviceType: getDeviceType(),
+        browser: getBrowserInfo(),
+        os: getOSInfo(),
+        timestamp: new Date().toISOString()
+      };
+
+      console.log('Collecting device info for user:', userId);
+
+      // Send to API endpoint
+      const response = await fetch('/api/user/device-info', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          device: JSON.stringify(deviceData)
+        }),
+      });
+
+      const responseText = await response.text();
+      let responseData;
+      try {
+        responseData = JSON.parse(responseText);
+      } catch (e) {
+        console.error('Error parsing response:', e);
+      }
+
+      if (!response.ok) {
+        console.error('Failed to save device info. Status:', response.status);
+        console.error('Response:', responseText);
+        throw new Error('Failed to save device info');
+      }
+
+      console.log('Device info saved successfully:', responseData);
+    } catch (error) {
+      console.error('Error in collectDeviceInfo:', error);
+    }
+  };
+
+  // Add this useEffect after your other useEffects to save device info on login
+  useEffect(() => {
+    // Check if user is logged in and auth is complete
+    if (user?.id && !authLoading) {
+      console.log('User authenticated, collecting device info for:', user.id);
+      // Collect device info when user signs in
+      collectDeviceInfo(user.id);
+    }
+  }, [user?.id, authLoading]); // This will run when the user ID is available and auth is complete
+
   return (
     <div className="h-screen flex overflow-scroll">
       <div className={`fixed top-0 left-0 h-full bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 w-[260px] z-50 flex flex-col transition-transform duration-300 ease-in-out shadow-lg overflow-y-auto ${menuOpen ? "translate-x-0" : "-translate-x-full"
@@ -1867,7 +1958,7 @@ export default function StaffDashboard() {
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
+                xmlns="http://www.w3.org/2000svg"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
@@ -2178,7 +2269,7 @@ export default function StaffDashboard() {
                       setInputValue(''); // Clear input after sending
                     }
                   }}
-                  placeholder="Ask Question"
+                  placeholder={translations[language]?.askQuestion || "AskQuestion"}
                   // Added padding-right to make space for the button
                   className="w-full p-3 pr-12 border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-[#C72026] dark:bg-gray-800 dark:text-white"
                   rows={1}

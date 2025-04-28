@@ -436,43 +436,106 @@ export default function AdminAnalytics() {
   }
 
   // Function to handle data export
+  // Function to handle data export
   const handleExportData = () => {
     try {
       // Format date for filename
       const date = new Date();
       const formattedDate = date.toISOString().split('T')[0];
-      const filename = `altacoach-analytics-${formattedDate}.csv`;
 
-      // Create CSV content
-      let csvContent = 'Category,Metric,Value\n';
+      // Create filename with period info if applicable
+      let periodInfo = 'all-time';
+      if (periodType === 'year') {
+        periodInfo = `year-${selectedYear}`;
+      } else if (periodType === 'month') {
+        periodInfo = `${selectedYear}-${selectedMonth.toString().padStart(2, '0')}`;
+      } else if (periodType === 'range' && dateFrom && dateTo) {
+        periodInfo = `${dateFrom.toISOString().split('T')[0]}-to-${dateTo.toISOString().split('T')[0]}`;
+      }
 
-      // Add user statistics
-      csvContent += `User Statistics,Total Users,${analyticsData.userStats.totalUsers}\n`;
-      csvContent += `User Statistics,Active Users,${analyticsData.userStats.activeUsers}\n`;
-      csvContent += `User Statistics,New Users This Month,${analyticsData.userStats.newUsersThisMonth}\n`;
-      csvContent += `User Statistics,Average Session Time,${analyticsData.userStats.averageSessionTime}\n`;
+      const filename = `altacoach-analytics-${periodInfo}-${formattedDate}.csv`;
 
-      // Add business statistics
-      csvContent += `Business Statistics,Total Businesses,${analyticsData.businessStats.totalBusinesses}\n`;
-      csvContent += `Business Statistics,Active Businesses,${analyticsData.businessStats.activeBusinesses}\n`;
-      csvContent += `Business Statistics,New Businesses This Month,${analyticsData.businessStats.newBusinessesThisMonth}\n`;
-      csvContent += `Business Statistics,Average Users Per Business,${analyticsData.businessStats.averageUsersPerBusiness}\n`;
+      // Create CSV content using the current data in the dashboard
+      // Using "=====" as visual separators to make headers stand out
+      let csvContent = '======== ALTACOACH ANALYTICS REPORT ========\n\n';
 
-      // Add content statistics
-      csvContent += `Content Statistics,Total Content,${analyticsData.contentStats.totalContent}\n`;
-      csvContent += `Content Statistics,Content Views,${analyticsData.contentStats.contentViews}\n`;
-      csvContent += `Content Statistics,Most Popular Content Type,${analyticsData.contentStats.mostPopularContentType}\n`;
-      csvContent += `Content Statistics,Average Completion Rate,${analyticsData.contentStats.averageCompletionRate}\n`;
+      // Add report metadata
+      csvContent += `Report Date,${date.toLocaleString()}\n`;
+      csvContent += `Time Period,${
+        periodType === 'year' ? `Year ${selectedYear}` :
+        periodType === 'month' ? `${new Date(0, selectedMonth - 1).toLocaleString(language, { month: 'long' })} ${selectedYear}` :
+        periodType === 'range' && dateFrom && dateTo ? `${dateFrom.toISOString().split('T')[0]} to ${dateTo.toISOString().split('T')[0]}` :
+        'All Time'
+      }\n\n`;
 
-      // Add AI statistics
-      csvContent += `AI Interaction Statistics,Total Interactions,${analyticsData.aiStats.totalInteractions}\n`;
-      csvContent += `AI Interaction Statistics,Average Response Time,${analyticsData.aiStats.averageResponseTime}\n`;
-      csvContent += `AI Interaction Statistics,Satisfaction Rate,${analyticsData.aiStats.satisfactionRate}\n`;
-      csvContent += `AI Interaction Statistics,Most Common Queries,${analyticsData.aiStats.mostCommonQueries}\n`;
+      // Add user statistics with clear section header
+      csvContent += '======== USER STATISTICS ========\n';
+      csvContent += 'Metric,Value,Description\n';
+      csvContent += `Total Users,${analyticsData.userStats.totalUsers},Total number of registered users\n`;
+      csvContent += `Active Users,${analyticsData.userStats.activeUsers},Users who logged in during the period\n`;
+      csvContent += `New Users This Period,${analyticsData.userStats.newUsersThisMonth},New user registrations during the selected time period\n`;
+      csvContent += `Average Session Time,${analyticsData.userStats.averageSessionTime},Average time users spend on the platform per session\n`;
+      csvContent += `Active User Percentage,${avgUsersPerBusinessPercent}%,Percentage of total users who are active\n\n`;
 
-      // Add export metadata
-      csvContent += `\nExport Date,${date.toLocaleString()}\n`;
-      csvContent += `Time Range,${t(timeRange)}\n`;
+      // Add business statistics with clear section header
+      csvContent += '======== BUSINESS STATISTICS ========\n';
+      csvContent += 'Metric,Value,Description\n';
+      csvContent += `Total Businesses,${analyticsData.businessStats.totalBusinesses},Total number of business accounts\n`;
+      csvContent += `Active Businesses,${analyticsData.businessStats.activeBusinesses},Business accounts with active users\n`;
+      csvContent += `New Businesses This Period,${analyticsData.businessStats.newBusinessesThisMonth},New business accounts created during the selected time period\n`;
+      csvContent += `Average Users Per Business,${analyticsData.businessStats.averageUsersPerBusiness},Average number of users associated with each business\n\n`;
+
+      // Add usage statistics with clear section header
+      csvContent += '======== USAGE STATISTICS ========\n';
+      csvContent += 'Metric,Value,Description\n';
+      csvContent += `Session Count,${usageStats.sessionCount},Total number of user sessions\n`;
+      csvContent += `Average Session Duration,${usageStats.sessionDuration} minutes,Average time users spend in a session\n\n`;
+
+      // Add device statistics with clear section header
+      csvContent += '======== DEVICE STATISTICS ========\n';
+      csvContent += 'Device Type,Percentage,\n';
+      csvContent += `Mobile,${deviceStats.mobile}%,\n`;
+      csvContent += `Desktop,${deviceStats.desktop}%,\n`;
+      csvContent += `Tablet,${deviceStats.tablet}%,\n`;
+      csvContent += `Other,${deviceStats.other}%,\n\n`;
+
+      // Add business breakdown if available
+      if (usageStats.businessBreakdown.length > 0) {
+        csvContent += '======== BUSINESS BREAKDOWN ========\n';
+        csvContent += 'Business Name,Active Users,Percentage\n';
+        usageStats.businessBreakdown.forEach(biz => {
+          csvContent += `${biz.name},${biz.activeUserCount},${biz.percent}%\n`;
+        });
+        csvContent += '\n';
+      }
+
+      // Add language breakdown if available
+      if (usageStats.languageBreakdown.length > 0) {
+        csvContent += '======== LANGUAGE BREAKDOWN ========\n';
+        csvContent += 'Language,Percentage,\n';
+        usageStats.languageBreakdown.forEach(lang => {
+          csvContent += `${lang.language},${lang.percent}%,\n`;
+        });
+        csvContent += '\n';
+      }
+
+      // Add chat statistics if available
+      if (usageStats.chatStats && usageStats.chatStats.length > 0) {
+        csvContent += '======== CHAT STATISTICS BY BUSINESS ========\n';
+        csvContent += 'Business Name,Users,Chats,Messages,Avg Duration (minutes)\n';
+        usageStats.chatStats.forEach(stat => {
+          csvContent += `${stat.businessName},${stat.usersCount},${stat.totalChats},${stat.totalMessages},${Math.round(stat.averageDurationMinutes)}\n`;
+        });
+
+        const totalChats = usageStats.chatStats.reduce((sum, stat) => sum + stat.totalChats, 0);
+        const totalChatUsers = usageStats.chatStats.reduce((sum, stat) => sum + stat.usersCount, 0);
+
+        csvContent += `TOTAL,${totalChatUsers},${totalChats},,\n\n`;
+      }
+
+      // Add export footer
+      csvContent += '======== END OF REPORT ========\n';
+      csvContent += 'Generated by altacoach Analytics Dashboard\n';
 
       // Create a blob and download link
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -595,6 +658,12 @@ export default function AdminAnalytics() {
             sessionDuration = Math.round(chatDurationData.averageDurationMinutes);
           }
 
+            // Get average session duration from chat data if available
+            let sessionDuration1 = Math.max(8, Math.min(25, Math.round(regularUsers / 50))); // Default
+            if (chatDurationData.success && chatDurationData.averageDurationMinutes) {
+              sessionDuration = Math.round(chatDurationData.averageDurationMinutes);
+            }
+
           // Update usage statistics with business and language breakdown
           setUsageStats(prev => ({
             ...prev,
@@ -654,6 +723,37 @@ export default function AdminAnalytics() {
         } else {
           console.warn('API returned success: false', data);
           // Keep using sample data
+        }
+
+        // Now fetch device statistics
+        try {
+          const deviceResponse = await fetch(`/api/admin/device-stats?${queryParams.toString()}`, {
+            cache: 'no-store',
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0'
+            }
+          });
+
+          if (deviceResponse.ok) {
+            const deviceData = await deviceResponse.json();
+
+            if (deviceData.success) {
+              console.log('Fetched device data:', deviceData);
+
+              // Update device statistics with real data
+              setDeviceStats({
+                mobile: deviceData.percentages.mobile || 0,
+                desktop: deviceData.percentages.desktop || 0,
+                tablet: deviceData.percentages.tablet || 0,
+                other: deviceData.percentages.other || 0
+              });
+            }
+          }
+        } catch (deviceError) {
+          console.error('Error fetching device statistics:', deviceError);
+          // Don't fail the whole process, just log the error
         }
       } catch (err) {
         console.error('Error fetching dashboard stats:', err);
@@ -723,10 +823,6 @@ export default function AdminAnalytics() {
                 newBusinessesThisMonth: data.stats?.businesses?.newThisMonth || prev.businessStats.newBusinessesThisMonth,
                 averageUsersPerBusiness: averageUsersPerBusiness
               },
-              contentStats: {
-                ...prev.contentStats,
-                totalContent: data.stats?.content?.total || prev.contentStats.totalContent
-              }
             }));
           }
         } catch (err) {
@@ -775,476 +871,724 @@ export default function AdminAnalytics() {
   };
 
   // Function to handle detailed report view
-  const handleViewDetailedReport = () => {
-    try {
-      // Create a more beautiful HTML representation of the data
-      let htmlContent = `
-        <!DOCTYPE html>
-        <html lang="${language}">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>AltaCoach Analytics - Detailed Report</title>
-          <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-          <style>
-            :root {
-              --primary: #C72026;
-              --primary-light: rgba(199, 32, 38, 0.1);
-              --primary-medium: rgba(199, 32, 38, 0.2);
-              --primary-dark: #a51a1f;
-              --gray-50: #f9fafb;
-              --gray-100: #f3f4f6;
-              --gray-200: #e5e7eb;
-              --gray-300: #d1d5db;
-              --gray-400: #9ca3af;
-              --gray-500: #6b7280;
-              --gray-600: #4b5563;
-              --gray-700: #374151;
-              --gray-800: #1f2937;
-              --gray-900: #111827;
-            }
-            
-            * {
-              box-sizing: border-box;
-              margin: 0;
-              padding: 0;
+  // Function to handle detailed report view
+const handleViewDetailedReport = () => {
+  try {
+    // Create a more beautiful HTML representation of the data
+    let htmlContent = `
+      <!DOCTYPE html>
+      <html lang="${language}">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>altacoach Analytics - Detailed Report</title>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <style>
+          :root {
+            --primary: #C72026;
+            --primary-light: rgba(199, 32, 38, 0.1);
+            --primary-medium: rgba(199, 32, 38, 0.2);
+            --primary-dark: #a51a1f;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+          }
+          
+          * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+          }
+          
+          body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: var(--gray-800);
+            background-color: var(--gray-50);
+            padding: 0;
+            margin: 0;
+          }
+          
+          .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+          }
+          
+          header {
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+          }
+          
+          .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          }
+          
+          .logo {
+            display: flex;
+            align-items: center;
+          }
+          
+          .logo h1 {
+            color: var(--gray-900);
+            font-size: 1.8rem;
+            margin: 0;
+            font-weight: 700;
+            font-style: italic;
+            letter-spacing: 0.1em;
+          }
+          
+          .logo h1 span {
+            color: var(--gray-900); /* All spans are black by default */
+          }
+          
+          .logo h1 span.red {
+            color: var(--primary); /* Only the span with class "red" will be red */
+          }
+          
+          .back-button {
+            display: inline-flex;
+            align-items: center;
+            background-color: var(--primary);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background-color 0.2s;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+          }
+          
+          .back-button:hover {
+            background-color: var(--primary-dark);
+          }
+          
+          .back-button svg {
+            margin-right: 0.5rem;
+            width: 1rem;
+            height: 1rem;
+          }
+          
+          .report-header {
+            margin: 2rem 0;
+          }
+          
+          .report-header h1 {
+            color: var(--primary);
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+          }
+          
+          .report-header p {
+            color: var(--gray-600);
+            font-size: 1.1rem;
+            max-width: 800px;
+          }
+          
+          section {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+          }
+          
+          section h2 {
+            color: var(--gray-800);
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--gray-200);
+          }
+          
+          table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 1rem;
+          }
+          
+          th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-200);
+          }
+          
+          th {
+            background-color: var(--gray-100);
+            font-weight: 600;
+            color: var(--gray-700);
+            position: sticky;
+            top: 73px;
+          }
+          
+          th:first-child {
+            border-top-left-radius: 0.375rem;
+          }
+          
+          th:last-child {
+            border-top-right-radius: 0.375rem;
+          }
+          
+          tr:last-child td:first-child {
+            border-bottom-left-radius: 0.375rem;
+          }
+          
+          tr:last-child td:last-child {
+            border-bottom-right-radius: 0.375rem;
+          }
+          
+          tr:hover td {
+            background-color: var(--gray-50);
+          }
+          
+          .meta-info {
+            background-color: var(--primary-light);
+            padding: 1rem;
+            border-radius: 0.375rem;
+            margin-top: 2rem;
+            display: flex;
+            justify-content: space-between;
+            color: var(--gray-700);
+            font-size: 0.875rem;
+            align-items: center;
+          }
+          
+          .value-column {
+            font-weight: 500;
+            color: var(--primary);
+          }
+          
+          .print-button {
+            background-color: var(--gray-200);
+            color: var(--gray-700);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            margin-left: 0.5rem;
+            transition: background-color 0.2s;
+          }
+          
+          .print-button:hover {
+            background-color: var(--gray-300);
+          }
+          
+          .print-button svg {
+            margin-right: 0.5rem;
+            width: 1rem;
+            height: 1rem;
+          }
+          
+          .admin-badge {
+            display: inline-block;
+            margin-left: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            background-color: var(--primary-light);
+            color: var(--primary);
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 0.25rem;
+          }
+          
+          .chart-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 2rem 0;
+            height: 300px;
+          }
+          
+          .chart-placeholder {
+            width: 100%;
+            height: 100%;
+            background-color: var(--gray-100);
+            border-radius: 0.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--gray-500);
+            font-style: italic;
+          }
+          
+          .stat-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+          }
+          
+          .stat-card {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            padding: 1.25rem;
+            display: flex;
+            align-items: center;
+          }
+          
+          .stat-icon {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            flex-shrink: 0;
+          }
+          
+          .stat-content h3 {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+            margin-bottom: 0.25rem;
+          }
+          
+          .stat-content p {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--gray-900);
+          }
+          
+          .section-subtitle {
+            color: var(--gray-600);
+            font-size: 1rem;
+            margin: -1rem 0 1.5rem 0;
+          }
+          
+          .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+          }
+          
+          @media print {
+            header, .back-button, .print-button {
+              display: none;
             }
             
             body {
-              font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-              line-height: 1.6;
-              color: var(--gray-800);
-              background-color: var(--gray-50);
-              padding: 0;
-              margin: 0;
+              background-color: white;
             }
             
             .container {
-              max-width: 1200px;
-              margin: 0 auto;
-              padding: 2rem;
-            }
-            
-            header {
-              background-color: white;
-              box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-              padding: 1rem 0;
-              position: sticky;
-              top: 0;
-              z-index: 10;
-            }
-            
-            .header-content {
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-            }
-            
-            .logo {
-              display: flex;
-              align-items: center;
-            }
-            
-            .logo h1 {
-              color: var(--gray-900);
-              font-size: 1.8rem;
-              margin: 0;
-              font-weight: 700;
-              font-style: italic;
-              letter-spacing: 0.1em;
-            }
-            
-            .logo h1 span {
-              color: var(--gray-900); /* All spans are black by default */
-            }
-            
-            .logo h1 span.red {
-              color: var(--primary); /* Only the span with class "red" will be red */
-            }
-            
-            .back-button {
-              display: inline-flex;
-              align-items: center;
-              background-color: var(--primary);
-              color: white;
-              padding: 0.5rem 1rem;
-              border-radius: 0.375rem;
-              text-decoration: none;
-              font-weight: 500;
-              transition: background-color 0.2s;
-              border: none;
-              cursor: pointer;
-              font-size: 0.875rem;
-            }
-            
-            .back-button:hover {
-              background-color: var(--primary-dark);
-            }
-            
-            .back-button svg {
-              margin-right: 0.5rem;
-              width: 1rem;
-              height: 1rem;
-            }
-            
-            .report-header {
-              margin: 2rem 0;
-            }
-            
-            .report-header h1 {
-              color: var(--primary);
-              font-size: 2.5rem;
-              margin-bottom: 1rem;
-              font-weight: 700;
-            }
-            
-            .report-header p {
-              color: var(--gray-600);
-              font-size: 1.1rem;
-              max-width: 800px;
+              padding: 0;
             }
             
             section {
-              background: white;
-              border-radius: 0.5rem;
-              box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-              padding: 1.5rem;
-              margin-bottom: 2rem;
-            }
-            
-            section h2 {
-              color: var(--gray-800);
-              font-size: 1.5rem;
-              margin-bottom: 1.5rem;
-              padding-bottom: 0.75rem;
-              border-bottom: 1px solid var(--gray-200);
+              box-shadow: none;
+              margin-bottom: 1rem;
+              page-break-inside: avoid;
             }
             
             table {
-              width: 100%;
-              border-collapse: separate;
-              border-spacing: 0;
-              margin-bottom: 1rem;
+              page-break-inside: avoid;
+            }
+          }
+          
+          @media (max-width: 768px) {
+            .container {
+              padding: 1rem;
             }
             
             th, td {
-              padding: 1rem;
-              text-align: left;
-              border-bottom: 1px solid var(--gray-200);
+              padding: 0.75rem 0.5rem;
             }
             
-            th {
-              background-color: var(--gray-100);
-              font-weight: 600;
-              color: var(--gray-700);
-              position: sticky;
-              top: 73px;
+            .report-header h1 {
+              font-size: 2rem;
             }
             
-            th:first-child {
-              border-top-left-radius: 0.375rem;
+            .chart-grid {
+              grid-template-columns: 1fr;
             }
-            
-            th:last-child {
-              border-top-right-radius: 0.375rem;
-            }
-            
-            tr:last-child td:first-child {
-              border-bottom-left-radius: 0.375rem;
-            }
-            
-            tr:last-child td:last-child {
-              border-bottom-right-radius: 0.375rem;
-            }
-            
-            tr:hover td {
-              background-color: var(--gray-50);
-            }
-            
-            .meta-info {
-              background-color: var(--primary-light);
-              padding: 1rem;
-              border-radius: 0.375rem;
-              margin-top: 2rem;
-              display: flex;
-              justify-content: space-between;
-              color: var(--gray-700);
-              font-size: 0.875rem;
-              align-items: center;
-            }
-            
-            .value-column {
-              font-weight: 500;
-              color: var(--primary);
-            }
-            
-            .print-button {
-              background-color: var(--gray-200);
-              color: var(--gray-700);
-              border: none;
-              padding: 0.5rem 1rem;
-              border-radius: 0.375rem;
-              font-weight: 500;
-              cursor: pointer;
-              display: inline-flex;
-              align-items: center;
-              margin-left: 0.5rem;
-              transition: background-color 0.2s;
-            }
-            
-            .print-button:hover {
-              background-color: var(--gray-300);
-            }
-            
-            .print-button svg {
-              margin-right: 0.5rem;
-              width: 1rem;
-              height: 1rem;
-            }
-            
-            .admin-badge {
-              display: inline-block;
-              margin-left: 0.5rem;
-              padding: 0.25rem 0.5rem;
-              background-color: var(--primary-light);
-              color: var(--primary);
-              font-size: 0.75rem;
-              font-weight: 600;
-              border-radius: 0.25rem;
-            }
-            
-            @media print {
-              header, .back-button, .print-button {
-                display: none;
-              }
-              
-              body {
-                background-color: white;
-              }
-              
-              .container {
-                padding: 0;
-              }
-              
-              section {
-                box-shadow: none;
-                margin-bottom: 1rem;
-                page-break-inside: avoid;
-              }
-              
-              table {
-                page-break-inside: avoid;
-              }
-            }
-            
-            @media (max-width: 768px) {
-              .container {
-                padding: 1rem;
-              }
-              
-              th, td {
-                padding: 0.75rem 0.5rem;
-              }
-              
-              .report-header h1 {
-                font-size: 2rem;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <header>
-            <div class="container">
-              <div class="header-content">
-                <div class="logo">
-                  <h1>
-                    <span>alta</span>
-                    <span class="red">c</span>
-                    <span>oach</span>
-                    <span class="admin-badge">Admin</span>
-                  </h1>
-                </div>
-                <button onclick="window.close()" class="back-button">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                  </svg>
-                  Back to Dashboard
-                </button>
+          }
+        </style>
+      </head>
+      <body>
+        <header>
+          <div class="container" style="padding: 0.75rem;">
+            <div class="header-content" style="justify-content: space-between; align-items: center;">
+              <div class="logo">
+                <h1 style="font-size: 1.2rem; margin: 0; display: flex; align-items: center;">
+                  <span>alta</span>
+                  <span class="red">c</span>
+                  <span>oach</span>
+                  <span class="admin-badge" style="font-size: 0.6rem; padding: 0.15rem 0.35rem; margin-left: 0.3rem;">Admin</span>
+                </h1>
               </div>
-            </div>
-          </header>
-          
-          <div class="container">
-            <div class="report-header">
-              <h1>AltaCoach Analytics - Detailed Report</h1>
-              <p>A comprehensive view of platform performance metrics and insights.</p>
-            </div>
-            
-            <section>
-              <h2>User Statistics</h2>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Metric</th>
-                    <th class="value-column">Value</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Total Users</td>
-                    <td class="value-column">${analyticsData.userStats.totalUsers}</td>
-                  </tr>
-                  <tr>
-                    <td>Active Users</td>
-                    <td className="value-column">${analyticsData.userStats.activeUsers}</td>
-                  </tr>
-                  <tr>
-                    <td>New Users This Month</td>
-                    <td class="value-column">${analyticsData.userStats.newUsersThisMonth}</td>
-                  </tr>
-                  <tr>
-                    <td>Average Session Time</td>
-                    <td class="value-column">${analyticsData.userStats.averageSessionTime}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </section>
-            
-            <section>
-              <h2>Business Statistics</h2>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Metric</th>
-                    <th class="value-column">Value</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Total Businesses</td>
-                    <td class="value-column">${analyticsData.businessStats.totalBusinesses}</td>
-                  </tr>
-                  <tr>
-                    <td>Active Businesses</td>
-                    <td class="value-column">${analyticsData.businessStats.activeBusinesses}</td>
-                  </tr>
-                  <tr>
-                    <td>New Businesses This Month</td>
-                    <td class="value-column">${analyticsData.businessStats.newBusinessesThisMonth}</td>
-                  </tr>
-                  <tr>
-                    <td>Average Users Per Business</td>
-                    <td class="value-column">${analyticsData.businessStats.averageUsersPerBusiness}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </section>
-            
-            <section>
-              <h2>Content Statistics</h2>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Metric</th>
-                    <th class="value-column">Value</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Total Content</td>
-                    <td class="value-column">${analyticsData.contentStats.totalContent}</td>
-                  </tr>
-                  <tr>
-                    <td>Content Views</td>
-                    <td class="value-column">${analyticsData.contentStats.contentViews}</td>
-                  </tr>
-                  <tr>
-                    <td>Most Popular Content Type</td>
-                    <td class="value-column">${analyticsData.contentStats.mostPopularContentType}</td>
-                  </tr>
-                  <tr>
-                    <td>Average Completion Rate</td>
-                    <td class="value-column">${analyticsData.contentStats.averageCompletionRate}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </section>
-            
-            <section>
-              <h2>AI Interaction Statistics</h2>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Metric</th>
-                    <th class="value-column">Value</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Total Interactions</td>
-                    <td class="value-column">${analyticsData.aiStats.totalInteractions}</td>
-                  </tr>
-                  <tr>
-                    <td>Average Response Time</td>
-                    <td class="value-column">${analyticsData.aiStats.averageResponseTime}</td>
-                  </tr>
-                  <tr>
-                    <td>Satisfaction Rate</td>
-                    <td class="value-column">${analyticsData.aiStats.satisfactionRate}</td>
-                  </tr>
-                  <tr>
-                    <td>Most Common Queries</td>
-                    <td class="value-column">${analyticsData.aiStats.mostCommonQueries}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </section>
-
-
-            {/* Last Updated */}
-            <div className="text-sm text-gray-500 dark:text-gray-400 text-right">
-              {t('lastUpdated')}: {currentTime}
-            </div>
-
-            <div class="meta-info">
-                <div>
-                  <p>Report generated on ${new Date().toLocaleString()}</p>
-                  <p>Time Range: ${t(timeRange)}</p>
-                </div>
-                <div>
-                  <button onclick="window.print()" class="print-button">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                    </svg>
-                    Print Report
-                  </button>
-                </div>
-              </div>
+              <button onclick="window.close()" class="back-button" style="font-size: 0.75rem; padding: 0.3rem 0.7rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back to Dashboard
+              </button>
             </div>
           </div>
+        </header>
+        
+        <div class="container">
+          <div class="report-header">
+            <h1>altacoach Analytics - Detailed Report</h1>
+            <p>A comprehensive view of platform performance metrics and insights for ${
+              periodType === 'year' ? `Year ${selectedYear}` :
+              periodType === 'month' ? `${new Date(0, selectedMonth - 1).toLocaleString(language, { month: 'long' })} ${selectedYear}` :
+              periodType === 'range' && dateFrom && dateTo ? `${dateFrom.toISOString().split('T')[0]} to ${dateTo.toISOString().split('T')[0]}` :
+              'All Time'
+            }</p>
+          </div>
           
-          <script>
-            // Add event listener for the back button
-            document.querySelector('.back-button').addEventListener('click', function() {
-              window.close();
-            });
-          </script>
-        </body>
-        </html>
-      `;
+          <!-- User Statistics Section -->
+          <section>
+            <h2>User Statistics</h2>
+            <p class="section-subtitle">Key metrics about platform users and their engagement</p>
+            
+            <div class="stat-cards">
+              <div class="stat-card">
+                <div class="stat-icon" style="background-color: #C72026; color: white;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                  </svg>
+                </div>
+                <div class="stat-content">
+                  <h3>Total Users</h3>
+                  <p>${analyticsData.userStats.totalUsers}</p>
+                </div>
+              </div>
+              
+              <div class="stat-card">
+                <div class="stat-icon" style="background-color: #10B981; color: white;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                  </svg>
+                </div>
+                <div class="stat-content">
+                  <h3>Active Users</h3>
+                  <p>${analyticsData.userStats.activeUsers}</p>
+                </div>
+              </div>
+              
+              <div class="stat-card">
+                <div class="stat-icon" style="background-color: #3B82F6; color: white;">
+                  <span style="font-size: 20px; font-weight: bold;">%</span>
+                </div>
+                <div class="stat-content">
+                  <h3>Active User Percentage</h3>
+                  <p>${avgUsersPerBusinessPercent}%</p>
+                </div>
+              </div>
+              
+              <div class="stat-card">
+                <div class="stat-icon" style="background-color: #F59E0B; color: white;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <div class="stat-content">
+                  <h3>Average Session Time</h3>
+                  <p>${analyticsData.userStats.averageSessionTime}</p>
+                </div>
+              </div>
+            </div>
+          </section>
+          
+          <!-- Business Statistics Section -->
+          <section>
+            <h2>Business Statistics</h2>
+            <p class="section-subtitle">Data about business accounts and their usage</p>
+            
+            <table>
+              <thead>
+                <tr>
+                  <th>Metric</th>
+                  <th class="value-column">Value</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Total Businesses</td>
+                  <td class="value-column">${analyticsData.businessStats.totalBusinesses}</td>
+                  <td>Total number of business accounts on the platform</td>
+                </tr>
+                <tr>
+                  <td>Active Businesses</td>
+                  <td class="value-column">${analyticsData.businessStats.activeBusinesses}</td>
+                  <td>Business accounts with active users in the last 30 days</td>
+                </tr>
+                <tr>
+                  <td>New Businesses This Period</td>
+                  <td class="value-column">${analyticsData.businessStats.newBusinessesThisMonth}</td>
+                  <td>New business accounts created during the selected time period</td>
+                </tr>
+                <tr>
+                  <td>Average Users Per Business</td>
+                  <td class="value-column">${analyticsData.businessStats.averageUsersPerBusiness}</td>
+                  <td>Average number of users associated with each business</td>
+                </tr>
+              </tbody>
+            </table>
+            
+            ${usageStats.businessBreakdown.length > 0 ? `
+              <h3 style="margin-top: 2rem; font-size: 1.25rem; color: var(--gray-700);">Active Users by Business</h3>
+              <table style="margin-top: 1rem;">
+                <thead>
+                  <tr>
+                    <th>Business Name</th>
+                    <th class="value-column">Active Users</th>
+                    <th>Percentage</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${usageStats.businessBreakdown.map(biz => `
+                    <tr>
+                      <td>${biz.name}</td>
+                      <td class="value-column">${biz.activeUserCount}</td>
+                      <td>
+                        <div style="width: 100%; background-color: var(--gray-200); height: 8px; border-radius: 4px;">
+                          <div style="width: ${biz.percent}%; background-color: var(--primary); height: 8px; border-radius: 4px;"></div>
+                        </div>
+                        <span style="font-size: 0.8rem; color: var(--gray-600);">${biz.percent}%</span>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            ` : ''}
+          </section>
+          
+          <!-- Usage Statistics Section -->
+          <section>
+            <h2>Usage Statistics</h2>
+            <p class="section-subtitle">Platform usage metrics and user engagement patterns</p>
+            
+            <div class="stat-cards">
+              <div class="stat-card">
+                <div class="stat-icon" style="background-color: #3B82F6; color: white;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2h2a2 2 0 012 2z"></path>
+                  </svg>
+                </div>
+                <div class="stat-content">
+                  <h3>Session Count</h3>
+                  <p>${usageStats.sessionCount.toLocaleString()}</p>
+                </div>
+              </div>
+              
+              <div class="stat-card">
+                <div class="stat-icon" style="background-color: #F59E0B; color: white;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <div class="stat-content">
+                  <h3>Avg. Session Duration</h3>
+                  <p>${usageStats.sessionDuration} min</p>
+                </div>
+              </div>
+              
+              <div class="stat-card">
+                <div class="stat-icon" style="background-color: #8B5CF6; color: white;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+                  </svg>
+                </div>
+                <div class="stat-content">
+                  <h3>Total Chat Sessions</h3>
+                  <p>${usageStats.chatStats ? usageStats.chatStats.reduce((sum, stat) => sum + stat.totalChats, 0).toLocaleString() : 0}</p>
+                </div>
+              </div>
+            </div>
+            
+            <h3 style="margin-top: 2rem; font-size: 1.25rem; color: var(--gray-700);">Device Usage Breakdown</h3>
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-around; margin: 1.5rem 0;">
+              <div style="text-align: center; padding: 1rem; min-width: 150px;">
+                <div style="width: 100px; height: 100px; border-radius: 50%; background-color: rgba(79, 70, 229, 0.2); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                  <span style="font-size: 1.75rem; font-weight: 700; color: #4F46E5;">${deviceStats.mobile}%</span>
+                </div>
+                <p style="font-weight: 500; color: var(--gray-700);">Mobile</p>
+              </div>
+              
+              <div style="text-align: center; padding: 1rem; min-width: 150px;">
+                <div style="width: 100px; height: 100px; border-radius: 50%; background-color: rgba(59, 130, 246, 0.2); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                  <span style="font-size: 1.75rem; font-weight: 700; color: #3B82F6;">${deviceStats.desktop}%</span>
+                </div>
+                <p style="font-weight: 500; color: var(--gray-700);">Desktop</p>
+              </div>
+              
+              <div style="text-align: center; padding: 1rem; min-width: 150px;">
+                <div style="width: 100px; height: 100px; border-radius: 50%; background-color: rgba(139, 92, 246, 0.2); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                  <span style="font-size: 1.75rem; font-weight: 700; color: #8B5CF6;">${deviceStats.tablet}%</span>
+                </div>
+                <p style="font-weight: 500; color: var(--gray-700);">Tablet</p>
+              </div>
+              
+              <div style="text-align: center; padding: 1rem; min-width: 150px;">
+                <div style="width: 100px; height: 100px; border-radius: 50%; background-color: rgba(107, 114, 128, 0.2); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                  <span style="font-size: 1.75rem; font-weight: 700; color: #6B7280;">${deviceStats.other}%</span>
+                </div>
+                <p style="font-weight: 500; color: var(--gray-700);">Other</p>
+              </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2rem;">
+              ${usageStats.languageBreakdown.length > 0 ? `
+                <div>
+                  <h3 style="font-size: 1.25rem; color: var(--gray-700); margin-bottom: 1rem;">Usage by Language</h3>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Language</th>
+                        <th class="value-column">Percentage</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${usageStats.languageBreakdown.map(lang => `
+                        <tr>
+                          <td>${lang.language}</td>
+                          <td class="value-column">${lang.percent}%</td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              ` : ''}
+            </div>
+          </section>
+          
+          <!-- Chat Statistics Section -->
+          ${usageStats.chatStats && usageStats.chatStats.length > 0 ? `
+            <section>
+              <h2>Chat Interaction Statistics</h2>
+              <p class="section-subtitle">Detailed metrics about user chat sessions and engagement</p>
+              
+              <div class="stat-cards">
+                <div class="stat-card">
+                  <div class="stat-icon" style="background-color: #8B5CF6; color: white;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+                    </svg>
+                  </div>
+                  <div class="stat-content">
+                    <h3>Total Chat Sessions</h3>
+                    <p>${usageStats.chatStats.reduce((sum, stat) => sum + stat.totalChats, 0).toLocaleString()}</p>
+                  </div>
+                </div>
+                
+                <div class="stat-card">
+                  <div class="stat-icon" style="background-color: #F59E0B; color: white;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                  </div>
+                  <div class="stat-content">
+                    <h3>Avg. Session Duration</h3>
+                    <p>${usageStats.sessionDuration} min</p>
+                  </div>
+                </div>
+                
+                <div class="stat-card">
+                  <div class="stat-icon" style="background-color: #3B82F6; color: white;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                  </div>
+                  <div class="stat-content">
+                    <h3>Active Chat Users</h3>
+                    <p>${usageStats.chatStats.reduce((sum, stat) => sum + stat.usersCount, 0)}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <h3 style="margin-top: 2rem; font-size: 1.25rem; color: var(--gray-700);">Chat Activity by Business</h3>
+              <table style="margin-top: 1rem;">
+                <thead>
+                  <tr>
+                    <th>Business</th>
+                    <th>Users</th>
+                    <th>Chats</th>
+                    <th>Messages</th>
+                    <th>Avg Duration</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${usageStats.chatStats.map((stat, index) => `
+                    <tr>
+                      <td style="font-weight: 500; color: var(--gray-800);">${stat.businessName}</td>
+                      <td>${stat.usersCount}</td>
+                      <td>${stat.totalChats}</td>
+                      <td>${stat.totalMessages}</td>
+                      <td>${Math.round(stat.averageDurationMinutes)} min</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </section>
+          ` : ''}
+            
+          <div class="meta-info">
+            <div>
+              <p>Report generated on ${new Date().toLocaleString()}</p>
+              <p>Time Period: ${
+                periodType === 'year' ? `Year ${selectedYear}` :
+                periodType === 'month' ? `${new Date(0, selectedMonth - 1).toLocaleString(language, { month: 'long' })} ${selectedYear}` :
+                periodType === 'range' && dateFrom && dateTo ? `${dateFrom.toISOString().split('T')[0]} to ${dateTo.toISOString().split('T')[0]}` :
+                'All Time'
+              }</p>
+            </div>
+            <div>
+              <button onclick="window.print()" class="print-button">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2a2 2 0 012 2z" />
+                </svg>
+                Print Report
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <script>
+          // Add event listener for the back button
+          document.querySelector('.back-button').addEventListener('click', function() {
+            window.close();
+          });
+        </script>
+      </body>
+      </html>
+    `;
 
-      // Create a blob and open in a new tab
-      const blob = new Blob([htmlContent], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
-      window.open(url, '_blank');
+    // Create a blob and open in a new tab
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
 
-      // Clean up URL object after the tab is opened
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    } catch (err) {
-      console.error('Error generating detailed report:', err);
-      alert('Failed to generate report. Please try again.');
-    }
-  };
+    // Clean up URL object after the tab is opened
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (err) {
+    console.error('Error generating detailed report:', err);
+    alert('Failed to generate report. Please try again.');
+  }
+};
 
   // Function to handle logout
   const handleLogout = async () => {
@@ -1770,7 +2114,8 @@ export default function AdminAnalytics() {
                   <div className="flex justify-center">
                     <div className="relative w-40 h-40">
                       <svg viewBox="0 0 36 36" className="w-full h-full">
-                        <path
+                       ```html
+<path
                           d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1            0 -31.831"
                           fill="none"
                           stroke="#eee"
@@ -1804,7 +2149,7 @@ export default function AdminAnalytics() {
                   <div className="flex items-center">
                     <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mr-4">
                       <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2h2a2 2 0 012 2z"></path>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H6a2 2 0 00-2 2v14a2 2 0 002 2h2a2 2 0 012 2z"></path>
                       </svg>
                     </div>
                     <div>
@@ -1942,70 +2287,6 @@ export default function AdminAnalytics() {
                   )}
                 </div>
               </div>
-
-              {/* Device Breakdown */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                  {t('device')}
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-center">
-                    <div className="w-12 h-12 bg-indigo-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H9a2 2 0 00-2 2v14a2 2 0 002 2h2a2 2 0 012 2z"></path>
-                      </svg>
-                    </div>
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                      {t('mobile')}
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {deviceStats.mobile}%
-                    </p>
-                  </div>
-
-                  <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-center">
-                    <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                      </svg>
-                    </div>
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                      {t('desktop')}
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {deviceStats.desktop}%
-                    </p>
-                  </div>
-
-                  <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-center">
-                    <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2h2a2 2 0 012 2z"></path>
-                      </svg>
-                    </div>
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                      {t('tablet')}
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {deviceStats.tablet}%
-                    </p>
-                  </div>
-
-                  <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-center">
-                    <div className="w-12 h-12 bg-gray-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2h2a2 2 0 012 2z"></path>
-                      </svg>
-                    </div>
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                      {t('other')}
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {deviceStats.other}%
-                    </p>
-                  </div>
-                </div>
-              </div>
             </section>
 
             {/* Chat Statistics Section */}
@@ -2033,7 +2314,7 @@ export default function AdminAnalytics() {
                         <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
                       ) : (
                         <p className="text-3xl font-semibold text-gray-900 dark:text-white">
-                          {usageStats.chatStats && usageStats.chatStats.reduce((sum, stat) => sum + stat.totalChats, 0) || 0}
+                          {(usageStats.chatStats ?? []).reduce((sum, stat) => sum + stat.totalChats, 0).toLocaleString()}
                         </p>
                       )}
                       <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -2046,6 +2327,33 @@ export default function AdminAnalytics() {
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
                     Average Session Time
+                  </h3>
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center mr-4">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                      </svg>
+                    </div>
+                    <div>
+                      {isLoading ? (
+                        <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                      ) : (
+                        <p className="text-3xl font-semibold text-gray-900 dark:text-white">
+                          {usageStats.sessionDuration} <span className="text-xl">min</span>
+                        </p>
+                      )}
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Per Chat Session
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+
+
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                    Session Time
                   </h3>
                   <div className="flex items-center">
                     <div className="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center mr-4">
