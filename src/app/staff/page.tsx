@@ -61,7 +61,7 @@ const translations = {
       welcome: "Welcome to the quiz! I'll ask you a series of questions to test your knowledge.",
       subjects: {
         marketingFundamentals: "Marketing Fundamentals",
-        salesStrategy: "Sales Strategy", 
+        salesStrategy: "Sales Strategy",
         businessDevelopment: "Business Development",
         customerRelationship: "Customer Relationship Management",
         productFeatures: "Product Features",
@@ -76,7 +76,7 @@ const translations = {
     },
     categories: {
       business: "Business",
-      businessStrategy: "Business Strategy", 
+      businessStrategy: "Business Strategy",
       marketing: "Marketing",
       customerSupport: "Customer Support",
       documentAnalysis: "Document Analysis",
@@ -171,7 +171,7 @@ const translations = {
     footerDisclaimer: 'altacoach is an AI and may make mistakes. Please verify any important information.',
     logoText: {
       alta: "alta",
-      c:"c",  
+      c: "c",
       oach: "oach"
     }
   },
@@ -209,7 +209,7 @@ const translations = {
     categories: {
       business: "Affaires",
       businessStrategy: "Stratégie d'entreprise",
-      marketing: "Marketing", 
+      marketing: "Marketing",
       customerSupport: "Service client",
       documentAnalysis: "Analyse de documents",
       productKnowledge: "Connaissance du produit",
@@ -303,7 +303,7 @@ const translations = {
     footerDisclaimer: 'altacoach est une IA et peut faire des erreurs. Veuillez vérifier toute information importante.',
     logoText: {
       alta: "alta",
-      c:"c",  
+      c: "c",
       oach: "oach"
     }
   },
@@ -435,7 +435,7 @@ const translations = {
     footerDisclaimer: 'altacoach ist eine KI und kann Fehler machen. Bitte überprüfen Sie alle wichtigen Informationen.',
     logoText: {
       alta: "alta",
-      c:"c",  
+      c: "c",
       oach: "oach"
     }
   },
@@ -567,7 +567,7 @@ const translations = {
     footerDisclaimer: 'altacoach è un\'IA e può commettere errori. Verifica qualsiasi informazione importante.',
     logoText: {
       alta: "alta",
-      c:"c",  
+      c: "c",
       oach: "oach"
     }
   },
@@ -699,7 +699,7 @@ const translations = {
     footerDisclaimer: 'altacoach es una IA y puede cometer errores. Verifica cualquier información importante.',
     logoText: {
       alta: "alta",
-      c:"c",  
+      c: "c",
       oach: "oach"
     }
   }
@@ -824,27 +824,40 @@ export default function StaffDashboard() {
     }
   ]);
 
-  // Chat history data
-  const [chatHistory] = useState([
-    {
-      id: '1',
-      title: 'Machine Learning Basics',
-      snippet: 'We discussed neural networks and supervised learning...',
-      date: 'Today, 2:30 PM'
-    },
-    {
-      id: '2',
-      title: 'Project Planning',
-      snippet: 'We outlined the steps for implementing a recommendation system...',
-      date: 'Yesterday, 10:15 AM'
-    },
-    {
-      id: '3',
-      title: 'Python Code Review',
-      snippet: 'I helped debug a function that was causing performance issues...',
-      date: 'Mar 15, 2023'
+  // Chat history 
+  const [chatHistory, setChatHistory] = useState<Array<{
+    id: string;
+    title: string;
+    date: string;
+  }>>([]);
+
+
+  useEffect(() => {
+    if (user?.id) {
+      fetch(`/api/chat/list/${user.id}`)
+        .then(res => res.json())
+        .then(data => {
+          const mappedHistory = (data || []).map((chat: any) => ({
+            id: chat.chat_id,
+            title: chat.name || 'New Chat',
+            snippet: '', // Optional: fetch actual messages if needed
+            date: new Date(chat.created_at).toLocaleString(), // Format timestamp
+          }));
+          setChatHistory(mappedHistory);
+        })
+        .catch(err => console.error('Failed to load chat history:', err));
     }
-  ]);
+  }, [user]);
+
+
+  useEffect(() => {
+    if (user?.language) {
+      // Map the user's language to the corresponding SupportedLanguage code
+      const mappedLanguage = languages.find(lang => lang.name === user.language)?.code || 'en'; // Default to 'en' if not found
+      setLanguage(mappedLanguage as SupportedLanguage);
+    }
+  }, [user, setLanguage]);
+
 
   useEffect(() => {
     if (user?.language) {
@@ -937,7 +950,7 @@ export default function StaffDashboard() {
           setInputValue('');
           setMenuOpen(false);
           setSettingsOpen(false);
-          
+
           // Navigate to login
           router.push('/login');
         } catch (error) {
@@ -1101,11 +1114,26 @@ export default function StaffDashboard() {
           ? `/api/chat/${chatId}/ask`
           : `/api/chat/create`;
 
+
         const mappedLanguageCode = languages.find(lang => lang.code === language)?.code || 'en'; // Default to 'en' if not found
+
+        const generateChatName = (text: string) => {
+          const words = text.trim().split(/\s+/).slice(0, 2).join(' ');
+          return words.charAt(0).toUpperCase() + words.slice(1);
+        };
+
+        const chatName = generateChatName(content);
 
         const payload = chatId
           ? { question: content, file_ids: fileIds, language_code: mappedLanguageCode }
-          : { name: 'New Chat', user_id: user.id, question: content, file_ids: fileIds, language_code: mappedLanguageCode };
+          : {
+            name: chatName || 'New Chat',
+            user_id: user.id,
+            question: content,
+            file_ids: fileIds,
+            language_code: mappedLanguageCode,
+          };
+
         const response = await fetch(endpoint, {
           method: 'POST',
           headers: {
@@ -1118,6 +1146,12 @@ export default function StaffDashboard() {
 
         if (!chatId && data.chat_id) {
           setChatId(data.chat_id); // 💾 save new chat ID
+          const newChat = {
+            id: data.chat_id,
+            title: data.name || chatName,
+            date: new Date().toLocaleString(),
+          };
+          setChatHistory(prev => [newChat, ...prev]);
         }
 
         const aiMessage = {
@@ -1321,10 +1355,36 @@ export default function StaffDashboard() {
   };
 
   // Function to load a historical chat
-  const handleLoadChat = (id: string) => {
-    alert(`Loading chat ${id} in a real application`);
-    setActiveView('chat');
-    setMenuOpen(false);
+  const handleLoadChat = async (id: string) => {
+    try {
+      const res = await fetch(`/api/chat/history/${id}`);
+      const data = await res.json();
+
+      if (Array.isArray(data)) {
+        const formatted = data.flatMap((entry: any) => [
+          {
+            id: uuidv4(),
+            role: 'user' as const,
+            text: entry.question,
+            timestamp: new Date(entry.created_at).toISOString(),
+          },
+          {
+            id: uuidv4(),
+            role: 'assistant' as const,
+            text: entry.answer,
+            timestamp: new Date(entry.created_at).toISOString(),
+          }
+        ]);
+
+        setMessages(formatted);
+        setChatId(id); // ✅ update chatId to enable continuation via ask endpoint
+        setActiveView('chat');
+        setMenuOpen(false);
+      }
+    } catch (error) {
+      console.error('Error loading chat history:', error);
+      alert('Failed to load chat history.');
+    }
   };
 
   // Handle file upload
@@ -1388,10 +1448,10 @@ export default function StaffDashboard() {
       setIsSuggestionModalOpen(false);
       setIsResetPasswordModalOpen(false);
       setChatId(null);
-      
+
       // Perform logout
       await logout();
-      
+
       // Navigate to login page
       router.push('/login');
     } catch (error) {
@@ -1431,9 +1491,9 @@ export default function StaffDashboard() {
   // Handle suggestion submission
   const handleSuggestionSubmit = async (suggestion: string) => {
     if (!suggestion.trim()) return;
-    
+
     setIsLoading(true);
-    
+
     try {
       const response = await fetch('/api/suggestions', {
         method: 'POST',
@@ -1445,13 +1505,13 @@ export default function StaffDashboard() {
           suggestionText: suggestion,
         }),
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || 'Failed to submit suggestion');
       }
-      
+
       // Show success message
       // alert(t.alerts.suggestionSuccess);
       setSuggestionInput('');
@@ -1466,9 +1526,9 @@ export default function StaffDashboard() {
 
   const handleSaveBusinessAdmin = async () => {
     if (!businessAdminName.trim()) return;
-    
+
     setIsLoading(true);
-    
+
     try {
       const response = await fetch('/api/suggestions', {
         method: 'POST',
@@ -1481,13 +1541,13 @@ export default function StaffDashboard() {
           businessAdminName: businessAdminName
         }),
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || 'Failed to save business admin name');
       }
-      
+
       // Show success message
       // alert(t.alerts.adminNameSaveSuccess);
       setIsSuggestionModalOpen(false);
@@ -1550,6 +1610,7 @@ export default function StaffDashboard() {
           <button
             onClick={() => {
               setMessages([]);
+              setChatId(null);
               setActiveView('chat');
               setQuizMode(false);
               setMenuOpen(false);
@@ -1818,6 +1879,7 @@ export default function StaffDashboard() {
                   <button
                     key={chat.id}
                     className="w-full p-2 text-left text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+                    onClick={() => handleLoadChat(chat.id)}
                   >
                     <div className="truncate font-medium">{chat.title}</div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -1937,11 +1999,10 @@ export default function StaffDashboard() {
                               setIsLanguageDropdownOpen(false);
                               setSettingsOpen(false);
                             }}
-                            className={`flex items-center justify-center px-2 py-2 text-sm rounded-md ${
-                              language === lang.code
-                                ? 'bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] dark:text-[#C72026]'
-                                : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200'
-                            }`}
+                            className={`flex items-center justify-center px-2 py-2 text-sm rounded-md ${language === lang.code
+                              ? 'bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] dark:text-[#C72026]'
+                              : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200'
+                              }`}
                           >
                             <span>{lang.name}</span>
                             {language === lang.code && (
@@ -2024,7 +2085,6 @@ export default function StaffDashboard() {
                     onClick={() => handleLoadChat(chat.id)}
                   >
                     <h3 className="font-medium truncate text-gray-800 dark:text-gray-200">{chat.title}</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">{chat.snippet}</p>
                     <div className="flex justify-between items-center mt-2">
                       <span className="text-xs text-gray-500 dark:text-gray-500">{chat.date}</span>
                       <button
@@ -2088,7 +2148,7 @@ export default function StaffDashboard() {
                   <ChatMessage
                     key={`${message.id}-${language}`} // Add language to key to force re-render on language change
                     message={message}
-                    previousMessage={messages[index - 1]} 
+                    previousMessage={messages[index - 1]}
                     userId={user?.id || ''}
                     isLast={index === messages.length - 1}
                     onDeleteMessage={handleDeleteMessage}

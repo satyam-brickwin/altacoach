@@ -104,7 +104,7 @@ const adminTranslations = {
     usage: 'Usage',
     activeUsersDefinition: 'Active Users (Definition of Activity)',
     percentageActiveUsers: 'Percentage of Active Users',
-    byBusiness: 'By Business',
+    byBusiness: 'Active Users By Business',
     byLanguage: 'By Language',
     numberOfSessions: 'Number of Sessions',
     sessionDuration: 'Session Duration',
@@ -160,7 +160,7 @@ const adminTranslations = {
     usage: 'Utilisation',
     activeUsersDefinition: 'Utilisateurs Actifs (Définition de l\'Activité)',
     percentageActiveUsers: 'Pourcentage d\'Utilisateurs Actifs',
-    byBusiness: 'Par Entreprise',
+    byBusiness: 'Utilisateurs actifs par entreprise',
     byLanguage: 'Par Langue',
     numberOfSessions: 'Nombre de Sessions',
     sessionDuration: 'Durée de Session',
@@ -345,12 +345,12 @@ export default function AdminAnalytics() {
   const { isDarkMode, toggleDarkMode } = useDarkMode();
   const router = useRouter();
   const { user, logout } = useAuth();
-  
+
   const [analyticsData, setAnalyticsData] = useState(sampleAnalyticsData);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [avgUsersPerBusinessPercent, setAvgUsersPerBusinessPercent] = useState<number>(0);
-  
+
   // Protect this page - only allow admin users
   const { isLoading: authLoading, isAuthenticated, user: authUser } = useAuthProtection([UserRole.ADMIN]);
 
@@ -418,20 +418,20 @@ export default function AdminAnalytics() {
   // Custom translate function that provides a fallback
   function t(key: string): string {
     // First check admin translations
-    let translation = adminTranslations[language as SupportedLanguage] ? 
+    let translation = adminTranslations[language as SupportedLanguage] ?
       (adminTranslations[language as SupportedLanguage] as Record<string, string>)[key] : undefined;
-    
+
     // If not found in admin translations, try global translations
     if (!translation) {
       translation = translate(key);
     }
-    
+
     // If still not found, return the key itself
     if (!translation || translation === key) {
       console.warn(`Translation missing for key: ${key} in language: ${language}`);
       return key;
     }
-    
+
     return translation;
   }
 
@@ -442,34 +442,34 @@ export default function AdminAnalytics() {
       const date = new Date();
       const formattedDate = date.toISOString().split('T')[0];
       const filename = `altacoach-analytics-${formattedDate}.csv`;
-      
+
       // Create CSV content
       let csvContent = 'Category,Metric,Value\n';
-      
+
       // Add user statistics
       csvContent += `User Statistics,Total Users,${analyticsData.userStats.totalUsers}\n`;
       csvContent += `User Statistics,Active Users,${analyticsData.userStats.activeUsers}\n`;
       csvContent += `User Statistics,New Users This Month,${analyticsData.userStats.newUsersThisMonth}\n`;
       csvContent += `User Statistics,Average Session Time,${analyticsData.userStats.averageSessionTime}\n`;
-      
+
       // Add business statistics
       csvContent += `Business Statistics,Total Businesses,${analyticsData.businessStats.totalBusinesses}\n`;
       csvContent += `Business Statistics,Active Businesses,${analyticsData.businessStats.activeBusinesses}\n`;
       csvContent += `Business Statistics,New Businesses This Month,${analyticsData.businessStats.newBusinessesThisMonth}\n`;
       csvContent += `Business Statistics,Average Users Per Business,${analyticsData.businessStats.averageUsersPerBusiness}\n`;
-      
+
       // Add content statistics
       csvContent += `Content Statistics,Total Content,${analyticsData.contentStats.totalContent}\n`;
       csvContent += `Content Statistics,Content Views,${analyticsData.contentStats.contentViews}\n`;
       csvContent += `Content Statistics,Most Popular Content Type,${analyticsData.contentStats.mostPopularContentType}\n`;
       csvContent += `Content Statistics,Average Completion Rate,${analyticsData.contentStats.averageCompletionRate}\n`;
-      
+
       // Add AI statistics
       csvContent += `AI Interaction Statistics,Total Interactions,${analyticsData.aiStats.totalInteractions}\n`;
       csvContent += `AI Interaction Statistics,Average Response Time,${analyticsData.aiStats.averageResponseTime}\n`;
       csvContent += `AI Interaction Statistics,Satisfaction Rate,${analyticsData.aiStats.satisfactionRate}\n`;
       csvContent += `AI Interaction Statistics,Most Common Queries,${analyticsData.aiStats.mostCommonQueries}\n`;
-      
+
       // Add export metadata
       csvContent += `\nExport Date,${date.toLocaleString()}\n`;
       csvContent += `Time Range,${t(timeRange)}\n`;
@@ -477,14 +477,14 @@ export default function AdminAnalytics() {
       // Create a blob and download link
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
-      
+
       // Create a temporary link element and trigger download
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', filename);
       document.body.appendChild(link);
       link.click();
-      
+
       // Clean up
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
@@ -499,10 +499,10 @@ export default function AdminAnalytics() {
     const fetchDashboardStats = async () => {
       try {
         setIsLoading(true);
-        
+
         // Build query params based on selected filters
         const queryParams = new URLSearchParams();
-        
+
         // Add period type filters
         if (periodType === 'year' && selectedYear) {
           queryParams.append('periodType', 'year');
@@ -516,7 +516,7 @@ export default function AdminAnalytics() {
           queryParams.append('dateFrom', dateFrom.toISOString().split('T')[0]);
           queryParams.append('dateTo', dateTo.toISOString().split('T')[0]);
         }
-        
+
         // Add business filters
         if (selectedBusinesses.length > 0) {
           if (selectedBusinesses.includes('all')) {
@@ -526,11 +526,11 @@ export default function AdminAnalytics() {
             queryParams.append('businesses', selectedBusinesses.join(','));
           }
         }
-        
+
         // Construct the URL with query parameters
         const apiUrl = `/api/admin/dashboard-stats2?${queryParams.toString()}`;
         console.log('Fetching analytics with URL:', apiUrl);
-        
+
         // Add cache control to prevent stale data
         const response = await fetch(apiUrl, {
           cache: 'no-store',
@@ -540,15 +540,15 @@ export default function AdminAnalytics() {
             'Expires': '0'
           }
         });
-        
+
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           throw new Error(errorData.message || `Failed to fetch dashboard statistics (${response.status})`);
         }
-        
+
         const data = await response.json();
         console.log('Fetched analytics data:', data);
-        
+
         // Also fetch chat duration data
         let chatDurationData: ChatDurationData = {};
         try {
@@ -560,7 +560,7 @@ export default function AdminAnalytics() {
               'Expires': '0'
             }
           });
-          
+
           if (chatResponse.ok) {
             chatDurationData = await chatResponse.json();
             console.log('Fetched chat duration data:', chatDurationData);
@@ -569,32 +569,32 @@ export default function AdminAnalytics() {
           console.error('Error fetching chat duration:', chatError);
           // Don't fail the whole process, just log the error
         }
-        
+
         if (data.success) {
           // Get regular users (non-admin) data from the API response
           const regularUsers = data.stats?.users?.regular || 0;
           const activeRegularUsers = data.stats?.users?.activeRegularFiltered || 0;
-          
+
           // Calculate average users per business more accurately
           const totalBusinesses = data.stats?.businesses?.total || 1; // Avoid division by zero
-          const averageUsersPerBusiness = totalBusinesses > 0 ? 
-            Math.round(regularUsers / totalBusinesses) : 
+          const averageUsersPerBusiness = totalBusinesses > 0 ?
+            Math.round(regularUsers / totalBusinesses) :
             0;
-          
+
           // Calculate percentage of active users
           const activeUserPercent = regularUsers > 0 ?
             Math.round((activeRegularUsers / regularUsers) * 100) :
             0;
-          
+
           // Set the percentage for use in the UI
           setAvgUsersPerBusinessPercent(activeUserPercent);
-          
+
           // Get average session duration from chat data if available
           let sessionDuration = Math.max(8, Math.min(25, Math.round(regularUsers / 50))); // Default
           if (chatDurationData.success && chatDurationData.averageDurationMinutes) {
             sessionDuration = Math.round(chatDurationData.averageDurationMinutes);
           }
-          
+
           // Update usage statistics with business and language breakdown
           setUsageStats(prev => ({
             ...prev,
@@ -604,7 +604,7 @@ export default function AdminAnalytics() {
             sessionDuration: sessionDuration, // Use chat duration if available
             chatStats: chatDurationData.businessChatStats || [] // Add chat stats by business
           }));
-          
+
           // Update only the specific stats we want from real data
           setAnalyticsData(prev => ({
             ...prev,
@@ -663,7 +663,7 @@ export default function AdminAnalytics() {
         setIsLoading(false);
       }
     };
-    
+
     // Only fetch data if user is authenticated and not during auth loading
     if (isAuthenticated && !authLoading) {
       fetchDashboardStats();
@@ -685,28 +685,28 @@ export default function AdminAnalytics() {
               'Expires': '0'
             }
           });
-          
+
           if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.message || `Failed to fetch dashboard statistics (${response.status})`);
           }
-          
+
           const data = await response.json();
-          
+
           if (data.success) {
             // Get only regular users (not admins)
             const regularUsers = data.stats?.users?.regular || 0;
             const activeRegularUsers = Math.round(regularUsers * 0.8);
-            
+
             // Calculate average users per business more accurately
             const totalBusinesses = data.stats?.businesses?.total || 1;
-            const averageUsersPerBusiness = totalBusinesses > 0 ? 
-              Math.round(regularUsers / totalBusinesses) : 
+            const averageUsersPerBusiness = totalBusinesses > 0 ?
+              Math.round(regularUsers / totalBusinesses) :
               0;
-              
+
             // Calculate a more reasonable session time based on user activity
             const averageSessionTime = `${Math.max(5, Math.min(25, Math.round(regularUsers / 10)))} minutes`;
-            
+
             setAnalyticsData(prev => ({
               ...prev,
               userStats: {
@@ -736,24 +736,24 @@ export default function AdminAnalytics() {
           setIsLoading(false);
         }
       };
-      
+
       fetchData();
     }
   };
 
   // Stat Card Component
-  const StatCard = ({ 
-    icon, 
-    title, 
-    value, 
-    isLoading = false, 
-    iconBackground = 'bg-blue-500' 
-  }: { 
-    icon: React.ReactNode, 
-    title: string, 
-    value: string | number, 
+  const StatCard = ({
+    icon,
+    title,
+    value,
+    isLoading = false,
+    iconBackground = 'bg-blue-500'
+  }: {
+    icon: React.ReactNode,
+    title: string,
+    value: string | number,
     isLoading?: boolean,
-    iconBackground?: string 
+    iconBackground?: string
   }) => {
     return (
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
@@ -1232,12 +1232,12 @@ export default function AdminAnalytics() {
         </body>
         </html>
       `;
-      
+
       // Create a blob and open in a new tab
       const blob = new Blob([htmlContent], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
       window.open(url, '_blank');
-      
+
       // Clean up URL object after the tab is opened
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (err) {
@@ -1268,7 +1268,7 @@ export default function AdminAnalytics() {
           <p>{error}</p>
           <p className="text-sm mt-1">Note: Sample data is shown below</p>
         </div>
-        <button 
+        <button
           onClick={handleRetry}
           className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
         >
@@ -1365,11 +1365,10 @@ export default function AdminAnalytics() {
                           setLanguage(code as SupportedLanguage);
                           setIsLanguageMenuOpen(false);
                         }}
-                        className={`${
-                          language === code
-                            ? 'bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white'
-                            : 'text-gray-700 dark:text-gray-200'
-                        } block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600`}
+                        className={`${language === code
+                          ? 'bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white'
+                          : 'text-gray-700 dark:text-gray-200'
+                          } block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600`}
                         role="menuitem"
                       >
                         {label}
@@ -1450,7 +1449,7 @@ export default function AdminAnalytics() {
                 </Link>
               </li>
               <li>
-                <Link href="/admin/analytics" 
+                <Link href="/admin/analytics"
                   className="block px-4 py-2 rounded-md bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] dark:text-[#C72026] font-medium">
                   {t('analytics')}
                 </Link>
@@ -1461,9 +1460,9 @@ export default function AdminAnalytics() {
                 </Link>
               </li>
               <li>
-                  <Link href="/admin/suggestion" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
-                    {translate('Suggestion')}
-                  </Link>
+                <Link href="/admin/suggestion" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
+                  {translate('Suggestion')}
+                </Link>
               </li>
             </ul>
           </nav>
@@ -1496,15 +1495,15 @@ export default function AdminAnalytics() {
                   {periodType === '' && selectedBusinesses.length === 0
                     ? t('Select filters...') // Show placeholder if nothing selected
                     : <>
-                        {periodType === 'year' && `Year: ${selectedYear}`}
-                        {periodType === 'month' && `Month: ${new Date(0, selectedMonth - 1).toLocaleString(language, { month: 'long' })} ${selectedYear}`}
-                        {periodType === 'range' && `From: ${dateFrom ? dateFrom.toISOString().split('T')[0] : ''} To: ${dateTo ? dateTo.toISOString().split('T')[0] : ''}`}
-                        {selectedBusinesses.includes('all')
-                          ? `, ${t('all')}`
-                          : selectedBusinesses.length > 0
-                            ? `, ${selectedBusinesses.length} ${t('businesses')}`
-                            : ''}
-                      </>
+                      {periodType === 'year' && `Year: ${selectedYear}`}
+                      {periodType === 'month' && `Month: ${new Date(0, selectedMonth - 1).toLocaleString(language, { month: 'long' })} ${selectedYear}`}
+                      {periodType === 'range' && `From: ${dateFrom ? dateFrom.toISOString().split('T')[0] : ''} To: ${dateTo ? dateTo.toISOString().split('T')[0] : ''}`}
+                      {selectedBusinesses.includes('all')
+                        ? `, ${t('all')}`
+                        : selectedBusinesses.length > 0
+                          ? `, ${selectedBusinesses.length} ${t('businesses')}`
+                          : ''}
+                    </>
                   }
                 </span>
                 <span className="ml-auto text-gray-400">&#9662;</span>
@@ -1622,7 +1621,7 @@ export default function AdminAnalytics() {
                             className="block w-28 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded"
                           >
                             {[...Array(12)].map((_, i) => (
-                              <option key={i+1} value={i+1}>{new Date(0, i).toLocaleString(language, { month: 'long' })}</option>
+                              <option key={i + 1} value={i + 1}>{new Date(0, i).toLocaleString(language, { month: 'long' })}</option>
                             ))}
                           </select>
                           <input
@@ -1724,28 +1723,28 @@ export default function AdminAnalytics() {
                 {t('userStatistics')}
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard 
+                <StatCard
                   icon={<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>}
                   title={t('totalUsers')}
                   value={analyticsData.userStats.totalUsers}
                   isLoading={isLoading}
                   iconBackground="bg-[#C72026]"
                 />
-                <StatCard 
+                <StatCard
                   icon={<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>}
                   title={t('activeUsers')}
                   value={analyticsData.userStats.activeUsers}
                   isLoading={isLoading}
                   iconBackground="bg-green-500"
                 />
-                <StatCard 
+                <StatCard
                   icon={<span className="text-white font-bold text-lg">%</span>}
                   title={t('activeUserPercentage')}
                   value={`${avgUsersPerBusinessPercent}%`}
                   isLoading={isLoading}
                   iconBackground="bg-blue-500"
                 />
-                <StatCard 
+                <StatCard
                   icon={<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>}
                   title={t('averageSessionTime')}
                   value={analyticsData.userStats.averageSessionTime}
@@ -1759,17 +1758,9 @@ export default function AdminAnalytics() {
               <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
                 {t('usage')}
               </h2>
-              
+
               {/* Active Users Definition */}
-              <div className="mb-6 bg-white dark:bg-gray-800 p-5 rounded-lg shadow-sm">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  {t('activeUsersDefinition')}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  A user is considered active if they have logged in at least once in the selected time period and have performed at least one meaningful interaction (such as viewing content or participating in a chat).
-                </p>
-              </div>
-              
+
               {/* Usage Overview */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
@@ -1805,7 +1796,7 @@ export default function AdminAnalytics() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
                     {t('numberOfSessions')}
@@ -1825,14 +1816,14 @@ export default function AdminAnalytics() {
                         </p>
                       )}
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {periodType === 'month' ? 'This Month' : 
-                          periodType === 'year' ? 'This Year' : 
+                        {periodType === 'month' ? 'This Month' :
+                          periodType === 'year' ? 'This Year' :
                             periodType === 'range' ? 'Selected Period' : 'Current Period'}
                       </p>
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
                     {t('sessionDuration')}
@@ -1858,7 +1849,7 @@ export default function AdminAnalytics() {
                   </div>
                 </div>
               </div>
-              
+
               {/* By Business & By Language */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
@@ -1908,7 +1899,7 @@ export default function AdminAnalytics() {
                     </p>
                   )}
                 </div>
-                
+
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
                     {t('byLanguage')}
@@ -1951,7 +1942,7 @@ export default function AdminAnalytics() {
                   )}
                 </div>
               </div>
-              
+
               {/* Device Breakdown */}
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
@@ -1971,7 +1962,7 @@ export default function AdminAnalytics() {
                       {deviceStats.mobile}%
                     </p>
                   </div>
-                  
+
                   <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-center">
                     <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-3">
                       <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -1985,7 +1976,7 @@ export default function AdminAnalytics() {
                       {deviceStats.desktop}%
                     </p>
                   </div>
-                  
+
                   <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-center">
                     <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-3">
                       <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -1999,7 +1990,7 @@ export default function AdminAnalytics() {
                       {deviceStats.tablet}%
                     </p>
                   </div>
-                  
+
                   <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-center">
                     <div className="w-12 h-12 bg-gray-500 rounded-full flex items-center justify-center mx-auto mb-3">
                       <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -2022,14 +2013,9 @@ export default function AdminAnalytics() {
               <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
                 Chat Interaction Statistics
               </h2>
-              
+
               {/* Description */}
-              <div className="mb-6 bg-white dark:bg-gray-800 p-5 rounded-lg shadow-sm">
-                <p className="text-gray-600 dark:text-gray-400">
-                  Chat statistics show how users are engaging with the platform through conversations. Session duration is calculated based on chat activity timing.
-                </p>
-              </div>
-              
+
               {/* Chat Stats Overview */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
@@ -2056,7 +2042,7 @@ export default function AdminAnalytics() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
                     Average Session Time
@@ -2081,7 +2067,7 @@ export default function AdminAnalytics() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
                     Active Chat Users
@@ -2107,7 +2093,7 @@ export default function AdminAnalytics() {
                   </div>
                 </div>
               </div>
-              
+
               {/* Chat Stats By Business */}
               {usageStats.chatStats && usageStats.chatStats.length > 0 && (
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
@@ -2161,16 +2147,16 @@ export default function AdminAnalytics() {
                 </div>
               )}
             </section>
-            
+
             {/* Action buttons */}
             <div className="flex justify-end space-x-4 mb-8">
-              <button 
+              <button
                 className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                 onClick={handleViewDetailedReport}
               >
                 {t('viewDetailedReport')}
               </button>
-              <button 
+              <button
                 className="px-4 py-2 bg-[#C72026] text-white rounded hover:bg-[#a51a1f] transition-colors"
                 onClick={handleExportData}
               >
