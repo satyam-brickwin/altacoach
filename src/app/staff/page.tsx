@@ -1428,29 +1428,39 @@ export default function StaffDashboard() {
   };
 
   // Handle logout
-  const handleLogout = async () => {
+  const handleLogout = () => {
     try {
-      // Clear all states before logout
-      setMessages([]);
-      setIsLoading(false);
-      setQuizMode(false);
-      setInputValue('');
-      setMenuOpen(false);
-      setSettingsOpen(false);
-      setIsLanguageDropdownOpen(false);
-      setIsSuggestionModalOpen(false);
-      setIsResetPasswordModalOpen(false);
-      setChatId(null);
-
-      // Perform logout
-      await logout();
-
-      // Navigate to login page
-      router.push('/login');
+      // Store a flag in localStorage to indicate we're logging out
+      // This prevents React rendering issues by using non-React state
+      localStorage.setItem('altacoach_logging_out', 'true');
+      
+      // Redirect to login page immediately
+      window.location.href = '/login';
+      
+      // The logout function will be called from the useEffect cleanup
+      // This ensures we don't run into React hooks issues
     } catch (error) {
       console.error('Error during logout:', error);
+      // Force redirect on error
+      window.location.href = '/login';
     }
   };
+  
+  // Add this effect near your other useEffect hooks
+  useEffect(() => {
+    // Check if we're logging out when the component mounts
+    const isLoggingOut = localStorage.getItem('altacoach_logging_out') === 'true';
+    
+    // Return a cleanup function that will be called when the component unmounts
+    return () => {
+      // If we were logging out, call the logout function and clear the flag
+      if (isLoggingOut) {
+        logout().then(() => {
+          localStorage.removeItem('altacoach_logging_out');
+        });
+      }
+    };
+  }, [logout]);
 
   // Function to handle password reset
   const handleResetPassword = async (currentPassword: string, newPassword: string) => {
