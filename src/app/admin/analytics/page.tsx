@@ -61,12 +61,23 @@ const sampleAnalyticsData = {
 const adminTranslations = {
   en: {
     adminDashboard: 'Admin Dashboard',
+    to:'to',
     ChatInteractionStatistics: 'Chat Interaction Statistics',
+    ExportChatHistory: 'Export Chat History',
     TotalChatSessions: 'Total Chat Sessions',
+    Last: 'Last:',
+    ThisMonth: 'This Month',
+    ThisYear: 'This Year',
+    SelectedPeriod: 'Selected Period',
+    CurrentPeriod: 'Current Period',
+    Noquestiondataavailablefortheselectedperiod: 'No question data available for the selected period.',  
     ChatConversations: 'Chat Conversations',
     AverageSessionTime: 'Average Session Time',
     PerChatSession: 'Per Chat Session',
     ActiveChatUsers: 'Active Chat Users',
+    times: 'times',
+    Asked: 'Asked',
+    Top3MostAskedQuestions: 'Top 3 Most Asked Questions',
     UniqueUsers: 'Unique Users',
     ChatActivitybyBusiness: 'Chat Activity by Business',
     Business: 'Business',
@@ -78,6 +89,7 @@ const adminTranslations = {
     Ok: 'OK',
     Year: 'Year',
     SignOut: 'Sign Out',
+    Selectfilters: 'Select Filters',
     Admin: 'Admin',
     Retry: 'Retry',
     Active: 'Active',
@@ -139,9 +151,21 @@ const adminTranslations = {
   fr: {
     adminDashboard: 'Tableau de Bord Admin',
     ChatInteractionStatistics: 'Statistiques d\'Interaction de Chat',
+    to: 'à',
     TotalChatSessions: 'Total des Sessions de Chat',
+    times: 'fois',
+    Asked: 'Posé',
+    Last: 'Dernier :',
+    ThisYear: 'Cette Année',
+    ThisMonth: 'Ce Mois',
+    Selectfilters: 'Sélectionner les Filtres',
+    SelectedPeriod: 'Période Sélectionnée',
+    CurrentPeriod: 'Période Actuelle',
+    ExportChatHistory: 'Exporter l\'Historique de Chat',
+    Noquestiondataavailablefortheselectedperiod:'Aucune donnée de question disponible pour la période sélectionnée.',
     ChatConversations: 'Conversations de chat',
     AverageSessionTime: 'Durée moyenne de session',
+    Top3MostAskedQuestions:' 3 Questions les Plus Posées',
     Active: 'Actif',
     PerChatSession: 'Par session de chat',
     ActiveChatUsers: 'Utilisateurs de chat actifs',
@@ -156,7 +180,7 @@ const adminTranslations = {
     Ok: 'OK',
     Year: 'Année',
     SignOut: 'Se déconnecter',
-    Admin: 'Admin',
+    Admin: 'Administrateur',
     Retry: 'Réessayer',
     min: 'min',
 
@@ -219,6 +243,17 @@ const adminTranslations = {
     adminDashboard: 'Admin-Dashboard',
     activeUserPercentage: 'Prozentsatz aktiver Benutzer',
     ChatInteractionStatistics: 'Chat-Interaktionsstatistiken',
+    to: 'zu',
+    Last: 'Letzte :',
+    times: 'Mal',
+    Asked: 'Gefragt',
+    ThisYear: 'Dieses Jahr',
+    ThisMonth: 'Diesen Monat',
+    SelectedPeriod: 'Ausgewählter Zeitraum',
+    CurrentPeriod: 'Aktueller Zeitraum',
+    ExportChatHistory:'Chatverlauf exportieren',
+    Top3MostAskedQuestions: 'Top 3 am häufigsten gestellte Fragen',
+    Noquestiondataavailablefortheselectedperiod: 'Keine Frage Daten für den ausgewählten Zeitraum verfügbar.',
     ChatConversations: 'Chatgesprekken',
     AverageSessionTime: 'Gemiddelde sessieduur',
     Active: 'Aktiv',
@@ -290,6 +325,7 @@ const adminTranslations = {
     sessionDuration: 'Sitzungsdauer',
     device: 'Gerät',
     mobile: 'Mobilgerät',
+    Selectfilters: 'Filter auswählen',
     desktop: 'Desktop',
     tablet: 'Tablet',
     other: 'Andere'
@@ -297,8 +333,20 @@ const adminTranslations = {
   it: {
     adminDashboard: 'Dashboard Admin',
     activeUserPercentage: 'Percentuale Utenti Attivi',
+    to: 'a',
     ChatInteractionStatistics: 'Statistiche Interazione Chat',
+    Last: 'Ultimo',
+    times: 'volte',
+    Selectfilters: 'Seleziona Filtri',
+    Asked: 'Chiesto',
+    ThisYear: 'Quest\'Anno',
+    ThisMonth: 'Questo Mese',
+    SelectedPeriod: 'Periodo Selezionato',
+    CurrentPeriod: 'Periodo Corrente',
+    ExportChatHistory:'Esporta Cronologia Chat',
     Active: 'Attivo',
+    Top3MostAskedQuestions:'Le 3 domande più frequenti',
+    Noquestiondataavailablefortheselectedperiod: 'Nessun dato disponibile per il periodo selezionato.',
     TotalChatSessions: 'Totale Sessioni Chat',
     ChatConversations: 'Conversazioni in chat',
     AverageSessionTime: 'Durata media della sessione',
@@ -318,7 +366,7 @@ const adminTranslations = {
     Admin: 'Amministratore',
     Retry: 'Riprova',
     min: 'min',
-
+    Businesses: 'Aziende',
     dashboard: 'Dashboard',
     businesses: 'Aziende',
     content: 'Contenuto',
@@ -482,6 +530,18 @@ export default function AdminAnalytics() {
     chatStats: [] as ChatDurationData['businessChatStats']
   });
 
+  // Add this interface with your other interfaces
+  interface TopQuestion {
+    content: string;
+    count: number;
+    id: string;
+    created_at: string;
+  }
+
+  // Add this state variable with your other state variables
+  const [topQuestions, setTopQuestions] = useState<TopQuestion[]>([]);
+  const [isQuestionsLoading, setIsQuestionsLoading] = useState(false);
+
   // Fetch business list on mount
   useEffect(() => {
     async function fetchBusinesses() {
@@ -527,521 +587,251 @@ export default function AdminAnalytics() {
   }
 
   // Function to handle data export
-  // Function to handle data export
-  const handleExportData = () => {
-    try {
-      // Format date for filename
-      const date = new Date();
-      const formattedDate = date.toISOString().split('T')[0];
-
-      // Create filename with period info if applicable
-      let periodInfo = 'all-time';
-      if (periodType === 'year') {
-        periodInfo = `year-${selectedYear}`;
-      } else if (periodType === 'month') {
-        periodInfo = `${selectedYear}-${selectedMonth.toString().padStart(2, '0')}`;
-      } else if (periodType === 'range' && dateFrom && dateTo) {
-        periodInfo = `${dateFrom.toISOString().split('T')[0]}-to-${dateTo.toISOString().split('T')[0]}`;
-      }
-
-      const filename = `altacoach-analytics-${periodInfo}-${formattedDate}.csv`;
-
-      // Create CSV content using the current data in the dashboard
-      // Using "=====" as visual separators to make headers stand out
-      let csvContent = '======== ALTACOACH ANALYTICS REPORT ========\n\n';
-
-      // Add report metadata
-      csvContent += `Report Date,${date.toLocaleString()}\n`;
-      csvContent += `Time Period,${periodType === 'year' ? `Year ${selectedYear}` :
-        periodType === 'month' ? `${new Date(0, selectedMonth - 1).toLocaleString(language, { month: 'long' })} ${selectedYear}` :
-          periodType === 'range' && dateFrom && dateTo ? `${dateFrom.toISOString().split('T')[0]} to ${dateTo.toISOString().split('T')[0]}` :
-            'All Time'
-        }\n\n`;
-
-      // Add user statistics with clear section header
-      csvContent += '======== USER STATISTICS ========\n';
-      csvContent += 'Metric,Value,Description\n';
-      csvContent += `Total Users,${analyticsData.userStats.totalUsers},Total number of registered users\n`;
-      csvContent += `Active Users,${analyticsData.userStats.activeUsers},Users who logged in during the period\n`;
-      csvContent += `New Users This Period,${analyticsData.userStats.newUsersThisMonth},New user registrations during the selected time period\n`;
-      csvContent += `Average Session Time,${analyticsData.userStats.averageSessionTime},Average time users spend on the platform per session\n`;
-      csvContent += `Active User Percentage,${avgUsersPerBusinessPercent}%,Percentage of total users who are active\n\n`;
-
-      // Add business statistics with clear section header
-      csvContent += '======== BUSINESS STATISTICS ========\n';
-      csvContent += 'Metric,Value,Description\n';
-      csvContent += `Total Businesses,${analyticsData.businessStats.totalBusinesses},Total number of business accounts\n`;
-      csvContent += `Active Businesses,${analyticsData.businessStats.activeBusinesses},Business accounts with active users\n`;
-      csvContent += `New Businesses This Period,${analyticsData.businessStats.newBusinessesThisMonth},New business accounts created during the selected time period\n`;
-      csvContent += `Average Users Per Business,${analyticsData.businessStats.averageUsersPerBusiness},Average number of users associated with each business\n\n`;
-
-      // Add usage statistics with clear section header
-      csvContent += '======== USAGE STATISTICS ========\n';
-      csvContent += 'Metric,Value,Description\n';
-      csvContent += `Session Count,${usageStats.sessionCount},Total number of user sessions\n`;
-      csvContent += `Average Session Duration,${usageStats.sessionDuration} minutes,Average time users spend in a session\n\n`;
-
-      // Add device statistics with clear section header
-      csvContent += '======== DEVICE STATISTICS ========\n';
-      csvContent += 'Device Type,Percentage,\n';
-      csvContent += `Mobile,${deviceStats.mobile}%,\n`;
-      csvContent += `Desktop,${deviceStats.desktop}%,\n`;
-      csvContent += `Tablet,${deviceStats.tablet}%,\n`;
-      csvContent += `Other,${deviceStats.other}%,\n\n`;
-
-      // Add business breakdown if available
-      if (usageStats.businessBreakdown.length > 0) {
-        csvContent += '======== BUSINESS BREAKDOWN ========\n';
-        csvContent += 'Business Name,Active Users,Percentage\n';
-        usageStats.businessBreakdown.forEach(biz => {
-          csvContent += `${biz.name},${biz.activeUserCount},${biz.percent}%\n`;
-        });
-        csvContent += '\n';
-      }
-
-      // Add language breakdown if available
-      if (usageStats.languageBreakdown.length > 0) {
-        csvContent += '======== LANGUAGE BREAKDOWN ========\n';
-        csvContent += 'Language,Percentage,\n';
-        usageStats.languageBreakdown.forEach(lang => {
-          csvContent += `${lang.language},${lang.percent}%,\n`;
-        });
-        csvContent += '\n';
-      }
-
-      // Add chat statistics if available
-      if (usageStats.chatStats && usageStats.chatStats.length > 0) {
-        csvContent += '======== CHAT STATISTICS BY BUSINESS ========\n';
-        csvContent += 'Business Name,Users,Chats,Messages,Avg Duration (minutes)\n';
-        usageStats.chatStats.forEach(stat => {
-          csvContent += `${stat.businessName},${stat.usersCount},${stat.totalChats},${stat.totalMessages},${Math.round(stat.averageDurationMinutes)}\n`;
-        });
-
-        const totalChats = usageStats.chatStats.reduce((sum, stat) => sum + stat.totalChats, 0);
-        const totalChatUsers = usageStats.chatStats.reduce((sum, stat) => sum + stat.usersCount, 0);
-
-        csvContent += `TOTAL,${totalChatUsers},${totalChats},,\n\n`;
-      }
-
-      // Add export footer
-      csvContent += '======== END OF REPORT ========\n';
-      csvContent += 'Generated by altacoach Analytics Dashboard\n';
-
-      // Create a blob and download link
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-
-      // Create a temporary link element and trigger download
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', filename);
-      document.body.appendChild(link);
-      link.click();
-
-      // Clean up
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Error exporting data:', err);
-      alert('Failed to export data. Please try again.');
-    }
-  };
-
-  // Function to fetch dashboard stats
-  useEffect(() => {
-    const fetchDashboardStats = async () => {
-      try {
-        setIsLoading(true);
-
-        // Build query params based on selected filters
-        const queryParams = new URLSearchParams();
-
-        // Add period type filters
-        if (periodType === 'year' && selectedYear) {
-          queryParams.append('periodType', 'year');
-          queryParams.append('year', selectedYear.toString());
-        } else if (periodType === 'month' && selectedYear && selectedMonth) {
-          queryParams.append('periodType', 'month');
-          queryParams.append('year', selectedYear.toString());
-          queryParams.append('month', selectedMonth.toString());
-        } else if (periodType === 'range' && dateFrom && dateTo) {
-          queryParams.append('periodType', 'range');
-          queryParams.append('dateFrom', dateFrom.toISOString().split('T')[0]);
-          queryParams.append('dateTo', dateTo.toISOString().split('T')[0]);
-        }
-
-        // Add business filters
-        if (selectedBusinesses.length > 0) {
-          if (selectedBusinesses.includes('all')) {
-            // If 'all' is selected, don't filter by business
-          } else {
-            // Add comma-separated list of business IDs
-            queryParams.append('businesses', selectedBusinesses.join(','));
-          }
-        }
-
-        // Construct the URL with query parameters
-        const apiUrl = `/api/admin/dashboard-stats2?${queryParams.toString()}`;
-        console.log('Fetching analytics with URL:', apiUrl);
-
-        // Add cache control to prevent stale data
-        const response = await fetch(apiUrl, {
-          cache: 'no-store',
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0'
-          }
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || `Failed to fetch dashboard statistics (${response.status})`);
-        }
-
-        const data = await response.json();
-        console.log('Fetched analytics data:', data);
-
-        // Also fetch chat duration data
-        let chatDurationData: ChatDurationData = {};
-        try {
-          const chatResponse = await fetch(`/api/admin/chat-duration?${queryParams.toString()}`, {
-            cache: 'no-store',
-            headers: {
-              'Cache-Control': 'no-cache, no-store, must-revalidate',
-              'Pragma': 'no-cache',
-              'Expires': '0'
-            }
-          });
-
-          if (chatResponse.ok) {
-            chatDurationData = await chatResponse.json();
-            console.log('Fetched chat duration data:', chatDurationData);
-          }
-        } catch (chatError) {
-          console.error('Error fetching chat duration:', chatError);
-          // Don't fail the whole process, just log the error
-        }
-
-        if (data.success) {
-          // Get regular users (non-admin) data from the API response
-          const regularUsers = data.stats?.users?.regular || 0;
-          const activeRegularUsers = data.stats?.users?.activeRegularFiltered || 0;
-
-          // Calculate average users per business more accurately
-          const totalBusinesses = data.stats?.businesses?.total || 1; // Avoid division by zero
-          const averageUsersPerBusiness = totalBusinesses > 0 ?
-            Math.round(regularUsers / totalBusinesses) :
-            0;
-
-          // Calculate percentage of active users
-          const activeUserPercent = regularUsers > 0 ?
-            Math.round((activeRegularUsers / regularUsers) * 100) :
-            0;
-
-          // Set the percentage for use in the UI
-          setAvgUsersPerBusinessPercent(activeUserPercent);
-
-          // Get average session duration from chat data if available
-          let sessionDuration = Math.max(8, Math.min(25, Math.round(regularUsers / 50))); // Default
-          if (chatDurationData.success && chatDurationData.averageDurationMinutes) {
-            sessionDuration = Math.round(chatDurationData.averageDurationMinutes);
-          }
-
-          // Update usage statistics with business and language breakdown
-          setUsageStats(prev => ({
-            ...prev,
-            businessBreakdown: data.businessActiveUserStats || [],
-            languageBreakdown: data.languageActiveUserStats || [],
-            sessionCount: chatDurationData.totalChats || Math.round(regularUsers * 3.5), // Use actual chat count when available
-            sessionDuration: sessionDuration, // Use chat duration if available
-            chatStats: chatDurationData.businessChatStats || [] // Add chat stats by business
-          }));
-
-          // Update only the specific stats we want from real data
-          setAnalyticsData(prev => ({
-            ...prev,
-            userStats: {
-              ...prev.userStats,
-              totalUsers: regularUsers, // Use regular users (non-admin) count
-              activeUsers: activeRegularUsers, // Use the direct filtered active count
-              newUsersThisMonth: data.stats?.users?.newThisPeriod || prev.userStats.newUsersThisMonth,
-              averageSessionTime: `${sessionDuration} minutes` // More realistic session time from chat data
-            },
-            businessStats: {
-              ...prev.businessStats,
-              totalBusinesses: data.stats?.businesses?.total || prev.businessStats.totalBusinesses,
-              activeBusinesses: data.stats?.businesses?.active || prev.businessStats.activeBusinesses,
-              newBusinessesThisMonth: data.stats?.businesses?.newThisPeriod || prev.businessStats.newBusinessesThisMonth,
-              averageUsersPerBusiness: averageUsersPerBusiness, // More accurate calculation
-            }
-          }));
-
-          // Update content statistics if available
-          if (data.stats?.content) {
-            setAnalyticsData(prev => ({
-              ...prev,
-              contentStats: {
-                ...prev.contentStats,
-                totalContent: data.stats.content.total || prev.contentStats.totalContent,
-                contentViews: data.stats.content.views || prev.contentStats.contentViews,
-                mostPopularContentType: data.stats.content.mostPopularType || prev.contentStats.mostPopularContentType,
-                averageCompletionRate: data.stats.content.averageCompletionRate || prev.contentStats.averageCompletionRate,
-              }
-            }));
-          }
-
-          // Update AI statistics if available
-          if (data.stats?.ai) {
-            setAnalyticsData(prev => ({
-              ...prev,
-              aiStats: {
-                ...prev.aiStats,
-                totalInteractions: data.stats.ai.totalInteractions || prev.aiStats.totalInteractions,
-                averageResponseTime: data.stats.ai.averageResponseTime || prev.aiStats.averageResponseTime,
-                satisfactionRate: data.stats.ai.satisfactionRate || prev.aiStats.satisfactionRate,
-                mostCommonQueries: data.stats.ai.mostCommonQueries || prev.aiStats.mostCommonQueries,
-              }
-            }));
-          }
-        } else {
-          console.warn('API returned success: false', data);
-          // Keep using sample data
-        }
-
-        // Now fetch device statistics
-        try {
-          const deviceResponse = await fetch(`/api/admin/device-stats?${queryParams.toString()}`, {
-            cache: 'no-store',
-            headers: {
-              'Cache-Control': 'no-cache, no-store, must-revalidate',
-              'Pragma': 'no-cache',
-              'Expires': '0'
-            }
-          });
-
-          if (deviceResponse.ok) {
-            const deviceData = await deviceResponse.json();
-
-            if (deviceData.success) {
-              console.log('Fetched device data:', deviceData);
-
-              // Update device statistics with real data
-              setDeviceStats({
-                mobile: deviceData.percentages.mobile || 0,
-                desktop: deviceData.percentages.desktop || 0,
-                tablet: deviceData.percentages.tablet || 0,
-                other: deviceData.percentages.other || 0
-              });
-            }
-          }
-        } catch (deviceError) {
-          console.error('Error fetching device statistics:', deviceError);
-          // Don't fail the whole process, just log the error
-        }
-      } catch (err) {
-        console.error('Error fetching dashboard stats:', err);
-        setError((err as Error).message || 'Failed to fetch dashboard statistics');
-        // Show an improved error message to the user
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    // Only fetch data if user is authenticated and not during auth loading
-    if (isAuthenticated && !authLoading) {
-      fetchDashboardStats();
-    }
-  }, [isAuthenticated, authLoading, periodType, selectedYear, selectedMonth, dateFrom, dateTo, selectedBusinesses]);
-
-
-
-  const handleExportChatHistory = async () => {
-    try {
-      let businessesToExport = selectedBusinesses;
-
-      if (businessesToExport.length === 0) {
-        const res = await fetch('/api/admin/businesses');
-        const data = await res.json();
-        businessesToExport = (data.businesses || []).map((b: any) => b.id);
-      }
-
-      const response = await fetch('/api/admin/export-chat-history', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ selectedBusinesses: businessesToExport }),
-      });
-
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.message || 'Failed to export chat history');
-      }
-
-      const doc = new jsPDF();
-      let y = 10; // start position
-
-      data.data.forEach((chat: any, index: number) => {
-        if (index > 0) {
-          doc.addPage();
-          y = 10; // Reset after new page
-        }
-
-        doc.setFontSize(16);
-        doc.text(`Chat: ${chat.name || 'Untitled Chat'}`, 10, y);
-        y += 10;
-        doc.setFontSize(12);
-        doc.text(`User ID: ${chat.user_id}`, 10, y);
-        y += 7;
-        doc.text(`Created At: ${chat.created_at}`, 10, y);
-        y += 10;
-        doc.setFontSize(14);
-        doc.text('--- Conversation ---', 10, y);
-        y += 10;
-
-        if (chat.chat_history.length === 0) {
-          doc.text('(No messages)', 10, y);
-          y += 10;
-        } else {
-          chat.chat_history.forEach((entry: any) => {
-            // Add question
-            doc.setFontSize(12);
-            const questionLines = doc.splitTextToSize(`Q: ${entry.question}`, 180);
-            questionLines.forEach((line: string) => {
-              doc.text(line, 10, y);
-              y += 7;
-            });
-
-            // Add answer
-            const answerLines = doc.splitTextToSize(`A: ${entry.answer}`, 180);
-            answerLines.forEach((line: string) => {
-              doc.text(line, 10, y);
-              y += 7;
-            });
-
-            y += 5; // Gap between Q&A pairs
-
-            // If page bottom is reached, add new page
-            if (y > 270) {
-              doc.addPage();
-              y = 10;
-            }
-          });
-        }
-      });
-
-      doc.save(`altacoach-chat-history-${new Date().toISOString().split('T')[0]}.pdf`);
-    } catch (err) {
-      console.error('Export Chat History PDF error:', err);
-      alert('Failed to export chat history. Please try again.');
-    }
-  };
-
-
-  // Enhance the error display with option to retry
-  const handleRetry = () => {
-    setError(null);
-    if (isAuthenticated && !authLoading) {
-      const fetchData = async () => {
-        try {
-          setIsLoading(true);
-          const response = await fetch('/api/admin/dashboard-stats', {
-            cache: 'no-store',
-            headers: {
-              'Cache-Control': 'no-cache, no-store, must-revalidate',
-              'Pragma': 'no-cache',
-              'Expires': '0'
-            }
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.message || `Failed to fetch dashboard statistics (${response.status})`);
-          }
-
-          const data = await response.json();
-
-          if (data.success) {
-            // Get only regular users (not admins)
-            const regularUsers = data.stats?.users?.regular || 0;
-            const activeRegularUsers = Math.round(regularUsers * 0.8);
-
-            // Calculate average users per business more accurately
-            const totalBusinesses = data.stats?.businesses?.total || 1;
-            const averageUsersPerBusiness = totalBusinesses > 0 ?
-              Math.round(regularUsers / totalBusinesses) :
-              0;
-
-            // Calculate a more reasonable session time based on user activity
-            const averageSessionTime = `${Math.max(5, Math.min(25, Math.round(regularUsers / 10)))} minutes`;
-
-            setAnalyticsData(prev => ({
-              ...prev,
-              userStats: {
-                ...prev.userStats,
-                totalUsers: regularUsers,
-                activeUsers: activeRegularUsers,
-                newUsersThisMonth: data.stats?.users?.newThisMonth || prev.userStats.newUsersThisMonth,
-                averageSessionTime: averageSessionTime
-              },
-              businessStats: {
-                ...prev.businessStats,
-                totalBusinesses: data.stats?.businesses?.total || prev.businessStats.totalBusinesses,
-                activeBusinesses: data.stats?.businesses?.active || prev.businessStats.activeBusinesses,
-                newBusinessesThisMonth: data.stats?.businesses?.newThisMonth || prev.businessStats.newBusinessesThisMonth,
-                averageUsersPerBusiness: averageUsersPerBusiness
-              },
-            }));
-          }
-        } catch (err) {
-          console.error('Error on retry:', err);
-          setError((err as Error).message || 'Failed to fetch dashboard statistics');
-        } finally {
-          setIsLoading(false);
-        }
-      };
-
-      fetchData();
-    }
-  };
-
-  // Stat Card Component
-  const StatCard = ({
-    icon,
-    title,
-    value,
-    isLoading = false,
-    iconBackground = 'bg-blue-500'
-  }: {
-    icon: React.ReactNode,
-    title: string,
-    value: string | number,
-    isLoading?: boolean,
-    iconBackground?: string
-  }) => {
-    return (
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
-        <div className="flex items-center">
-          <div className={`${iconBackground} w-12 h-12 rounded-full flex items-center justify-center mr-4`}>
-            {icon}
-          </div>
-          <div>
-            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</h3>
-            {isLoading ? (
-              <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mt-1"></div>
-            ) : (
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white">{value}</p>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Function to handle detailed report view
-  // Function to handle detailed report view
   const handleViewDetailedReport = () => {
     try {
+      // Define translations for report elements
+      const translations = {
+        en: {
+          title: "altacoach Analytics - Detailed Report",
+          year: "Year",
+          backToDashboard: "Back to Dashboard",
+          headerTitle: "altacoach Analytics - Detailed Report",
+          headerDescription: "A comprehensive view of platform performance metrics and insights for",
+          userStats: "User Statistics",
+          userStatsSubtitle: "Key metrics about platform users and their engagement",
+          totalUsers: "Total Users",
+          activeUsers: "Active Users",
+          activeUserPercentage: "Active User Percentage",
+          averageSessionTime: "Average Session Time",
+          businessStats: "Business Statistics",
+          businessStatsSubtitle: "Data about business accounts and their usage",
+          metric: "Metric",
+          value: "Value",
+          description: "Description",
+          totalBusinesses: "Total Businesses",
+          totalBusinessesDesc: "Total number of business accounts on the platform",
+          activeBusinesses: "Active Businesses",
+          activeBusinessesDesc: "Business accounts with active users in the last 30 days",
+          newBusinessesThisPeriod: "New Businesses This Period",
+          newBusinessesThisPeriodDesc: "New business accounts created during the selected time period",
+          averageUsersPerBusiness: "Average Users Per Business",
+          averageUsersPerBusinessDesc: "Average number of users associated with each business",
+          activeUsersByBusiness: "Active Users by Business",
+          businessName: "Business Name",
+          percentage: "Percentage",
+          usageStatistics: "Usage Statistics",
+          usageStatisticsSubtitle: "Platform usage metrics and user engagement patterns",
+          sessionCount: "Session Count",
+          avgSessionDuration: "Avg. Session Duration",
+          totalChatSessions: "Total Chat Sessions",
+          deviceUsageBreakdown: "Device Usage Breakdown",
+          mobile: "Mobile",
+          desktop: "Desktop",
+          tablet: "Tablet",
+          other: "Other",
+          usageByLanguage: "Usage by Language",
+          language: "Language",
+          topQuestions: "Top 3 Most Asked Questions",
+          topQuestionsSubtitle: "Most frequently asked questions by users",
+          question: "Question",
+          count: "Count",
+          chatInteractionStats: "Chat Interaction Statistics",
+          chatInteractionStatsSubtitle: "Detailed metrics about user chat sessions and engagement",
+          chatActivityByBusiness: "Chat Activity by Business",
+          business: "Business",
+          users: "Users",
+          chats: "Chats",
+          messages: "Messages",
+          avgDuration: "Avg Duration",
+          reportGeneratedOn: "Report generated on",
+          timePeriod: "Time Period",
+          printReport: "Print Report",
+          min: "min",
+          allTime: "All Time",
+          to: "to",
+        },
+        fr: {
+          title: "altacoach Analytique - Rapport Détaillé",
+          year: "Année",
+          backToDashboard: "Retour au Tableau de Bord",
+          headerTitle: "altacoach Analytique - Rapport Détaillé",
+          headerDescription: "Une vue complète des métriques de performance de la plateforme et des insights pour",
+          userStats: "Statistiques des Utilisateurs",
+          userStatsSubtitle: "Métriques clés sur les utilisateurs de la plateforme et leur engagement",
+          totalUsers: "Nombre Total d'Utilisateurs",
+          activeUsers: "Utilisateurs Actifs",
+          activeUserPercentage: "Pourcentage d'Utilisateurs Actifs",
+          averageSessionTime: "Durée Moyenne de Session",
+          businessStats: "Statistiques des Entreprises",
+          businessStatsSubtitle: "Données sur les comptes entreprises et leur utilisation",
+          metric: "Métrique",
+          value: "Valeur",
+          description: "Description",
+          totalBusinesses: "Nombre Total d'Entreprises",
+          totalBusinessesDesc: "Nombre total de comptes entreprises sur la plateforme",
+          activeBusinesses: "Entreprises Actives",
+          activeBusinessesDesc: "Comptes entreprises avec des utilisateurs actifs au cours des 30 derniers jours",
+          newBusinessesThisPeriod: "Nouvelles Entreprises Cette Période",
+          newBusinessesThisPeriodDesc: "Nouveaux comptes entreprises créés pendant la période sélectionnée",
+          averageUsersPerBusiness: "Moyenne d'Utilisateurs par Entreprise",
+          averageUsersPerBusinessDesc: "Nombre moyen d'utilisateurs associés à chaque entreprise",
+          activeUsersByBusiness: "Utilisateurs Actifs par Entreprise",
+          businessName: "Nom de l'Entreprise",
+          percentage: "Pourcentage",
+          usageStatistics: "Statistiques d'Utilisation",
+          usageStatisticsSubtitle: "Métriques d'utilisation de la plateforme et modèles d'engagement des utilisateurs",
+          sessionCount: "Nombre de Sessions",
+          avgSessionDuration: "Durée Moyenne de Session",
+          totalChatSessions: "Nombre Total de Sessions de Chat",
+          deviceUsageBreakdown: "Répartition par Appareil",
+          mobile: "Mobile",
+          desktop: "Ordinateur",
+          tablet: "Tablette",
+          other: "Autre",
+          usageByLanguage: "Utilisation par Langue",
+          language: "Langue",
+          topQuestions: "Top 3 des Questions les Plus Posées",
+          topQuestionsSubtitle: "Questions les plus fréquemment posées par les utilisateurs",
+          question: "Question",
+          count: "Nombre",
+          chatInteractionStats: "Statistiques d'Interaction de Chat",
+          chatInteractionStatsSubtitle: "Métriques détaillées sur les sessions de chat des utilisateurs et l'engagement",
+          chatActivityByBusiness: "Activité de Chat par Entreprise",
+          business: "Entreprise",
+          users: "Utilisateurs",
+          chats: "Chats",
+          messages: "Messages",
+          avgDuration: "Durée Moyenne",
+          reportGeneratedOn: "Rapport généré le",
+          timePeriod: "Période",
+          printReport: "Imprimer le Rapport",
+          min: "min",
+          allTime: "Tout Temps",
+          to: "à",
+        },
+        de: {
+          title: "altacoach Analytik - Detaillierter Bericht",
+          backToDashboard: "Zurück zum Dashboard",
+          headerTitle: "altacoach Analytik - Detaillierter Bericht",
+          year: "Jahr",
+          headerDescription: "Ein umfassender Überblick über Plattformleistungskennzahlen und Erkenntnisse für",
+          userStats: "Benutzerstatistiken",
+          userStatsSubtitle: "Wichtige Kennzahlen zu Plattformbenutzern und deren Engagement",
+          totalUsers: "Gesamtzahl der Benutzer",
+          activeUsers: "Aktive Benutzer",
+          activeUserPercentage: "Prozentsatz aktiver Benutzer",
+          averageSessionTime: "Durchschnittliche Sitzungszeit",
+          businessStats: "Unternehmensstatistiken",
+          businessStatsSubtitle: "Daten zu Unternehmenskonten und deren Nutzung",
+          metric: "Kennzahl",
+          value: "Wert",
+          description: "Beschreibung",
+          totalBusinesses: "Gesamtzahl der Unternehmen",
+          totalBusinessesDesc: "Gesamtzahl der Unternehmenskonten auf der Plattform",
+          activeBusinesses: "Aktive Unternehmen",
+          activeBusinessesDesc: "Unternehmenskonten mit aktiven Benutzern in den letzten 30 Tagen",
+          newBusinessesThisPeriod: "Neue Unternehmen in diesem Zeitraum",
+          newBusinessesThisPeriodDesc: "Neue Unternehmenskonten, die während des ausgewählten Zeitraums erstellt wurden",
+          averageUsersPerBusiness: "Durchschnittliche Benutzer pro Unternehmen",
+          averageUsersPerBusinessDesc: "Durchschnittliche Anzahl von Benutzern, die jedem Unternehmen zugeordnet sind",
+          activeUsersByBusiness: "Aktive Benutzer nach Unternehmen",
+          businessName: "Unternehmensname",
+          percentage: "Prozentsatz",
+          usageStatistics: "Nutzungsstatistiken",
+          usageStatisticsSubtitle: "Plattformnutzungskennzahlen und Benutzerengagement-Muster",
+          sessionCount: "Anzahl der Sitzungen",
+          avgSessionDuration: "Durchschn. Sitzungsdauer",
+          totalChatSessions: "Gesamtzahl der Chat-Sitzungen",
+          deviceUsageBreakdown: "Gerätenutzung-Aufschlüsselung",
+          mobile: "Mobil",
+          desktop: "Desktop",
+          tablet: "Tablet",
+          other: "Andere",
+          usageByLanguage: "Nutzung nach Sprache",
+          language: "Sprache",
+          topQuestions: "Top 3 der am häufigsten gestellten Fragen",
+          topQuestionsSubtitle: "Am häufigsten von Benutzern gestellte Fragen",
+          question: "Frage",
+          count: "Anzahl",
+          chatInteractionStats: "Chat-Interaktionsstatistiken",
+          chatInteractionStatsSubtitle: "Detaillierte Kennzahlen zu Benutzer-Chat-Sitzungen und Engagement",
+          chatActivityByBusiness: "Chat-Aktivität nach Unternehmen",
+          business: "Unternehmen",
+          users: "Benutzer",
+          chats: "Chats",
+          messages: "Nachrichten",
+          avgDuration: "Durchschn. Dauer",
+          reportGeneratedOn: "Bericht erstellt am",
+          timePeriod: "Zeitraum",
+          printReport: "Bericht drucken",
+          min: "Min",
+          allTime: "Gesamter Zeitraum",
+          to: "zu"
+        },
+        it: {
+          title: "altacoach Analytics - Rapporto Dettagliato",
+          backToDashboard: "Torna alla Dashboard",
+          headerTitle: "altacoach Analytics - Rapporto Dettagliato",
+          year: "Anno",
+          headerDescription: "Una visione completa delle metriche di performance della piattaforma e degli insight per",
+          userStats: "Statistiche Utenti",
+          userStatsSubtitle: "Metriche chiave sugli utenti della piattaforma e il loro coinvolgimento",
+          totalUsers: "Utenti Totali",
+          activeUsers: "Utenti Attivi",
+          activeUserPercentage: "Percentuale Utenti Attivi",
+          averageSessionTime: "Tempo Medio di Sessione",
+          businessStats: "Statistiche Aziendali",
+          businessStatsSubtitle: "Dati sugli account aziendali e il loro utilizzo",
+          metric: "Metrica",
+          value: "Valore",
+          description: "Descrizione",
+          totalBusinesses: "Aziende Totali",
+          totalBusinessesDesc: "Numero totale di account aziendali sulla piattaforma",
+          activeBusinesses: "Aziende Attive",
+          activeBusinessesDesc: "Account aziendali con utenti attivi negli ultimi 30 giorni",
+          newBusinessesThisPeriod: "Nuove Aziende in Questo Periodo",
+          newBusinessesThisPeriodDesc: "Nuovi account aziendali creati durante il periodo selezionato",
+          averageUsersPerBusiness: "Media Utenti per Azienda",
+          averageUsersPerBusinessDesc: "Numero medio di utenti associati a ciascuna azienda",
+          activeUsersByBusiness: "Utenti Attivi per Azienda",
+          businessName: "Nome Azienda",
+          percentage: "Percentuale",
+          usageStatistics: "Statistiche di Utilizzo",
+          usageStatisticsSubtitle: "Metriche di utilizzo della piattaforma e modelli di coinvolgimento degli utenti",
+          sessionCount: "Numero di Sessioni",
+          avgSessionDuration: "Durata Media Sessione",
+          totalChatSessions: "Sessioni di Chat Totali",
+          deviceUsageBreakdown: "Suddivisione Utilizzo Dispositivi",
+          mobile: "Mobile",
+          desktop: "Desktop",
+          tablet: "Tablet",
+          other: "Altro",
+          usageByLanguage: "Utilizzo per Lingua",
+          language: "Lingua",
+          topQuestions: "Top 3 Domande Più Frequenti",
+          topQuestionsSubtitle: "Domande poste più frequentemente dagli utenti",
+          question: "Domanda",
+          count: "Conteggio",
+          chatInteractionStats: "Statistiche Interazioni Chat",
+          chatInteractionStatsSubtitle: "Metriche dettagliate sulle sessioni di chat degli utenti e sul coinvolgimento",
+          chatActivityByBusiness: "Attività Chat per Azienda",
+          business: "Azienda",
+          users: "Utenti",
+          chats: "Chat",
+          messages: "Messaggi",
+          avgDuration: "Durata Media",
+          reportGeneratedOn: "Rapporto generato il",
+          timePeriod: "Periodo di Tempo",
+          printReport: "Stampa Rapporto",
+          min: "min",
+          allTime: "Tutto il Periodo",
+          to: "a"
+        }
+      };
+  
+      // Get translation based on current language setting
+      const t = translations[language] || translations.en;
+  
       // Create a more beautiful HTML representation of the data
       let htmlContent = `
       <!DOCTYPE html>
@@ -1049,7 +839,7 @@ export default function AdminAnalytics() {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>altacoach Analytics - Detailed Report</title>
+        <title>${t.title}</title>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
         <style>
           :root {
@@ -1409,7 +1199,7 @@ export default function AdminAnalytics() {
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
-                Back to Dashboard
+                ${t.backToDashboard}
               </button>
             </div>
           </div>
@@ -1417,18 +1207,18 @@ export default function AdminAnalytics() {
         
         <div class="container">
           <div class="report-header">
-            <h1>altacoach Analytics - Detailed Report</h1>
-            <p>A comprehensive view of platform performance metrics and insights for ${periodType === 'year' ? `Year ${selectedYear}` :
+            <h1>${t.headerTitle}</h1>
+            <p>${t.headerDescription} ${periodType === 'year' ? `${t.year} ${selectedYear}` :
           periodType === 'month' ? `${new Date(0, selectedMonth - 1).toLocaleString(language, { month: 'long' })} ${selectedYear}` :
-            periodType === 'range' && dateFrom && dateTo ? `${dateFrom.toISOString().split('T')[0]} to ${dateTo.toISOString().split('T')[0]}` :
-              'All Time'
+            periodType === 'range' && dateFrom && dateTo ? `${dateFrom.toISOString().split('T')[0]} ${t.to} ${dateTo.toISOString().split('T')[0]}` :
+              t.allTime
         }</p>
           </div>
           
           <!-- User Statistics Section -->
           <section>
-            <h2>User Statistics</h2>
-            <p class="section-subtitle">Key metrics about platform users and their engagement</p>
+            <h2>${t.userStats}</h2>
+            <p class="section-subtitle">${t.userStatsSubtitle}</p>
             
             <div class="stat-cards">
               <div class="stat-card">
@@ -1438,7 +1228,7 @@ export default function AdminAnalytics() {
                   </svg>
                 </div>
                 <div class="stat-content">
-                  <h3>Total Users</h3>
+                  <h3>${t.totalUsers}</h3>
                   <p>${analyticsData.userStats.totalUsers}</p>
                 </div>
               </div>
@@ -1450,7 +1240,7 @@ export default function AdminAnalytics() {
                   </svg>
                 </div>
                 <div class="stat-content">
-                  <h3>Active Users</h3>
+                  <h3>${t.activeUsers}</h3>
                   <p>${analyticsData.userStats.activeUsers}</p>
                 </div>
               </div>
@@ -1460,7 +1250,7 @@ export default function AdminAnalytics() {
                   <span style="font-size: 20px; font-weight: bold;">%</span>
                 </div>
                 <div class="stat-content">
-                  <h3>Active User Percentage</h3>
+                  <h3>${t.activeUserPercentage}</h3>
                   <p>${avgUsersPerBusinessPercent}%</p>
                 </div>
               </div>
@@ -1472,7 +1262,7 @@ export default function AdminAnalytics() {
                   </svg>
                 </div>
                 <div class="stat-content">
-                  <h3>Average Session Time</h3>
+                  <h3>${t.averageSessionTime}</h3>
                   <p>${analyticsData.userStats.averageSessionTime}</p>
                 </div>
               </div>
@@ -1481,49 +1271,49 @@ export default function AdminAnalytics() {
           
           <!-- Business Statistics Section -->
           <section>
-            <h2>Business Statistics</h2>
-            <p class="section-subtitle">Data about business accounts and their usage</p>
+            <h2>${t.businessStats}</h2>
+            <p class="section-subtitle">${t.businessStatsSubtitle}</p>
             
             <table>
               <thead>
                 <tr>
-                  <th>Metric</th>
-                  <th class="value-column">Value</th>
-                  <th>Description</th>
+                  <th>${t.metric}</th>
+                  <th class="value-column">${t.value}</th>
+                  <th>${t.description}</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td>Total Businesses</td>
+                  <td>${t.totalBusinesses}</td>
                   <td class="value-column">${analyticsData.businessStats.totalBusinesses}</td>
-                  <td>Total number of business accounts on the platform</td>
+                  <td>${t.totalBusinessesDesc}</td>
                 </tr>
                 <tr>
-                  <td>Active Businesses</td>
+                  <td>${t.activeBusinesses}</td>
                   <td class="value-column">${analyticsData.businessStats.activeBusinesses}</td>
-                  <td>Business accounts with active users in the last 30 days</td>
+                  <td>${t.activeBusinessesDesc}</td>
                 </tr>
                 <tr>
-                  <td>New Businesses This Period</td>
+                  <td>${t.newBusinessesThisPeriod}</td>
                   <td class="value-column">${analyticsData.businessStats.newBusinessesThisMonth}</td>
-                  <td>New business accounts created during the selected time period</td>
+                  <td>${t.newBusinessesThisPeriodDesc}</td>
                 </tr>
                 <tr>
-                  <td>Average Users Per Business</td>
+                  <td>${t.averageUsersPerBusiness}</td>
                   <td class="value-column">${analyticsData.businessStats.averageUsersPerBusiness}</td>
-                  <td>Average number of users associated with each business</td>
+                  <td>${t.averageUsersPerBusinessDesc}</td>
                 </tr>
               </tbody>
             </table>
             
             ${usageStats.businessBreakdown.length > 0 ? `
-              <h3 style="margin-top: 2rem; font-size: 1.25rem; color: var(--gray-700);">Active Users by Business</h3>
+              <h3 style="margin-top: 2rem; font-size: 1.25rem; color: var(--gray-700);">${t.activeUsersByBusiness}</h3>
               <table style="margin-top: 1rem;">
                 <thead>
                   <tr>
-                    <th>Business Name</th>
-                    <th class="value-column">Active Users</th>
-                    <th>Percentage</th>
+                    <th>${t.businessName}</th>
+                    <th class="value-column">${t.activeUsers}</th>
+                    <th>${t.percentage}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1546,8 +1336,8 @@ export default function AdminAnalytics() {
           
           <!-- Usage Statistics Section -->
           <section>
-            <h2>Usage Statistics</h2>
-            <p class="section-subtitle">Platform usage metrics and user engagement patterns</p>
+            <h2>${t.usageStatistics}</h2>
+            <p class="section-subtitle">${t.usageStatisticsSubtitle}</p>
             
             <div class="stat-cards">
               <div class="stat-card">
@@ -1557,7 +1347,7 @@ export default function AdminAnalytics() {
                   </svg>
                 </div>
                 <div class="stat-content">
-                  <h3>Session Count</h3>
+                  <h3>${t.sessionCount}</h3>
                   <p>${usageStats.sessionCount.toLocaleString()}</p>
                 </div>
               </div>
@@ -1569,8 +1359,8 @@ export default function AdminAnalytics() {
                   </svg>
                 </div>
                 <div class="stat-content">
-                  <h3>Avg. Session Duration</h3>
-                  <p>${usageStats.sessionDuration} min</p>
+                  <h3>${t.avgSessionDuration}</h3>
+                  <p>${usageStats.sessionDuration} ${t.min}</p>
                 </div>
               </div>
               
@@ -1581,52 +1371,52 @@ export default function AdminAnalytics() {
                   </svg>
                 </div>
                 <div class="stat-content">
-                  <h3>Total Chat Sessions</h3>
+                  <h3>${t.totalChatSessions}</h3>
                   <p>${usageStats.chatStats ? usageStats.chatStats.reduce((sum, stat) => sum + stat.totalChats, 0).toLocaleString() : 0}</p>
                 </div>
               </div>
             </div>
             
-            <h3 style="margin-top: 2rem; font-size: 1.25rem; color: var(--gray-700);">Device Usage Breakdown</h3>
+            <h3 style="margin-top: 2rem; font-size: 1.25rem; color: var(--gray-700);">${t.deviceUsageBreakdown}</h3>
             <div style="display: flex; flex-wrap: wrap; justify-content: space-around; margin: 1.5rem 0;">
               <div style="text-align: center; padding: 1rem; min-width: 150px;">
                 <div style="width: 100px; height: 100px; border-radius: 50%; background-color: rgba(79, 70, 229, 0.2); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
                   <span style="font-size: 1.75rem; font-weight: 700; color: #4F46E5;">${deviceStats.mobile}%</span>
                 </div>
-                <p style="font-weight: 500; color: var(--gray-700);">Mobile</p>
+                <p style="font-weight: 500; color: var(--gray-700);">${t.mobile}</p>
               </div>
               
               <div style="text-align: center; padding: 1rem; min-width: 150px;">
                 <div style="width: 100px; height: 100px; border-radius: 50%; background-color: rgba(59, 130, 246, 0.2); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
                   <span style="font-size: 1.75rem; font-weight: 700; color: #3B82F6;">${deviceStats.desktop}%</span>
                 </div>
-                <p style="font-weight: 500; color: var(--gray-700);">Desktop</p>
+                <p style="font-weight: 500; color: var(--gray-700);">${t.desktop}</p>
               </div>
               
               <div style="text-align: center; padding: 1rem; min-width: 150px;">
                 <div style="width: 100px; height: 100px; border-radius: 50%; background-color: rgba(139, 92, 246, 0.2); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
                   <span style="font-size: 1.75rem; font-weight: 700; color: #8B5CF6;">${deviceStats.tablet}%</span>
                 </div>
-                <p style="font-weight: 500; color: var(--gray-700);">Tablet</p>
+                <p style="font-weight: 500; color: var(--gray-700);">${t.tablet}</p>
               </div>
               
               <div style="text-align: center; padding: 1rem; min-width: 150px;">
                 <div style="width: 100px; height: 100px; border-radius: 50%; background-color: rgba(107, 114, 128, 0.2); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
                   <span style="font-size: 1.75rem; font-weight: 700; color: #6B7280;">${deviceStats.other}%</span>
                 </div>
-                <p style="font-weight: 500; color: var(--gray-700);">Other</p>
+                <p style="font-weight: 500; color: var(--gray-700);">${t.other}</p>
               </div>
             </div>
             
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2rem;">
               ${usageStats.languageBreakdown.length > 0 ? `
                 <div>
-                  <h3 style="font-size: 1.25rem; color: var(--gray-700); margin-bottom: 1rem;">Usage by Language</h3>
+                  <h3 style="font-size: 1.25rem; color: var(--gray-700); margin-bottom: 1rem;">${t.usageByLanguage}</h3>
                   <table>
                     <thead>
                       <tr>
-                        <th>Language</th>
-                        <th class="value-column">Percentage</th>
+                        <th>${t.language}</th>
+                        <th class="value-column">${t.percentage}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1642,12 +1432,37 @@ export default function AdminAnalytics() {
               ` : ''}
             </div>
           </section>
+  
+          <!-- Top Questions Section -->
+          ${topQuestions.length > 0 ? `
+            <section>
+              <h2>${t.topQuestions}</h2>
+              <p class="section-subtitle">${t.topQuestionsSubtitle}</p>
+              
+              <table>
+                <thead>
+                  <tr>
+                    <th>${t.question}</th>
+                    <th class="value-column">${t.count}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${topQuestions.map(question => `
+                    <tr>
+                      <td>${question.content}</td>
+                      <td class="value-column">${question.count}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </section>-
+          ` : ''} 
           
           <!-- Chat Statistics Section -->
           ${usageStats.chatStats && usageStats.chatStats.length > 0 ? `
             <section>
-              <h2>Chat Interaction Statistics</h2>
-              <p class="section-subtitle">Detailed metrics about user chat sessions and engagement</p>
+              <h2>${t.chatInteractionStats}</h2>
+              <p class="section-subtitle">${t.chatInteractionStatsSubtitle}</p>
               
               <div class="stat-cards">
                 <div class="stat-card">
@@ -1657,7 +1472,7 @@ export default function AdminAnalytics() {
                     </svg>
                   </div>
                   <div class="stat-content">
-                    <h3>Total Chat Sessions</h3>
+                    <h3>${t.totalChatSessions}</h3>
                     <p>${usageStats.chatStats.reduce((sum, stat) => sum + stat.totalChats, 0).toLocaleString()}</p>
                   </div>
                 </div>
@@ -1669,8 +1484,8 @@ export default function AdminAnalytics() {
                     </svg>
                   </div>
                   <div class="stat-content">
-                    <h3>Avg. Session Duration</h3>
-                    <p>${usageStats.sessionDuration} min</p>
+                    <h3>${t.avgSessionDuration}</h3>
+                    <p>${usageStats.sessionDuration} ${t.min}</p>
                   </div>
                 </div>
                 
@@ -1681,21 +1496,21 @@ export default function AdminAnalytics() {
                     </svg>
                   </div>
                   <div class="stat-content">
-                    <h3>Active Chat Users</h3>
+                    <h3>${t.activeUsers}</h3>
                     <p>${usageStats.chatStats.reduce((sum, stat) => sum + stat.usersCount, 0)}</p>
                   </div>
                 </div>
               </div>
               
-              <h3 style="margin-top: 2rem; font-size: 1.25rem; color: var(--gray-700);">Chat Activity by Business</h3>
+              <h3 style="margin-top: 2rem; font-size: 1.25rem; color: var(--gray-700);">${t.chatActivityByBusiness}</h3>
               <table style="margin-top: 1rem;">
                 <thead>
                   <tr>
-                    <th>Business</th>
-                    <th>Users</th>
-                    <th>Chats</th>
-                    <th>Messages</th>
-                    <th>Avg Duration</th>
+                    <th>${t.business}</th>
+                    <th>${t.users}</th>
+                    <th>${t.chats}</th>
+                    <th>${t.messages}</th>
+                    <th>${t.avgDuration}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1705,7 +1520,7 @@ export default function AdminAnalytics() {
                       <td>${stat.usersCount}</td>
                       <td>${stat.totalChats}</td>
                       <td>${stat.totalMessages}</td>
-                      <td>${Math.round(stat.averageDurationMinutes)} min</td>
+                      <td>${Math.round(stat.averageDurationMinutes)} ${t.min}</td>
                     </tr>
                   `).join('')}
                 </tbody>
@@ -1715,11 +1530,11 @@ export default function AdminAnalytics() {
             
           <div class="meta-info">
             <div>
-              <p>Report generated on ${new Date().toLocaleString()}</p>
-              <p>Time Period: ${periodType === 'year' ? `Year ${selectedYear}` :
+              <p>${t.reportGeneratedOn} ${new Date().toLocaleString(language)}</p>
+              <p>${t.timePeriod}: ${periodType === 'year' ? `${t.year} ${selectedYear}` :
           periodType === 'month' ? `${new Date(0, selectedMonth - 1).toLocaleString(language, { month: 'long' })} ${selectedYear}` :
-            periodType === 'range' && dateFrom && dateTo ? `${dateFrom.toISOString().split('T')[0]} to ${dateTo.toISOString().split('T')[0]}` :
-              'All Time'
+            periodType === 'range' && dateFrom && dateTo ? `${dateFrom.toISOString().split('T')[0]} ${t.to} ${dateTo.toISOString().split('T')[0]}` :
+              t.allTime
         }</p>
             </div>
             <div>
@@ -1727,7 +1542,7 @@ export default function AdminAnalytics() {
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2a2 2 0 012 2z" />
                 </svg>
-                Print Report
+                ${t.printReport}
               </button>
             </div>
           </div>
@@ -1742,12 +1557,12 @@ export default function AdminAnalytics() {
       </body>
       </html>
     `;
-
+  
       // Create a blob and open in a new tab
       const blob = new Blob([htmlContent], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
       window.open(url, '_blank');
-
+  
       // Clean up URL object after the tab is opened
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (err) {
@@ -1755,6 +1570,601 @@ export default function AdminAnalytics() {
       alert('Failed to generate report. Please try again.');
     }
   };
+
+
+  // Function to handle data export
+  const handleExportData = () => {
+    try {
+      // Format date for filename
+      const date = new Date();
+      const formattedDate = date.toISOString().split('T')[0];
+
+      // Create filename with period info if applicable
+      let periodInfo = 'all-time';
+      if (periodType === 'year') {
+        periodInfo = `year-${selectedYear}`;
+      } else if (periodType === 'month') {
+        periodInfo = `${selectedYear}-${selectedMonth.toString().padStart(2, '0')}`;
+      } else if (periodType === 'range' && dateFrom && dateTo) {
+        periodInfo = `${dateFrom.toISOString().split('T')[0]}-to-${dateTo.toISOString().split('T')[0]}`;
+      }
+
+      const filename = `altacoach-analytics-${periodInfo}-${formattedDate}.csv`;
+
+      // Create CSV content using the current data in the dashboard
+      // Using "=====" as visual separators to make headers stand out
+      let csvContent = '======== ALTACOACH ANALYTICS REPORT ========\n\n';
+
+      // Add report metadata
+      csvContent += `Report Date,${date.toLocaleString()}\n`;
+      csvContent += `Time Period,${periodType === 'year' ? `Year ${selectedYear}` :
+        periodType === 'month' ? `${new Date(0, selectedMonth - 1).toLocaleString(language, { month: 'long' })} ${selectedYear}` :
+          periodType === 'range' && dateFrom && dateTo ? `${dateFrom.toISOString().split('T')[0]} to ${dateTo.toISOString().split('T')[0]}` :
+            'All Time'
+        }\n\n`;
+
+      // Add user statistics with clear section header
+      csvContent += '======== USER STATISTICS ========\n';
+      csvContent += 'Metric,Value,Description\n';
+      csvContent += `Total Users,${analyticsData.userStats.totalUsers},Total number of registered users\n`;
+      csvContent += `Active Users,${analyticsData.userStats.activeUsers},Users who logged in during the period\n`;
+      csvContent += `New Users This Period,${analyticsData.userStats.newUsersThisMonth},New user registrations during the selected time period\n`;
+      csvContent += `Average Session Time,${analyticsData.userStats.averageSessionTime},Average time users spend on the platform per session\n`;
+      csvContent += `Active User Percentage,${avgUsersPerBusinessPercent}%,Percentage of total users who are active\n\n`;
+
+      // Add business statistics with clear section header
+      csvContent += '======== BUSINESS STATISTICS ========\n';
+      csvContent += 'Metric,Value,Description\n';
+      csvContent += `Total Businesses,${analyticsData.businessStats.totalBusinesses},Total number of business accounts\n`;
+      csvContent += `Active Businesses,${analyticsData.businessStats.activeBusinesses},Business accounts with active users\n`;
+      csvContent += `New Businesses This Period,${analyticsData.businessStats.newBusinessesThisMonth},New business accounts created during the selected time period\n`;
+      csvContent += `Average Users Per Business,${analyticsData.businessStats.averageUsersPerBusiness},Average number of users associated with each business\n\n`;
+
+      // Add usage statistics with clear section header
+      csvContent += '======== USAGE STATISTICS ========\n';
+      csvContent += 'Metric,Value,Description\n';
+      csvContent += `Session Count,${usageStats.sessionCount},Total number of user sessions\n`;
+      csvContent += `Average Session Duration,${usageStats.sessionDuration} minutes,Average time users spend in a session\n\n`;
+
+      // Add device statistics with clear section header
+      csvContent += '======== DEVICE STATISTICS ========\n';
+      csvContent += 'Device Type,Percentage,\n';
+      csvContent += `Mobile,${deviceStats.mobile}%,\n`;
+      csvContent += `Desktop,${deviceStats.desktop}%,\n`;
+      csvContent += `Tablet,${deviceStats.tablet}%,\n`;
+      csvContent += `Other,${deviceStats.other}%,\n\n`;
+
+      // Add business breakdown if available
+      if (usageStats.businessBreakdown.length > 0) {
+        csvContent += '======== BUSINESS BREAKDOWN ========\n';
+        csvContent += 'Business Name,Active Users,Percentage\n';
+        usageStats.businessBreakdown.forEach(biz => {
+          csvContent += `${biz.name},${biz.activeUserCount},${biz.percent}%\n`;
+        });
+        csvContent += '\n';
+      }
+
+      // Add language breakdown if available
+      if (usageStats.languageBreakdown.length > 0) {
+        csvContent += '======== LANGUAGE BREAKDOWN ========\n';
+        csvContent += 'Language,Percentage,\n';
+        usageStats.languageBreakdown.forEach(lang => {
+          csvContent += `${lang.language},${lang.percent}%,\n`;
+        });
+        csvContent += '\n';
+      }
+
+      // Add chat statistics if available
+      if (usageStats.chatStats && usageStats.chatStats.length > 0) {
+        csvContent += '======== CHAT STATISTICS BY BUSINESS ========\n';
+        csvContent += 'Business Name,Users,Chats,Messages,Avg Duration (minutes)\n';
+        usageStats.chatStats.forEach(stat => {
+          csvContent += `${stat.businessName},${stat.usersCount},${stat.totalChats},${stat.totalMessages},${Math.round(stat.averageDurationMinutes)}\n`;
+        });
+
+        const totalChats = usageStats.chatStats.reduce((sum, stat) => sum + stat.totalChats, 0);
+        const totalChatUsers = usageStats.chatStats.reduce((sum, stat) => sum + stat.usersCount, 0);
+
+        csvContent += `TOTAL,${totalChatUsers},${totalChats},,\n\n`;
+      }
+
+      // Add export footer
+      csvContent += '======== END OF REPORT ========\n';
+      csvContent += 'Generated by altacoach Analytics Dashboard\n';
+
+      // Create a blob and download link
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+
+      // Create a temporary link element and trigger download
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+
+      // Clean up
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error exporting data:', err);
+      alert('Failed to export data. Please try again.');
+    }
+  };
+
+  // Function to fetch dashboard stats
+  useEffect(() => {
+    const fetchDashboardStats = async () => {
+      try {
+        setIsLoading(true);
+
+        // Build query params based on selected filters
+        const queryParams = new URLSearchParams();
+
+        // Add period type filters
+        if (periodType === 'year' && selectedYear) {
+          queryParams.append('periodType', 'year');
+          queryParams.append('year', selectedYear.toString());
+        } else if (periodType === 'month' && selectedYear && selectedMonth) {
+          queryParams.append('periodType', 'month');
+          queryParams.append('year', selectedYear.toString());
+          queryParams.append('month', selectedMonth.toString());
+        } else if (periodType === 'range' && dateFrom && dateTo) {
+          queryParams.append('periodType', 'range');
+          queryParams.append('dateFrom', dateFrom.toISOString().split('T')[0]);
+          queryParams.append('dateTo', dateTo.toISOString().split('T')[0]);
+        }
+
+        // Add business filters
+        if (selectedBusinesses.length > 0) {
+          if (selectedBusinesses.includes('all')) {
+            // If 'all' is selected, don't filter by business
+          } else {
+            // Add comma-separated list of business IDs
+            queryParams.append('businesses', selectedBusinesses.join(','));
+          }
+        }
+
+        // Construct the URL with query parameters
+        const apiUrl = `/api/admin/dashboard-stats2?${queryParams.toString()}`;
+        console.log('Fetching analytics with URL:', apiUrl);
+
+        // Add cache control to prevent stale data
+        const response = await fetch(apiUrl, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || `Failed to fetch dashboard statistics (${response.status})`);
+        }
+
+        const data = await response.json();
+        console.log('Fetched analytics data:', data);
+
+        // Also fetch chat duration data
+        let chatDurationData: ChatDurationData = {};
+        try {
+          const chatResponse = await fetch(`/api/admin/chat-duration?${queryParams.toString()}`, {
+            cache: 'no-store',
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0'
+            }
+          });
+
+          if (chatResponse.ok) {
+            chatDurationData = await chatResponse.json();
+            console.log('Fetched chat duration data:', chatDurationData);
+          }
+        } catch (chatError) {
+          console.error('Error fetching chat duration:', chatError);
+          // Don't fail the whole process, just log the error
+        }
+
+        if (data.success) {
+          // Get regular users (non-admin) data from the API response
+          const regularUsers = data.stats?.users?.regular || 0;
+          const activeRegularUsers = data.stats?.users?.activeRegularFiltered || 0;
+
+          // Calculate average users per business more accurately
+          const totalBusinesses = data.stats?.businesses?.total || 1; // Avoid division by zero
+          const averageUsersPerBusiness = totalBusinesses > 0 ?
+            Math.round(regularUsers / totalBusinesses) :
+            0;
+
+          // Calculate percentage of active users
+          const activeUserPercent = regularUsers > 0 ?
+            Math.round((activeRegularUsers / regularUsers) * 100) :
+            0;
+
+          // Set the percentage for use in the UI
+          setAvgUsersPerBusinessPercent(activeUserPercent);
+
+          // Get average session duration from chat data if available
+          let sessionDuration = Math.max(8, Math.min(25, Math.round(regularUsers / 50))); // Default
+          if (chatDurationData.success && chatDurationData.averageDurationMinutes) {
+            sessionDuration = Math.round(chatDurationData.averageDurationMinutes);
+          }
+
+          // Update usage statistics with business and language breakdown
+          setUsageStats(prev => ({
+            ...prev,
+            businessBreakdown: data.businessActiveUserStats || [],
+            languageBreakdown: data.languageActiveUserStats || [],
+            sessionCount: chatDurationData.totalChats || Math.round(regularUsers * 3.5), // Use actual chat count when available
+            sessionDuration: sessionDuration, // Use chat duration if available
+            chatStats: chatDurationData.businessChatStats || [] // Add chat stats by business
+          }));
+
+          // Update only the specific stats we want from real data
+          setAnalyticsData(prev => ({
+            ...prev,
+            userStats: {
+              ...prev.userStats,
+              totalUsers: regularUsers, // Use regular users (non-admin) count
+              activeUsers: activeRegularUsers, // Use the direct filtered active count
+              newUsersThisMonth: data.stats?.users?.newThisPeriod || prev.userStats.newUsersThisMonth,
+              averageSessionTime: `${sessionDuration} minutes` // More realistic session time from chat data
+            },
+            businessStats: {
+              ...prev.businessStats,
+              totalBusinesses: data.stats?.businesses?.total || prev.businessStats.totalBusinesses,
+              activeBusinesses: data.stats?.businesses?.active || prev.businessStats.activeBusinesses,
+              newBusinessesThisMonth: data.stats?.businesses?.newThisPeriod || prev.businessStats.newBusinessesThisMonth,
+              averageUsersPerBusiness: averageUsersPerBusiness, // More accurate calculation
+            }
+          }));
+
+          // Update content statistics if available
+          if (data.stats?.content) {
+            setAnalyticsData(prev => ({
+              ...prev,
+              contentStats: {
+                ...prev.contentStats,
+                totalContent: data.stats.content.total || prev.contentStats.totalContent,
+                contentViews: data.stats.content.views || prev.contentStats.contentViews,
+                mostPopularContentType: data.stats.content.mostPopularType || prev.contentStats.mostPopularContentType,
+                averageCompletionRate: data.stats.content.averageCompletionRate || prev.contentStats.averageCompletionRate,
+              }
+            }));
+          }
+
+          // Update AI statistics if available
+          if (data.stats?.ai) {
+            setAnalyticsData(prev => ({
+              ...prev,
+              aiStats: {
+                ...prev.aiStats,
+                totalInteractions: data.stats.ai.totalInteractions || prev.aiStats.totalInteractions,
+                averageResponseTime: data.stats.ai.averageResponseTime || prev.aiStats.averageResponseTime,
+                satisfactionRate: data.stats.ai.satisfactionRate || prev.aiStats.satisfactionRate,
+                mostCommonQueries: data.stats.ai.mostCommonQueries || prev.aiStats.mostCommonQueries,
+              }
+            }));
+          }
+        } else {
+          console.warn('API returned success: false', data);
+          // Keep using sample data
+        }
+
+        // Now fetch device statistics
+        try {
+          const deviceResponse = await fetch(`/api/admin/device-stats?${queryParams.toString()}`, {
+            cache: 'no-store',
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0'
+            }
+          });
+
+          if (deviceResponse.ok) {
+            const deviceData = await deviceResponse.json();
+
+            if (deviceData.success) {
+              console.log('Fetched device data:', deviceData);
+
+              // Update device statistics with real data
+              setDeviceStats({
+                mobile: deviceData.percentages.mobile || 0,
+                desktop: deviceData.percentages.desktop || 0,
+                tablet: deviceData.percentages.tablet || 0,
+                other: deviceData.percentages.other || 0
+              });
+            }
+          }
+        } catch (deviceError) {
+          console.error('Error fetching device statistics:', deviceError);
+          // Don't fail the whole process, just log the error
+        }
+      } catch (err) {
+        console.error('Error fetching dashboard stats:', err);
+        setError((err as Error).message || 'Failed to fetch dashboard statistics');
+        // Show an improved error message to the user
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Only fetch data if user is authenticated and not during auth loading
+    if (isAuthenticated && !authLoading) {
+      fetchDashboardStats();
+      fetchTopQuestions(); // Add this line to fetch questions
+    }
+  }, [isAuthenticated, authLoading, periodType, selectedYear, selectedMonth, dateFrom, dateTo, selectedBusinesses]);
+
+  // Add this function to fetch top questions
+  // Update the fetchTopQuestions function in your analytics page
+const fetchTopQuestions = async () => {
+  try {
+    setIsQuestionsLoading(true);
+    
+    // Build query params based on selected filters
+    let businessesToExport = selectedBusinesses;
+    let dateRange = null;
+    
+    if (periodType === 'range' && dateFrom && dateTo) {
+      dateRange = {
+        startDate: dateFrom.toISOString(),
+        endDate: dateTo.toISOString()
+      };
+    }
+
+    if (businessesToExport.length === 0) {
+      const res = await fetch('/api/admin/businesses');
+      const data = await res.json();
+      businessesToExport = (data.businesses || []).map((b: any) => b.id);
+    }
+
+    const response = await fetch('/api/admin/export-chat-questions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        selectedBusinesses: businessesToExport,
+        dateRange: dateRange
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.message || 'Failed to fetch top questions');
+    }
+
+    // Process the questions to find the most common ones
+    const questionCounts = new Map<string, { content: string, count: number, id: string, created_at: string }>();
+    
+    data.data.forEach((chat: any) => {
+      if (chat.chat_history && Array.isArray(chat.chat_history)) {
+        chat.chat_history.forEach((msg: any) => {
+          if (msg.question) {  // Check for question field instead of role & content
+            // Normalize the question text for better matching
+            const normalizedQuestion = msg.question.trim().toLowerCase();
+            
+            if (questionCounts.has(normalizedQuestion)) {
+              const existingQuestion = questionCounts.get(normalizedQuestion)!;
+              questionCounts.set(normalizedQuestion, {
+                ...existingQuestion,
+                count: existingQuestion.count + 1
+              });
+            } else {
+              questionCounts.set(normalizedQuestion, {
+                content: msg.question,  // Use question field instead of content
+                count: 1,
+                id: msg.id,
+                created_at: msg.created_at
+              });
+            }
+          }
+        });
+      }
+    });
+
+    // Convert Map to array and sort by count (descending)
+    const sortedQuestions = Array.from(questionCounts.values())
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 3); // Get top 3
+
+    setTopQuestions(sortedQuestions);
+  } catch (error) {
+    console.error('Error fetching top questions:', error);
+  } finally {
+    setIsQuestionsLoading(false);
+  }
+};
+
+  const handleExportChatHistory = async () => {
+    try {
+      let businessesToExport = selectedBusinesses;
+
+      if (businessesToExport.length === 0) {
+        const res = await fetch('/api/admin/businesses');
+        const data = await res.json();
+        businessesToExport = (data.businesses || []).map((b: any) => b.id);
+      }
+
+      const response = await fetch('/api/admin/export-chat-history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ selectedBusinesses: businessesToExport }),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to export chat history');
+      }
+
+      const doc = new jsPDF();
+      let y = 10; // start position
+
+      data.data.forEach((chat: any, index: number) => {
+        if (index > 0) {
+          doc.addPage();
+          y = 10; // Reset after new page
+        }
+
+        doc.setFontSize(16);
+        doc.text(`Chat: ${chat.name || 'Untitled Chat'}`, 10, y);
+        y += 10;
+        doc.setFontSize(12);
+        doc.text(`User ID: ${chat.user_id}`, 10, y);
+        y += 7;
+        doc.text(`Created At: ${chat.created_at}`, 10, y);
+        y += 10;
+        doc.setFontSize(14);
+        doc.text('--- Conversation ---', 10, y);
+        y += 10;
+
+        if (chat.chat_history.length === 0) {
+          doc.text('(No messages)', 10, y);
+          y += 10;
+        } else {
+          chat.chat_history.forEach((entry: any) => {
+            // Add question
+            doc.setFontSize(12);
+            const questionLines = doc.splitTextToSize(`Q: ${entry.question}`, 180);
+            questionLines.forEach((line: string) => {
+              doc.text(line, 10, y);
+              y += 7;
+            });
+
+            // Add answer
+            const answerLines = doc.splitTextToSize(`A: ${entry.answer}`, 180);
+            answerLines.forEach((line: string) => {
+              doc.text(line, 10, y);
+              y += 7;
+            });
+
+            y += 5; // Gap between Q&A pairs
+
+            // If page bottom is reached, add new page
+            if (y > 270) {
+              doc.addPage();
+              y = 10;
+            }
+          });
+        }
+      });
+
+      doc.save(`altacoach-chat-history-${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (err) {
+      console.error('Export Chat History PDF error:', err);
+      alert('Failed to export chat history. Please try again.');
+    }
+  };
+
+
+  // Enhance the error display with option to retry
+  const handleRetry = () => {
+    setError(null);
+    if (isAuthenticated && !authLoading) {
+      const fetchData = async () => {
+        try {
+          setIsLoading(true);
+          const response = await fetch('/api/admin/dashboard-stats', {
+            cache: 'no-store',
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0'
+            }
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || `Failed to fetch dashboard statistics (${response.status})`);
+          }
+
+          const data = await response.json();
+
+          if (data.success) {
+            // Get only regular users (not admins)
+            const regularUsers = data.stats?.users?.regular || 0;
+            const activeRegularUsers = Math.round(regularUsers * 0.8);
+
+            // Calculate average users per business more accurately
+            const totalBusinesses = data.stats?.businesses?.total || 1;
+            const averageUsersPerBusiness = totalBusinesses > 0 ?
+              Math.round(regularUsers / totalBusinesses) :
+              0;
+
+            // Calculate a more reasonable session time based on user activity
+            const averageSessionTime = `${Math.max(5, Math.min(25, Math.round(regularUsers / 10)))} minutes`;
+
+            setAnalyticsData(prev => ({
+              ...prev,
+              userStats: {
+                ...prev.userStats,
+                totalUsers: regularUsers,
+                activeUsers: activeRegularUsers,
+                newUsersThisMonth: data.stats?.users?.newThisMonth || prev.userStats.newUsersThisMonth,
+                averageSessionTime: averageSessionTime
+              },
+              businessStats: {
+                ...prev.businessStats,
+                totalBusinesses: data.stats?.businesses?.total || prev.businessStats.totalBusinesses,
+                activeBusinesses: data.stats?.businesses?.active || prev.businessStats.activeBusinesses,
+                newBusinessesThisMonth: data.stats?.businesses?.newThisMonth || prev.businessStats.newBusinessesThisMonth,
+                averageUsersPerBusiness: averageUsersPerBusiness
+              },
+            }));
+          }
+        } catch (err) {
+          console.error('Error on retry:', err);
+          setError((err as Error).message || 'Failed to fetch dashboard statistics');
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchData();
+    }
+  };
+
+  // Stat Card Component
+  const StatCard = ({
+    icon,
+    title,
+    value,
+    isLoading = false,
+    iconBackground = 'bg-blue-500'
+  }: {
+    icon: React.ReactNode,
+    title: string,
+    value: string | number,
+    isLoading?: boolean,
+    iconBackground?: string
+  }) => {
+    return (
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
+        <div className="flex items-center">
+          <div className={`${iconBackground} w-12 h-12 rounded-full flex items-center justify-center mr-4`}>
+            {icon}
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</h3>
+            {isLoading ? (
+              <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mt-1"></div>
+            ) : (
+              <p className="text-2xl font-semibold text-gray-900 dark:text-white">{value}</p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Function to handle detailed report view
+  // Function to handle detailed report view
+  
 
   // Function to handle logout
   const handleLogout = async () => {
@@ -1787,6 +2197,42 @@ export default function AdminAnalytics() {
       </div>
     </div>
   );
+
+  // Question Card Component
+  const QuestionCard = ({ question, rank }: { 
+    question: { 
+      content: string, 
+      count: number, 
+      id: string, 
+      created_at: string 
+    }, 
+    rank: number 
+  }) => {
+    return (
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
+        <div className="flex items-start">
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-4 ${
+            rank === 1 ? 'bg-yellow-500' : rank === 2 ? 'bg-gray-400' : 'bg-amber-700'
+          }`}>
+            <span className="text-white font-bold">{rank}</span>
+          </div>
+          <div className="flex-1">
+            <p className="text-gray-900 dark:text-white font-medium line-clamp-3">
+              {question.content}
+            </p>
+            <div className="mt-2 flex justify-between text-sm">
+              <span className="text-gray-500 dark:text-gray-400">
+                {t('Asked')} {question.count} {t('times')}
+              </span>
+              <span className="text-gray-500 dark:text-gray-400">
+                {t('Last')} {new Date(question.created_at).toLocaleDateString()}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -2003,7 +2449,7 @@ export default function AdminAnalytics() {
                 {/* Button summary */}
                 <span className="truncate text-gray-400">
                   {periodType === '' && selectedBusinesses.length === 0
-                    ? t('Select filters...') // Show placeholder if nothing selected
+                    ? t('Selectfilters') // Show placeholder if nothing selected
                     : <>
                       {periodType === 'year' && `Year: ${selectedYear}`}
                       {periodType === 'month' && `Month: ${new Date(0, selectedMonth - 1).toLocaleString(language, { month: 'long' })} ${selectedYear}`}
@@ -2327,10 +2773,12 @@ export default function AdminAnalytics() {
                         </p>
                       )}
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {periodType === 'month' ? 'This Month' :
-                          periodType === 'year' ? 'This Year' :
-                            periodType === 'range' ? 'Selected Period' : 'Current Period'}
+                        {periodType === 'month' ? t('ThisMonth') :
+                          periodType === 'year' ? t('ThisYear') :
+                          periodType === 'range' ? t('SelectedPeriod') :
+                          t('CurrentPeriod')}
                       </p>
+
                     </div>
                   </div>
                 </div>
@@ -2661,6 +3109,50 @@ export default function AdminAnalytics() {
               )}
             </section>
 
+            {/* Top Questions Section */}
+            <section className="mb-8">
+              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
+                {t('Top3MostAskedQuestions')}
+              </h2>
+                        
+              {isQuestionsLoading ? (
+                <div className="grid grid-cols-1 gap-6">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm animate-pulse">
+                      <div className="flex items-start">
+                        <div className="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 mr-4"></div>
+                        <div className="flex-1">
+                          <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4 mb-2"></div>
+                          <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-1/2 mb-2"></div>
+                          <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-5/6"></div>
+                          <div className="mt-2 flex justify-between">
+                            <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
+                            <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : topQuestions.length > 0 ? (
+                <div className="grid grid-cols-1 gap-6">
+                  {topQuestions.map((question, index) => (
+                    <QuestionCard 
+                      key={question.id} 
+                      question={question} 
+                      rank={index + 1} 
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm text-center">
+                  <p className="text-gray-500 dark:text-gray-400">
+                    {t('Noquestiondataavailablefortheselectedperiod')}
+                  </p>
+                </div>
+              )}
+            </section>
+
             {/* Action buttons */}
             <div className="flex justify-end space-x-4 mb-8">
               <button
@@ -2679,7 +3171,7 @@ export default function AdminAnalytics() {
                 className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
                 onClick={handleExportChatHistory}
               >
-                Export Chat History
+                {t('ExportChatHistory')}
               </button>
 
             </div>

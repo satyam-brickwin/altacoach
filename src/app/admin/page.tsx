@@ -43,6 +43,13 @@ interface UserStats {
   businessUsers: number;
 }
 
+interface TopQuestion {
+  content: string;
+  count: number;
+  id: string;
+  created_at: string;
+}
+
 const AdminDashboard = () => {
   // Move all hooks to the top for consistent ordering
   const router = useRouter();
@@ -80,6 +87,8 @@ const AdminDashboard = () => {
     regularUsers: 0, // Initialize regular users count
     businessUsers: 0
   });
+  const [topQuestions, setTopQuestions] = useState<TopQuestion[]>([]);
+  const [isQuestionsLoading, setIsQuestionsLoading] = useState(false);
   
   // Add a refresh trigger state to force data refresh
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -297,6 +306,103 @@ const AdminDashboard = () => {
     }
   }, [isAuthenticated, authLoading, refreshTrigger]);
 
+  // Remove the existing fetchTopQuestions function and the setIsQuestionsLoading function at the bottom
+// Add this useEffect inside the component, near your other useEffect hooks:
+
+// Add this useEffect to fetch top questions when the dashboard loads
+  useEffect(() => {
+    const fetchTopQuestionsData = async () => {
+      try {
+        setIsQuestionsLoading(true);
+        
+        // First, get a list of all business IDs
+        const businessesResponse = await fetch('/api/admin/businesses');
+        const businessesData = await businessesResponse.json();
+        
+        if (!businessesData.success) {
+          throw new Error('Failed to fetch businesses list');
+        }
+        
+        // Extract business IDs from the response
+        const businessIds = businessesData.businesses.map((business: any) => business.id);
+        
+        // Now use those business IDs in the questions request
+        const response = await fetch('/api/admin/export-chat-questions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            // Include all business IDs instead of an empty array
+            selectedBusinesses: businessIds,
+            dateRange: null
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`API request failed with status ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.message || 'Failed to fetch top questions');
+        }
+
+        // Process the questions to find the most common ones
+        const questionCounts = new Map<string, { content: string, count: number, id: string, created_at: string }>();
+        
+        // Check if data.data exists and is an array
+        if (!Array.isArray(data.data)) {
+          console.warn('Expected array of chat data but received:', data.data);
+          setTopQuestions([]);
+          return;
+        }
+        
+        data.data.forEach((chat: any) => {
+          if (chat.chat_history && Array.isArray(chat.chat_history)) {
+            chat.chat_history.forEach((msg: any) => {
+              if (msg.question) {
+                const normalizedQuestion = msg.question.trim().toLowerCase();
+                
+                if (questionCounts.has(normalizedQuestion)) {
+                  const existingQuestion = questionCounts.get(normalizedQuestion)!;
+                  questionCounts.set(normalizedQuestion, {
+                    ...existingQuestion,
+                    count: existingQuestion.count + 1
+                  });
+                } else {
+                  questionCounts.set(normalizedQuestion, {
+                    content: msg.question,
+                    count: 1,
+                    id: msg.id || `q-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+                    created_at: msg.created_at || new Date().toISOString()
+                  });
+                }
+              }
+            });
+          }
+        });
+
+        // Convert to array and sort by count (descending)
+        const sortedQuestions = Array.from(questionCounts.values())
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 3); // Get top 3
+
+        setTopQuestions(sortedQuestions);
+        console.log("Top questions processed successfully:", sortedQuestions);
+      } catch (error) {
+        console.error('Error fetching top questions:', error);
+        // Set an empty array on error to avoid undefined issues
+        setTopQuestions([]);
+      } finally {
+        setIsQuestionsLoading(false);
+      }
+    };
+
+    if (isAuthenticated && !authLoading) {
+      fetchTopQuestionsData();
+    }
+  }, [isAuthenticated, authLoading, refreshTrigger]);
+
   useEffect(() => {
     console.log('Current contentStats state:', contentStats);
   }, [contentStats]);
@@ -375,7 +481,7 @@ const AdminDashboard = () => {
                   <span className="text-gray-900 dark:text-white tracking-[.10em]">oach</span>
                 </span>
                 <span className="ml-2 px-2 py-1 bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] text-sm font-medium rounded">
-                  Admin
+                  {translate('Admin')}
                 </span>
               </div>
             </div>
@@ -653,7 +759,7 @@ const AdminDashboard = () => {
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                 <div className="flex items-center mb-4">
                   <div className="bg-[#C72026]/10 dark:bg-[#C72026]/20 rounded-full p-3 mr-4">
-                    <svg className="h-5 w-5 text-[#C72026] dark:text-[#C72026]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="h-5 w-5 text-[#C72026] dark:text-[#C72026]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                     </svg>
                   </div>
@@ -769,7 +875,7 @@ const AdminDashboard = () => {
                         <td colSpan={5} className="px-6 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
                           <div className="flex flex-col items-center justify-center space-y-3">
                             <svg className="h-10 w-10 text-gray-400 dark:text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                             </svg>
                             <p>{translate('noBusinessesFound') || 'No businesses found'}</p>
                             <button
@@ -786,10 +892,57 @@ const AdminDashboard = () => {
                 </table>
               </div>
             </div>
+
+            {/* Top Questions Section */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden mt-8">
+              <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {translate('Top3MostAskedQuestions') || 'Top 3 Most Asked Questions'}
+                </h2>
+              </div>
+              <div className="p-6">
+                {isQuestionsLoading ? (
+                  <div className="grid grid-cols-1 gap-6">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm animate-pulse">
+                        <div className="flex items-start">
+                          <div className="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 mr-4"></div>
+                          <div className="flex-1">
+                            <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4 mb-2"></div>
+                            <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-1/2 mb-2"></div>
+                            <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-5/6"></div>
+                            <div className="mt-2 flex justify-between">
+                              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
+                              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : topQuestions.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-6">
+                    {topQuestions.map((question, index) => (
+                      <QuestionCard 
+                        key={question.id} 
+                        question={question} 
+                        rank={index + 1} 
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm text-center">
+                    <p className="text-gray-500 dark:text-gray-400">
+                      {translate('Noquestiondataavailablefortheselectedperiod') || 'No question data available for the selected period'}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
-
+      
       {/* Business View Modal - Updated Design */}
       {isViewModalOpen && selectedBusiness && (
         <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
@@ -932,4 +1085,37 @@ const AdminDashboard = () => {
   );
 };
 
+const QuestionCard = ({ question, rank }: { 
+  question: TopQuestion, 
+  rank: number 
+}) => {
+  const { translate } = useLanguage(); // Add this to access the translate function
+  
+  return (
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
+      <div className="flex items-start">
+        <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-4 ${
+          rank === 1 ? 'bg-yellow-500' : rank === 2 ? 'bg-gray-400' : 'bg-amber-700'
+        }`}>
+          <span className="text-white font-bold">{rank}</span>
+        </div>
+        <div className="flex-1">
+          <p className="text-gray-900 dark:text-white font-medium line-clamp-3">
+            {question.content}
+          </p>
+          <div className="mt-2 flex justify-between text-sm">
+            <span className="text-gray-500 dark:text-gray-400">
+              {translate('Asked') || 'Asked'} {question.count} {translate('times') || 'times'}
+            </span>
+            <span className="text-gray-500 dark:text-gray-400">
+              {translate('Last') || 'Last'} {new Date(question.created_at).toLocaleDateString()}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default AdminDashboard;
+

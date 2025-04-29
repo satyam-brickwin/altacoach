@@ -15,6 +15,7 @@ import UserDataActions from '@/components/UserDataActions';
 import ViewDocumentModal from '@/components/ViewDocumentModal';
 import { convertToCSV, downloadCSV } from '@/utils/exportHelpers';
 import { useToast } from '@/contexts/ToastContext'; // Add this import
+import { Title } from '@radix-ui/react-toast';
 
 // Add this helper function near the top of the file with other utility functions
 const isDuplicateUser = (newUser: NewUser, existingUsers: User[], currentBusinessId: string): boolean => {
@@ -272,6 +273,14 @@ const adminTranslations = {
     allBusinesses: 'All Businesses',
     BusinessName: 'Business Name',
     altamediacontent: 'altamedia Content',
+    Title: 'Title',
+    Language: 'Language',
+    Type: 'Type',
+    Created: 'Created',
+    Admin: 'Admin',
+    search_users:'Search Users',
+    search_documents:'Search Documents',
+    Signout: 'Sign out',
 
     analytics: 'Analytics',
     settings: 'Settings',
@@ -286,6 +295,10 @@ const adminTranslations = {
     status: 'Status',
     StartDate: 'Start Date',
     createdBy: 'Created By',
+    CreatedBy: 'Created By',
+    Actions: 'Actions',
+    // Language: 'Language',
+    Name: 'Name',
     actions: 'Actions',
     view: 'View',
     edit: 'Edit',
@@ -336,6 +349,7 @@ const adminTranslations = {
   fr: {
     dashboard: 'Tableau de Bord',
     businesses: 'Entreprises',
+    Admin:'Administrateur ',
     altamediacontent: 'Contenu Altamedia',
     BusinessName: 'Nom de l\'entreprise',
     businessManagement: 'Gérer les entreprises et leurs détails',
@@ -345,6 +359,14 @@ const adminTranslations = {
     active: 'Actif',
     pending: 'En Attente',
     analytics: 'analytique',
+    Title: 'Titre',
+    Signout: 'Déconnexion',
+    Type: 'Type',
+    Laguage: 'Langue',
+    search_users:'Recherche d\'utilisateurs',
+    search_documents:'Recherche de documents',
+    Created: 'Créé',
+    Agent: 'Agent',
     suspended: 'Suspendu',
     searchBusinesses: 'Rechercher des entreprises...',
     loading: 'Chargement...',
@@ -354,6 +376,9 @@ const adminTranslations = {
     status: 'Statut',
     StartDate: 'Date de Début',
     createdBy: 'Créé Par',
+    CreatedBy:' Créé Par',
+    Name: 'Nom',
+    Language: 'Langue',
     actions: 'Actions',
     view: 'Voir',
     edit: 'Modifier',
@@ -376,6 +401,8 @@ const adminTranslations = {
     searchUsers: 'Rechercher des utilisateurs...',
     addUser: 'Ajouter un utilisateur',
     uploadDocument: 'Télécharger un document',
+    Actions: 'Actions',
+    // Language: 'Langue',
     documentTitle: 'Titre',
     documentType: 'Type',
     documentLanguage: 'Langue',
@@ -410,6 +437,13 @@ const adminTranslations = {
     BusinessName: 'Unternehmensname',
     StartDate: 'Startdatum',
     EndDate: 'Enddatum',
+    Signout: 'Abmelden',
+    Title: 'Titel',
+    Type: 'Typ',
+    Laguage: 'Sprache',
+    Created: 'Erstellt',
+    search_users:'Benutzer suchen',
+    search_documents:'Dokumente suchen',
     businessManagement: 'Unternehmen und ihre Details verwalten',
     addNewBusiness: 'Neues Unternehmen hinzufügen',
     filterByStatus: 'Nach Status filtern:',
@@ -426,6 +460,11 @@ const adminTranslations = {
     status: 'Status',
     // StartDate: 'Startdatum',
     createdBy: 'Erstellt Von',
+    Admin:'Beheerder ',
+    CreatedBy: 'Erstellt Von',
+    Name: 'Name',
+    Actions: 'Aktionen',
+    Language: 'Sprache',
     actions: 'Aktionen',
     view: 'Ansehen',
     edit: 'Bearbeiten',
@@ -473,85 +512,84 @@ const adminTranslations = {
     noDocumentsFound: 'Keine Dokumente gefunden',
     noUsersFound: 'Keine Benutzer für dieses Unternehmen gefunden'
   },
-  es: {
-    adminDashboard: 'Panel de Administrador',
-    dashboard: 'Panel',
-    altamediacontent: 'Contenido Altamedia',
-    businesses: 'Empresas',
-    StartDate: 'Fecha de Inicio',
-    EndDate: 'Fecha de Fin',
-    setting: 'Configuración',
-    Satus: 'Estado',
-    BusinessName: 'Nombre de la Empresa',
-    content: 'Contenido',
-    userAccounts: 'Cuentas de Usuario',
-    settings: 'Configuración',
-    analytics: 'Analíticas',
-    prompts: 'Indicaciones',
-    notifications: 'Notificaciones',
-    businessOverview: 'Resumen de Empresas',
-    activeBusinesses: 'Empresas Activas',
-    pendingBusinesses: 'Empresas Pendientes',
-    suspendedBusinesses: 'Empresas Suspendidas',
-    contentManagement: 'Gestión de Contenido',
-    contentItems: 'Elementos de Contenido',
-    exercises: 'Ejercicios',
-    faqs: 'Preguntas Frecuentes',
-    viewAll: 'Ver Todo',
-    manage: 'Gestionar',
-    approve: 'Aprobar',
-    suspend: 'Suspender',
-    delete: 'Eliminar',
-    userStatistics: 'Estadísticas de Usuarios',
-    totalBusinesses: 'Total de Empresas',
-    totalContent: 'Total de Contenido',
-    totalUsers: 'Total de Usuarios',
-    activeUsers: 'Usuarios Activos',
-    adminUsers: 'Usuarios Administradores',
-    courses: 'Cursos',
-    guides: 'Guías',
-    recentRegistrations: 'Registros Recientes',
-    selectLanguage: 'Seleccionar Idioma',
-    name: 'Nombre',
-    plan: 'Plan',
-    userCount: 'Usuarios',
-    status: 'Estado',
-    joined: 'Unido',
-    actions: 'Acciones',
-    active: 'Activo',
-    pending: 'Pendiente',
-    suspended: 'Suspendido',
-    view: 'Ver',
-    edit: 'Editar',
-    logo: 'Logo',
-    colorTheme: 'Tema de Color',
-    isActive: 'Estado Activo',
-    activate: 'Activar',
-    deactivate: 'Desactivar',
-    uploadLogo: 'Subir Logo',
-    selectColorTheme: 'Seleccionar Tema de Color',
-    saveChanges: 'Guardar Cambios',
-    businessUpdatedSuccessfully: 'Empresa actualizada exitosamente!',
-    errorUpdatingBusiness: 'Error al actualizar la empresa. Por favor, inténtelo más tarde.',
-    businessManagement: 'Gestión de Empresas',
-    addNewBusiness: 'Añadir Nueva Empresa',
-    filterByStatus: 'Filtrar por Estado:',
-    allBusinesses: 'Todas las Empresas',
-    search: 'Buscar',
-    searchBusinesses: 'Buscar empresas...',
-    businessAddedSuccessfully: 'Empresa agregada exitosamente!',
-    errorAddingBusiness: 'Error al agregar la empresa. Por favor, inténtelo más tarde.',
-    businessName: 'Nombre de la Empresa',
-    email: 'Correo Electrónico',
-    phoneNumber: 'Número de Teléfono',
-    address: 'Dirección',
-    submitting: 'Enviando...',
-    add: 'Agregar',
-    cancel: 'Cancelar',
-    loading: 'Cargando...',
-    refresh: 'Actualizar',
-    noBusinessesFound: 'No se encontraron empresas',
-    createdBy: 'Creado Por',
+  it: {
+    dashboard: 'Dashboard',
+    setting: 'Impostazioni',
+    businesses: 'Aziende',
+    altamediacontent: 'Contenuti Altamedia',
+    BusinessName: 'Nome Azienda',
+    StartDate: 'Data di Inizio',
+    EndDate: 'Data di Fine',
+    Signout: 'Disconnetti',
+    search_users:'Ricerca Utenti',
+    search_documents:'Ricerca Documenti',
+    businessManagement: 'Gestisci aziende e i loro dettagli',
+    addNewBusiness: 'Aggiungi nuova azienda',
+    filterByStatus: 'Filtra per stato:',
+    allBusinesses: 'Tutte le aziende',
+    active: 'Attivo',
+    pending: 'In attesa',
+    Title: 'Titolo',
+    Type: 'Tipo',
+    Laguage: 'Lingua',
+    Created:' Creato ',
+    analytics: 'Analisi',
+    suspended: 'Sospeso',
+    searchBusinesses: 'Cerca aziende...',
+    loading: 'Caricamento...',
+    noBusinessesFound: 'Nessuna azienda trovata',
+    name: 'Nome',
+    userCount: 'Utenti',
+    status: 'Stato',
+    createdBy: 'Creato da',
+    CreatedBy: 'Creato da',
+    Name: 'Nome',
+    Actions: 'Azioni',
+    actions: 'Azioni',
+    view: 'Visualizza',
+    edit: 'Modifica',
+    approve: 'Approva',
+    suspend: 'Sospendi',
+    deactivate: 'Disattiva',
+    activate: 'Attiva',
+    submitting: 'Invio...',
+    add: 'Aggiungi',
+    cancel: 'Annulla',
+    error: 'Si è verificato un errore. Riprova.',
+    backToBusinesses: 'Torna alle aziende',
+    businessDetails: 'Dettagli azienda',
+    allDocuments: 'Tutti i documenti',
+    businessDocuments: 'Documenti aziendali',
+    adminDocuments: 'Documenti amministrativi',
+    userAccounts: 'Account utente',
+    searchDocuments: 'Cerca documenti...',
+    searchUsers: 'Cerca utenti...',
+    addUser: 'Aggiungi utente',
+    uploadDocument: 'Carica documento',
+    documentTitle: 'Titolo',
+    documentType: 'Tipo',
+    documentLanguage: 'Lingua',
+    documentCreated: 'Creato',
+    documentActions: 'Azioni',
+    download: 'Scarica',
+    save: 'Salva',
+    clearSelection: 'Cancella selezione',
+    documentsSelected: 'Documenti selezionati',
+    saveToUsers: 'Salva per utenti',
+    userName: 'Nome',
+    userEmail: 'Email',
+    userLanguage: 'Lingua',
+    userStatus: 'Stato',
+    userCreatedBy: 'Creato da',
+    userActions: 'Azioni',
+    editUser: 'Modifica utente',
+    deactivateUser: 'Disattiva utente',
+    activateUser: 'Attiva utente',
+    loadingDocuments: 'Caricamento documenti...',
+    noDocumentsFound: 'Nessun documento trovato',
+    noUsersFound: 'Nessun utente trovato per questa azienda',
+    Admin:'Amministratore ',
+
   }
 };
 
@@ -597,7 +635,7 @@ export default function AdminBusinesses() {
   const router = useRouter();
   const { user, logout } = useAuth(); // Get user and signOut from auth context
   const { showToast } = useToast(); // Add this hook
-
+ 
   // Move the state declarations inside the component
   const [selectedBusinessView, setSelectedBusinessView] = useState<Business | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'detail'>('list');
@@ -1020,7 +1058,7 @@ export default function AdminBusinesses() {
   };
 
   // Translation helper
-  const t = (key: string) => {
+  const t = (key: string, p0?: string) => {
     const translations = adminTranslations[language as keyof typeof adminTranslations] || adminTranslations.en;
     return translations[key as keyof typeof translations] || key;
   };
@@ -1918,7 +1956,7 @@ export default function AdminBusinesses() {
                   <span className="text-gray-900 dark:text-white tracking-[.10em]">oach</span>
                 </span>
                 <span className="ml-2 px-2 py-1 bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] text-sm font-medium rounded">
-                  Admin
+                  {t('Admin')}
                 </span>
               </div>
             </div>
@@ -2021,7 +2059,7 @@ export default function AdminBusinesses() {
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 3 0 01-3 3H6a3 3 3 0 01-3-3V7a3 3 3 0 013-3h4a3 3 3 0 013 3v1" />
                       </svg>
-                      Sign out
+                      {t('Signout')}
                     </button>
                   </div>
                 )}
@@ -2312,15 +2350,22 @@ export default function AdminBusinesses() {
                   <div className="relative mb-4">
                     <input
                       type="text"
-                      placeholder={`Search ${activeFilter === 'users' ? 'users' : 'documents'}...`}
-                      value={activeFilter === 'users' ? userSearchTerm : documentSearchTerm}
-                      onChange={(e) => activeFilter === 'users'
-                        ? setUserSearchTerm(e.target.value)
-                        : setDocumentSearchTerm(e.target.value)
+                      placeholder={
+                        activeFilter === 'users'
+                          ? t('search_users', 'Search users...')
+                          : t('search_documents', 'Search documents...')
                       }
+                      value={activeFilter === 'users' ? userSearchTerm : documentSearchTerm}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        activeFilter === 'users'
+                          ? setUserSearchTerm(value)
+                          : setDocumentSearchTerm(value);
+                      }}
                       className="w-full px-3 py-2 border rounded-md focus:ring-[#C72026] focus:border-[#C72026]"
                     />
                   </div>
+
 
                   {/* Add some visual indicator for the number of selected documents in the admin documents tab */}
                   {activeFilter === 'admin' && Object.values(selectedDocuments).some(selected => selected) && (
@@ -2352,12 +2397,12 @@ export default function AdminBusinesses() {
                       <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead className="bg-gray-50 dark:bg-gray-800">
                           <tr>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Language</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created By</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('Name')}</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('Email')}</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('Language')}</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('Status')}</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('CreatedBy')}</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('Actions')}</th>
                           </tr>
                         </thead>
                         <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
@@ -2488,12 +2533,12 @@ export default function AdminBusinesses() {
                                 />
                               </th>
                             )}
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Title</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('Title')}</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('Type')}</th>
                             {/* <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Content Type</th> */}
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Language</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('Language')}</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('Created')}</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('Actions')}</th>
                           </tr>
                         </thead>
                         <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
@@ -2614,11 +2659,11 @@ export default function AdminBusinesses() {
                                 />
                               </th>
                             )}
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Title</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Language</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('Title')}</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('Type')}</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('Language')}</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('Created')}</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('Actions')}</th>
                           </tr>
                         </thead>
                         <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
