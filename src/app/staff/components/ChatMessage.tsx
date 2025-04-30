@@ -3,6 +3,8 @@ import { cn } from '../lib/utils';
 import { Edit, Check, X, Trash2, Lightbulb } from 'lucide-react';
 import { NewSuggestionModal } from './NewSuggestionModal';
 import { v4 as uuidv4 } from 'uuid';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 // Update submitSuggestionAPI to include better context about the chat
 const submitSuggestionAPI = async (suggestion: string, messageId: string, userId: string, message: { text: string; role: 'user' | 'assistant'; id: string }, previousMessage?: { text: string; role: 'user' | 'assistant'; id: string }) => {
@@ -77,7 +79,7 @@ const saveMessageToDatabase = async (message: {
 }) => {
   try {
     console.log('Saving message to database:', message);
-    
+
     // For the PUT request to save messages
     const response = await fetch('/api/newsuggestion', {
       method: 'PUT', // Using PUT method for the message-saving endpoint
@@ -97,13 +99,13 @@ const saveMessageToDatabase = async (message: {
         answerText: message.role === 'assistant' ? message.text : undefined
       }),
     });
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);
       console.error('Failed to save message:', errorData);
       throw new Error(`Failed to save message: ${response.status}`);
     }
-    
+
     const data = await response.json();
     console.log('Message saved successfully:', data);
     return data;
@@ -160,7 +162,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
   onEditMessage,
   onDeleteMessage,
   language = 'en', // Add default value
-  translations = {}, 
+  translations = {},
   // onSubmitSuggestion // This prop might become redundant if only used internally now
 }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -168,7 +170,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messageRef = useRef<HTMLDivElement>(null);
   const isUser = message.role === 'user';
-  
+
   const [isSuggestionModalOpen, setIsSuggestionModalOpen] = useState(false);
   const [suggestionInput, setSuggestionInput] = useState('');
 
@@ -221,13 +223,13 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
       it: "Ho un suggerimento riguardo questa risposta...",
       es: "Tengo una sugerencia sobre esta respuesta..."
     };
-    
+
     // Set initial placeholder text based on language
-    const placeholderText = defaultSuggestionPlaceholders[language as keyof typeof defaultSuggestionPlaceholders] || 
-                            defaultSuggestionPlaceholders.en;
-    
+    const placeholderText = defaultSuggestionPlaceholders[language as keyof typeof defaultSuggestionPlaceholders] ||
+      defaultSuggestionPlaceholders.en;
+
     setSuggestionInput(placeholderText);
-    setIsSuggestionModalOpen(true); 
+    setIsSuggestionModalOpen(true);
   };
 
   // Update handleSubmitSuggestion to pass previousMessage with ID
@@ -309,7 +311,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
               <span className="text-xs font-medium">AC</span>
             </div>
           )}
-          
+
           <div className={cn(
             "mx-2 max-w-[80%] relative",
           )}>
@@ -321,13 +323,13 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                 {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
             </div>
-            
+
             <div
               className={cn(
                 "px-4 py-3 rounded-2xl",
                 isUser
-                  ? "bg-[#C72026] text-white rounded-br-none" 
-                  : "bg-[#C72026]/10 dark:bg-[#C72026]/20 rounded-bl-none text-gray-900 dark:text-gray-100" 
+                  ? "bg-[#C72026] text-white rounded-br-none"
+                  : "bg-[#C72026]/10 dark:bg-[#C72026]/20 rounded-bl-none text-gray-900 dark:text-gray-100"
               )}
             >
               {isEditing ? (
@@ -346,11 +348,27 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                     isUser ? "text-white dark:text-white" : "text-gray-900 dark:chat-text-dark"
                   )}
                 >
-                  {message.text}
+
+
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]} // ✅ Enable GFM for better list parsing
+                    components={{
+                      h1: ({ node, ...props }) => <h1 className="text-2xl font-bold my-4" {...props} />,
+                      h2: ({ node, ...props }) => <h2 className="text-xl font-semibold my-3" {...props} />,
+                      h3: ({ node, ...props }) => <h3 className="text-lg font-semibold my-2" {...props} />,
+                      p: ({ node, ...props }) => <p className="mb-2" {...props} />,
+                      ul: ({ node, ...props }) => <ul className="list-disc list-inside my-2" {...props} />,  // ✅ Bullet points
+                      ol: ({ node, ...props }) => <ol className="list-decimal list-inside my-2" {...props} />, // ✅ Numbered list
+                      li: ({ node, ...props }) => <li className="ml-4 mb-1" {...props} />, // ✅ List item indent
+                    }}
+                  >
+                    {message.text}
+                  </ReactMarkdown>
                 </div>
               )}
             </div>
-            
+
+
             {isEditing && (
               <div className="flex items-center justify-end gap-2 mt-2">
                 <button
@@ -369,7 +387,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                 </button>
               </div>
             )}
-            
+
             {!isUser && !isEditing && (
               <div className="opacity-0 group-hover:opacity-100 absolute bottom-0 right-0 transform translate-x-8 translate-y-1/2 transition-opacity duration-200">
                 <button
@@ -382,7 +400,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                 </button>
               </div>
             )}
-            
+
             {isUser && !isEditing && (
               <div className="opacity-0 group-hover:opacity-100 absolute top-6 -left-10 flex flex-col gap-1 transition-opacity duration-200">
                 <button
@@ -402,7 +420,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
               </div>
             )}
           </div>
-          
+
           {isUser && (
             <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-[#C72026] text-white mt-1">
               <span className="text-xs font-medium">
@@ -421,7 +439,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
         setSuggestionInput={setSuggestionInput}
         userId={userId} // Make sure userId is properly passed
         language={language || 'en'} // Ensure language has a fallback
-        // translations={translations} // Pass the translations object
+      // translations={translations} // Pass the translations object
       />
     </div>
   );

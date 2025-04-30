@@ -65,6 +65,8 @@ const adminTranslations = {
     ChatInteractionStatistics: 'Chat Interaction Statistics',
     ExportChatHistory: 'Export Chat History',
     TotalChatSessions: 'Total Chat Sessions',
+    Suggestion:'Suggestion',
+    admin:'Admin',
     Last: 'Last:',
     ThisMonth: 'This Month',
     ThisYear: 'This Year',
@@ -91,6 +93,7 @@ const adminTranslations = {
     SignOut: 'Sign Out',
     Selectfilters: 'Select Filters',
     Admin: 'Admin',
+    altamediaContent:'altamedia Content',
     Retry: 'Retry',
     Active: 'Active',
     dashboard: 'Dashboard',
@@ -147,6 +150,7 @@ const adminTranslations = {
     desktop: 'Desktop',
     tablet: 'Tablet',
     other: 'Other'
+    
   },
   fr: {
     adminDashboard: 'Tableau de Bord Admin',
@@ -421,62 +425,8 @@ const adminTranslations = {
     tablet: 'Tablet',
     other: 'Altro'
   },
-  es: {
-    adminDashboard: 'Panel de Administrador',
-    dashboard: 'Panel',
-    businesses: 'Empresas',
-    content: 'Contenido',
-    userAccounts: 'Cuentas de Usuario',
-    settings: 'Configuración',
-    analytics: 'Analíticas',
-    prompts: 'Indicaciones',
-    notifications: 'Notificaciones',
-    analyticsOverview: 'Resumen de Analíticas',
-    userStatistics: 'Estadísticas de Usuarios',
-    businessStatistics: 'Estadísticas de Empresas',
-    contentStatistics: 'Estadísticas de Contenido',
-    aiStatistics: 'Estadísticas de Interacción con IA',
-    totalUsers: 'Total de Usuarios',
-    activeUsers: 'Usuarios Activos',
-    newUsersThisMonth: 'Nuevos Usuarios Este Mes',
-    averageSessionTime: 'Tiempo Promedio de Sesión',
-    totalBusinesses: 'Total de Empresas',
-    activeBusinesses: 'Empresas Activas',
-    newBusinessesThisMonth: 'Nuevas Empresas Este Mes',
-    averageUsersPerBusiness: 'Promedio de Usuarios por Empresa',
-    totalContent: 'Total de Contenido',
-    contentViews: 'Vistas de Contenido',
-    mostPopularContentType: 'Tipo de Contenido Más Popular',
-    averageCompletionRate: 'Tasa Promedio de Finalización',
-    totalInteractions: 'Total de Interacciones',
-    averageResponseTime: 'Tiempo Promedio de Respuesta',
-    satisfactionRate: 'Tasa de Satisfacción',
-    mostCommonQueries: 'Consultas Más Comunes',
-    selectLanguage: 'Seleccionar Idioma',
-    analyticsDescription: 'Métricas de rendimiento e información de la plataforma',
-    viewDetailedReport: 'Ver Informe Detallado',
-    exportData: 'Exportar Datos',
-    lastUpdated: 'Última Actualización',
-    today: 'Hoy',
-    thisWeek: 'Esta Semana',
-    thisMonth: 'Este Mes',
-    thisYear: 'Este Año',
-    timeRange: 'Rango de Tiempo',
-    filterBy: 'Filtrar Por',
-    all: 'Todos',
-    usage: 'Uso',
-    activeUsersDefinition: 'Usuarios Activos (Definición de Actividad)',
-    percentageActiveUsers: 'Porcentaje de Usuarios Activos',
-    byBusiness: 'Por Empresa',
-    byLanguage: 'Por Idioma',
-    numberOfSessions: 'Número de Sesiones',
-    sessionDuration: 'Duración de Sesión',
-    device: 'Dispositivo',
-    mobile: 'Móvil',
-    desktop: 'Escritorio',
-    tablet: 'Tableta',
-    other: 'Otro'
-  }
+  // 
+  
 };
 
 export default function AdminAnalytics() {
@@ -2222,7 +2172,7 @@ const fetchTopQuestions = async () => {
             </p>
             <div className="mt-2 flex justify-between text-sm">
               <span className="text-gray-500 dark:text-gray-400">
-                {t('Asked')} {question.count} {t('times')}
+                {translate('Asked')} {question.count} {translate('times')}
               </span>
               <span className="text-gray-500 dark:text-gray-400">
                 {t('Last')} {new Date(question.created_at).toLocaleDateString()}
@@ -2269,7 +2219,7 @@ const fetchTopQuestions = async () => {
                   <span className="text-gray-900 dark:text-white tracking-[.10em]">oach</span>
                 </span>
                 <span className="ml-2 px-2 py-1 bg-[#C72026]/10 dark:bg-[#C72026]/20 text-[#C72026] text-sm font-medium rounded">
-                  {t('Admin')}
+                  {translate('Admin')}
                 </span>
               </div>
             </div>
@@ -2401,7 +2351,7 @@ const fetchTopQuestions = async () => {
               </li>
               <li>
                 <Link href="/admin/content" className="block px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
-                  {t('altamedia Content')}
+                  {t('altamediaContent')}
                 </Link>
               </li>
               <li>
@@ -2747,7 +2697,7 @@ const fetchTopQuestions = async () => {
                           {avgUsersPerBusinessPercent}%
                         </div>
                         <div className="text-sm text-gray-500 dark:text-gray-400">
-                          {t('Active')}
+                          {translate('Active')}
                         </div>
                       </div>
                     </div>
@@ -3066,16 +3016,16 @@ const fetchTopQuestions = async () => {
                       <thead>
                         <tr>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            {t('Business')}
+                            {translate('Business')}
                           </th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            {t('Users')}
+                            {translate('Users')}
                           </th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            {t('Chats')}
+                            {translate('Chats')}
                           </th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            {t('Messages')}
+                            {translate('Messages')}
                           </th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             {t('AvgDuration')}

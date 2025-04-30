@@ -3,37 +3,37 @@ import { prisma } from '@/lib/prisma';
 import { comparePasswords, createToken, setAuthCookie } from '@/lib/auth';
 
 // Mock user database for demonstration
-let MOCK_USERS = [
-  {
-    id: '1',
-    name: 'Test User',
-    email: 'test@example.com',
-    // In a real app, this would be a hashed password
-    password: 'password123',
-    company: 'AltaCoach',
-    preferredLanguage: 'en',
-  },
-  {
-    id: '2',
-    name: 'Admin User',
-    email: 'admin@altacoach.com',
-    password: 'admin123',
-    company: 'AltaCoach',
-    preferredLanguage: 'en',
-    isAdmin: true,
-  },
-];
+// let MOCK_USERS = [
+//   {
+//     id: '1',
+//     name: 'Test User',
+//     email: 'test@example.com',
+//     // In a real app, this would be a hashed password
+//     password: 'password123',
+//     company: 'AltaCoach',
+//     preferredLanguage: 'en',
+//   },
+//   {
+//     id: '2',
+//     name: 'Admin User',
+//     email: 'admin@altacoach.com',
+//     password: 'admin123',
+//     company: 'AltaCoach',
+//     preferredLanguage: 'en',
+//     isAdmin: true,
+//   },
+// ];
 
 // This function allows us to access the mock users from other routes
-export function getMockUsers() {
-  return MOCK_USERS;
-}
+// export function getMockUsers() {
+//   return MOCK_USERS;
+// }
 
 // This function allows us to update the mock users from other routes
-export function addMockUser(user: any) {
-  MOCK_USERS.push(user);
-  return user;
-}
+// export function addMockUser(user: any) {
+//   MOCK_USERS.push(user);
+//   return user;
+// }
 
 export async function POST(request: NextRequest) {
   try {
@@ -84,13 +84,13 @@ export async function POST(request: NextRequest) {
     setAuthCookie(token);
 
     // Create session record
-    await prisma.session.create({
-      data: {
-        userId: user.id,
-        token,
-        expires: new Date(Date.now() + (rememberMe ? 30 : 1) * 24 * 60 * 60 * 1000),
-      },
-    });
+    // await prisma.session.create({
+    //   data: {
+    //     userId: user.id,
+    //     token,
+    //     expires: new Date(Date.now() + (rememberMe ? 30 : 1) * 24 * 60 * 60 * 1000),
+    //   },
+    // });
 
     // Return user data (excluding password)
     const { password: _, ...userWithoutPassword } = user;

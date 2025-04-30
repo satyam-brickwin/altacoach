@@ -170,3 +170,10 @@ model device_info {
   
   user         User     @relation(fields: [user_id], references: [id])
 }
+
+model models {
+  id         String   @id @default(uuid())
+  model_name String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}

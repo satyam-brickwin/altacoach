@@ -470,16 +470,16 @@ export default function AdminUsers() {
       });
 
       // Step 4: Use both endpoints simultaneously to ensure logout happens
-      try {
-        // Try the super admin logout
-        await fetch('/apisuper/auth/logout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-        });
-      } catch (e) {
-        console.warn("Super admin logout failed, continuing...");
-      }
+      // try {
+      //   // Try the super admin logout
+      //   await fetch('/apisuper/auth/logout', {
+      //     method: 'POST',
+      //     headers: { 'Content-Type': 'application/json' },
+      //     credentials: 'include',
+      //   });
+      // } catch (e) {
+      //   console.warn("Super admin logout failed, continuing...");
+      // }
       
       try {
         // Also try the regular logout

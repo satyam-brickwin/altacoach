@@ -759,7 +759,7 @@ const AdminDashboard = () => {
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                 <div className="flex items-center mb-4">
                   <div className="bg-[#C72026]/10 dark:bg-[#C72026]/20 rounded-full p-3 mr-4">
-                    <svg className="h-5 w-5 text-[#C72026] dark:text-[#C72026]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 24 24" stroke="currentColor">
+                    <svg className="h-5 w-5 text-[#C72026] dark:text-[#C72026]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                     </svg>
                   </div>

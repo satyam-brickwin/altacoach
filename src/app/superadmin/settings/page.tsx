@@ -29,6 +29,25 @@ const SuperAdminSettings = () => {
   const { user, isAuthenticated } = useAuth();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
+  const [selectedModel, setSelectedModel] = useState('mistral');
+  const [initialModel, setInitialModel] = useState('mistral');
+  const [showSaveModel, setShowSaveModel] = useState(false);
+
+  // Fetch model on mount
+  useEffect(() => {
+    const fetchModel = async () => {
+      const res = await fetch('/api/admin/model');
+      const data = await res.json();
+      const uiValue = data.model === 'mixtral' ? 'mistral' : 'deepseek';
+      setSelectedModel(uiValue);
+      setInitialModel(uiValue);
+    };
+    fetchModel();
+  }, []);
+
+
+
+
   // Update the handleLogout function
   const handleLogout = async () => {
     try {
@@ -48,16 +67,16 @@ const SuperAdminSettings = () => {
       });
 
       // Step 4: Use both endpoints simultaneously to ensure logout happens
-      try {
-        // Try the super admin logout
-        await fetch('/apisuper/auth/logout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-        });
-      } catch (e) {
-        console.warn("Super admin logout failed, continuing...");
-      }
+      // try {
+      //   // Try the super admin logout
+      //   await fetch('/apisuper/auth/logout', {
+      //     method: 'POST',
+      //     headers: { 'Content-Type': 'application/json' },
+      //     credentials: 'include',
+      //   });
+      // } catch (e) {
+      //   console.warn("Super admin logout failed, continuing...");
+      // }
 
       try {
         // Also try the regular logout
@@ -659,6 +678,15 @@ const SuperAdminSettings = () => {
                 >
                   {formatTabName(translate('resetPassword'))}
                 </button>
+                <button
+                  onClick={() => setActiveTab('model')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'model'
+                    ? 'border-[#C72026] text-[#C72026] dark:text-[#C72026]'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                    }`}
+                >
+                  {translate('model')}
+                </button>
               </nav>
             </div>
 
@@ -877,6 +905,53 @@ const SuperAdminSettings = () => {
                       </button>
                     </div>
                   </form>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'model' && (
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mt-6">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  {translate('modelSettings')}
+                </h2>
+
+                <div className="border dark:border-gray-700 rounded-lg p-6 bg-gray-50 dark:bg-gray-700">
+                  <label htmlFor="model-select" className="block mb-2 text-gray-700 dark:text-gray-300">
+                    {translate('selectModel')}
+                  </label>
+                  <select
+                    id="model-select"
+                    className="w-full p-2 rounded-md bg-white dark:bg-gray-800 border dark:border-gray-600 text-gray-800 dark:text-white"
+                    value={selectedModel}
+                    onChange={(e) => {
+                      setSelectedModel(e.target.value);
+                      setShowSaveModel(e.target.value !== initialModel);
+                    }}
+                  >
+                    <option value="mistral">Mistral</option>
+                    <option value="deepseek">Deepseek</option>
+                  </select>
+
+                  {showSaveModel && (
+                    <button
+                      onClick={async () => {
+                        await fetch('/api/admin/model', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            model_name: selectedModel === 'mistral' ? 'mixtral' : 'reasoning'
+                          })
+                        });
+
+                        setInitialModel(selectedModel);
+                        setShowSaveModel(false);
+                      }}
+                      className="mt-4 px-4 py-2 bg-[#C72026] text-white rounded hover:bg-[#a51a1f]"
+                    >
+                      {translate('SaveModel')}
+                    </button>
+
+                  )}
                 </div>
               </div>
             )}
